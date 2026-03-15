@@ -162,7 +162,11 @@ const AppComponents = {
                         </div>
                     </div>
 
-                    <div class="airmail-card" onclick="this.classList.toggle('opened');">
+
+
+
+
+                                        <div class="airmail-card" onclick="this.classList.toggle('opened');">
                         <div class="airmail-inner">
                             <div class="airmail-front">
                                 <div class="airmail-label">To: You</div>
@@ -172,13 +176,58 @@ const AppComponents = {
                             <div class="airmail-back airmail-letter" id="dynamic-ow-sleep"></div>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <div id="proposal" class="clean-section" style="padding: 40px 20px; text-align: center;">
+                <div id="proposal-state">
+                    <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #ff4d79; margin-bottom: 25px;">Will you be my Valentine? <span style="font-size:2.5rem;">🌹</span></h2>
+                    
+                    <div id="question-gif-card" style="display:none; background: #ffffff; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(255, 77, 121, 0.1); margin-bottom: 30px;">
+                        <img src="" id="proposal-gif" style="width: 200px; border-radius: 12px;">
+                    </div>
+
+                    <div style="display: flex; gap: 20px; justify-content: center; position: relative; height: 60px;">
+                        <button class="btn-no" id="btn-no" style="background: #9ca3af; color: white; padding: 12px 40px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; position: absolute; left: calc(50% - 130px);">No 🥺</button>
+                        <button class="btn-yes" id="btn-yes" onclick="acceptProposal(event)" style="background: #d81b60; color: white; padding: 12px 40px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; box-shadow: 0 8px 20px rgba(216, 27, 96, 0.3); position: absolute; left: calc(50% + 20px);">Yes! 💖</button>
+                    </div>
+                </div>
+
+                <div id="success-state" style="display:none;">
+                    <h2 style="font-family: 'Dancing Script'; font-size: 4.5rem; color: #ff3366; margin-bottom: 10px;">✨ Yayyyyyy! ✨</h2>
+                    <p style="font-family: 'Poppins'; color: #333; font-size: 1.2rem; margin-bottom: 30px;">"I knew you'd say yes! I love you! 💖"</p>
+                    <div style="background: #ffffff; border-radius: 16px; padding: 20px; border: 2px solid #ff1a53; box-shadow: 0 15px 40px rgba(255, 26, 83, 0.2); display: inline-block;">
+                        <img src="https://media.tenor.com/T0bSg1H9b4MAAAAj/cute-bear.gif" style="width: 200px; border-radius: 12px;">
+                    </div>
+                </div>
+            </div>
+
+            <div id="final-surprise" class="clean-section" style="padding: 40px 20px; text-align: center; padding-bottom: 100px;">
+                <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #4a1525; margin-bottom: 10px;">One Last Surprise...</h2>
+                <p style="color: #ff4d79; font-family: 'Poppins'; font-size: 1.1rem; margin-bottom: 40px;">Click the box to open</p>
+                
+                <div class="minimal-gift-container" onclick="openGift()" style="cursor: pointer; perspective: 1000px; margin-bottom: 20px; display:inline-block;">
+                    <div class="minimal-gift-box" id="minimal-gift" style="position: relative; width: 140px; height: 120px; transition: transform 0.3s ease;">
+                        <div class="minimal-gift-lid" style="position: absolute; top: 5px; left: -5%; width: 110%; height: 30px; background: linear-gradient(to bottom, #e60000, #b30000); border-radius: 6px; z-index: 2; box-shadow: 0 5px 10px rgba(0,0,0,0.3); transition: all 0.6s ease;"></div>
+                        <div class="minimal-gift-body" style="position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(to bottom, #cc0000, #4a0000); border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.2);"></div>
+                    </div>
+                </div>
+
+                <div id="surpriseMessage" style="margin-top: 40px; padding: 30px; background: white; border-radius: 20px; box-shadow: 0 20px 50px rgba(255, 77, 121, 0.2); border: 2px solid #ffe6ea; opacity: 0; transform: translateY(40px) scale(0.9); transition: all 0.8s ease; max-width: 500px; margin-left:auto; margin-right:auto;">
+                    <h3 style="font-family: 'Dancing Script'; font-size: 3rem; color: #cc0033; margin-bottom: 15px;">You are the best thing in my life ❤️</h3>
+                    <p style="font-size: 1.2rem; color: #3a0a14; line-height: 1.6;">This little website is just a small way to show how special you are.</p>
                 </div>
             </div>
 
         </div>
         `;
     },
+
+
+
+
+
+
 
     // ------------------------------------------
     // 3. THE GALLERY (LOVE BOOTH) COMPONENT
@@ -237,7 +286,10 @@ const AppComponents = {
 
             <div class="glass-card" style="padding: 10px; border-radius:30px; display:flex; gap:10px; align-items:center;">
                 <input type="text" id="live-msg-input" placeholder="Type a message..." style="flex:1; padding:12px 15px; border-radius:20px; border:1px solid #ff4d79; outline:none; font-family:'Poppins';">
-                <button id="send-msg-btn" style="background: #cc0033; color:white; border:none; width:45px; height:45px; border-radius:50%; font-size:16px; cursor:pointer; box-shadow: 0 4px 10px rgba(204,0,51,0.3);"><i class="fa-solid fa-paper-plane"></i></button>
+                 <button id="send-msg-btn" style="background: #cc0033; color:white; border:none; width:45px; height:45px; flex-shrink:0; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:16px; cursor:pointer; box-shadow: 0 4px 10px rgba(204,0,51,0.3);"><i class="fa-solid fa-paper-plane"></i></button>
+<button id="send-msg-btn" style="background: #cc0033; color:white; border:none; width:45px; height:45px; flex-shrink:0; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:16px; cursor:pointer; box-shadow: 0 4px 10px rgba(204,0,51,0.3);"><i class="fa-solid fa-paper-plane"></i></button>
+
+
             </div>
             <p id="msg-count-display" style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Messages: 0 / 100</p>
         </div>

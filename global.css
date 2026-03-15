@@ -182,3 +182,31 @@ body.viewer-theme {
 /* Pill Music Player Status Animation */
 @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(204,0,51,0.4); } 70% { box-shadow: 0 0 0 10px rgba(204,0,51,0); } 100% { box-shadow: 0 0 0 0 rgba(204,0,51,0); } }
 .music-playing #music-icon-bg { background: #cc0033 !important; color: white !important; animation: pulseGlow 2s infinite; }
+
+
+/* POLAROID 1:1 GRID & 3D FLIP */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 50px; width: 100%; max-width: 1200px; padding: 20px; margin: 0 auto; }
+.polaroid-flip { height: 350px; perspective: 1200px; cursor: pointer; }
+.polaroid-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
+.polaroid-flip:hover .polaroid-inner { transform: translateY(-10px) rotate(2deg); }
+.polaroid-flip.is-flipped .polaroid-inner { transform: rotateY(180deg) scale(1.05); }
+.polaroid-front, .polaroid-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; background: white; padding: 15px 15px 45px 15px; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+.polaroid-front img { width: 100%; height: 240px; object-fit: cover; border-radius: 2px; }
+.polaroid-front p { font-family: 'Dancing Script', cursive; font-size: 2rem; margin-top: 15px; color: #3a0a14; text-align: center; }
+.polaroid-back { transform: rotateY(180deg); background: linear-gradient(135deg, #fff, #ffe6ea); display: flex; align-items: center; justify-content: center; padding: 30px; font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #cc0033; border: 2px dashed #ff4d79; border-radius: 10px; text-align: center;}
+.polaroid-flip:nth-child(even) { transform: rotate(4deg); }
+.polaroid-flip:nth-child(odd) { transform: rotate(-4deg); }
+
+/* OPEN WHEN AIRMAIL CARDS */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; width: 100%; max-width: 1200px; margin: 0 auto;}
+.airmail-card { height: 240px; perspective: 1200px; cursor: pointer; }
+.airmail-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 16px; }
+.airmail-card:hover .airmail-inner { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(255, 77, 121, 0.3); }
+.airmail-card.opened .airmail-inner { transform: rotateY(180deg) scale(1.05); }
+.airmail-front, .airmail-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.airmail-front { background: #fff; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+.airmail-front::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; border: 8px solid transparent; border-image: repeating-linear-gradient(45deg, #cc0033 0, #cc0033 15px, transparent 15px, transparent 30px, #00509e 30px, #00509e 45px, transparent 45px, transparent 60px) 10; pointer-events: none; }
+.airmail-label { position: absolute; top: 20px; left: 20px; font-family: 'Dancing Script', cursive; font-size: 1.5rem; color: #cc0033; font-weight: bold; background: white; padding: 0 10px; }
+.airmail-front h3 { font-family: 'Poppins', sans-serif; font-size: 1.4rem; margin-top: 20px; color: #3a0a14; font-weight: 600; }
+.airmail-front i { font-size: 3.5rem; color: #ff4d79; filter: drop-shadow(0 4px 8px rgba(255, 77, 121, 0.4)); }
+.airmail-back { transform: rotateY(180deg); background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 30px; border: 3px solid #ff4d79; font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #3a0a14; line-height: 1.6; text-align: center;}
