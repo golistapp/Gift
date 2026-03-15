@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="action-btn" style="color: #8b5cf6;" title="Admin Edit (Bypass Passcode)" onclick="window.open('${formLink}&mode=admin_edit', '_blank')"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button class="action-btn" style="color: #10b981;" title="Admin Preview (No Time Tracking)" onclick="window.open('${viewLink}&mode=admin_preview', '_blank')"><i class="fa-solid fa-eye"></i></button>
                         
-                        <button class="action-btn" style="color: #ec4899;" title="Download QR Code" onclick="downloadTableQR('${viewLink}', '${id}')"><i class="fa-solid fa-qrcode"></i></button>
+                        <button class="action-btn" style="color: #ec4899;" title="Download Pro QR Code" onclick="downloadTableQR('${viewLink}', '${id}')"><i class="fa-solid fa-qrcode"></i></button>
                         
                         <button class="action-btn" style="color: #f59e0b;" title="Advanced Reset" onclick="openResetModal('${id}')"><i class="fa-solid fa-rotate-right"></i></button>
                         <button class="action-btn" style="color: #ef4444;" title="Delete Forever" onclick="deleteMemory('${id}')"><i class="fa-solid fa-trash"></i></button>
@@ -111,9 +111,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('form-link').value = formUrl;
             document.getElementById('view-link').value = viewUrl;
 
+            // 🔴 PRO QR CODE GENERATION (Red Color + High Correction)
             const qrcodeContainer = document.getElementById('qrcode-container');
             qrcodeContainer.innerHTML = ''; 
-            new QRCode(qrcodeContainer, { text: viewUrl, width: 200, height: 200 });
+            new QRCode(qrcodeContainer, { 
+                text: viewUrl, 
+                width: 250, 
+                height: 250,
+                colorDark : "#cc0033", // Deep Red
+                colorLight : "#ffffff", // White
+                correctLevel : QRCode.CorrectLevel.H // High Error Correction (easy scan)
+            });
 
             document.getElementById('result-section').classList.remove('hidden');
             loadDashboardData();
@@ -127,41 +135,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 4. DOWNLOAD QR CODE LOGIC (MAIN & TABLE) ---
+    // --- 4. ADVANCED DOWNLOAD QR CODE LOGIC (WITH PADDING & TEXT) ---
     downloadQrBtn.addEventListener('click', () => {
         const qrcodeContainer = document.getElementById('qrcode-container');
-        downloadCanvasAsImage(qrcodeContainer, document.getElementById('display-id').innerText);
+        createProQRCanvasAndDownload(qrcodeContainer, document.getElementById('display-id').innerText);
     });
 
     window.downloadTableQR = (url, id) => {
         const hiddenContainer = document.getElementById('hidden-qr-container');
         hiddenContainer.innerHTML = ''; 
-        new QRCode(hiddenContainer, { text: url, width: 300, height: 300 });
+        new QRCode(hiddenContainer, { 
+            text: url, 
+            width: 300, 
+            height: 300,
+            colorDark : "#cc0033", 
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H 
+        });
         
-        // Wait for 300ms for QR to render in background
         setTimeout(() => {
-            downloadCanvasAsImage(hiddenContainer, id);
-        }, 300);
+            createProQRCanvasAndDownload(hiddenContainer, id);
+        }, 400); // Give it time to render in background
     }
 
-    function downloadCanvasAsImage(container, id) {
-        const canvas = container.querySelector('canvas');
-        const img = container.querySelector('img');
-        let dataUrl = '';
-        if (img && img.src && img.src.startsWith('data:image')) {
-            dataUrl = img.src;
-        } else if (canvas) {
-            dataUrl = canvas.toDataURL("image/png");
+    // Yeh function Canvas banakar QR ko Padding + Text deta hai
+    function createProQRCanvasAndDownload(container, id) {
+        const qrCanvas = container.querySelector('canvas');
+        const qrImg = container.querySelector('img');
+        
+        let sourceImageSrc = '';
+        if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) {
+            sourceImageSrc = qrImg.src;
+        } else if (qrCanvas) {
+            sourceImageSrc = qrCanvas.toDataURL("image/png");
         } else {
             alert("Please wait, QR code is generating..."); return;
         }
 
-        const link = document.createElement('a');
-        link.download = `MemoryGift_QR_${id}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Naya Premium Canvas Banayenge
+        const finalCanvas = document.createElement('canvas');
+        const ctx = finalCanvas.getContext('2d');
+        
+        const qrSize = 300;
+        const padding = 50; // White border space
+        
+        finalCanvas.width = qrSize + (padding * 2);
+        finalCanvas.height = qrSize + (padding * 2) + 60; // Extra 60px for text at bottom
+        
+        // Background White Fill
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // Scan Me ❤️ Text Draw
+        ctx.fillStyle = "#cc0033";
+        ctx.font = "bold 26px 'Poppins', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Scan Me ❤️", finalCanvas.width / 2, finalCanvas.height - 30);
+
+        // Load QR Image and Draw it on canvas
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+            ctx.drawImage(img, padding, padding, qrSize, qrSize);
+            
+            // Download the final edited Canvas
+            const link = document.createElement('a');
+            link.download = `Premium_MemoryGift_QR_${id}.png`;
+            link.href = finalCanvas.toDataURL("image/png");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+        img.src = sourceImageSrc;
     }
 
     // --- 5. ADVANCED RESET SYSTEM LOGIC ---
@@ -179,34 +224,31 @@ document.addEventListener('DOMContentLoaded', () => {
         currentResetId = null;
     });
 
-    // Option 1: Full Reset
     document.getElementById('btn-reset-full').addEventListener('click', async () => {
         if(!confirm("Are you sure? This will delete ALL photos, text, and passwords.")) return;
         await resetData({
-            status: "empty", passcode: null, music_id: null, message_text: null, girlfriend_name: null,
+            status: "empty", occasion: null, passcode: null, music_id: null, message_text: null, girlfriend_name: null,
             open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null,
-            girlfriend_message: null, locked_at: null, scanned_at: null, proposal_accepted_at: null,
+            girlfriend_message: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null,
             image_1_url: null, caption_1: null, image_2_url: null, caption_2: null,
             image_3_url: null, caption_3: null, image_4_url: null, caption_4: null,
             image_5_url: null, caption_5: null
         });
     });
 
-    // Option 2: Reset Text Only
     document.getElementById('btn-reset-text').addEventListener('click', async () => {
         if(!confirm("Are you sure? This will delete all TEXT and Passcode. Photos will remain safe.")) return;
         await resetData({
-            status: "empty", passcode: null, message_text: null, girlfriend_name: null,
+            status: "empty", occasion: null, passcode: null, message_text: null, girlfriend_name: null,
             open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null,
-            girlfriend_message: null, locked_at: null, scanned_at: null, proposal_accepted_at: null
+            girlfriend_message: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null
         });
     });
 
-    // Option 3: Reset Images Only
     document.getElementById('btn-reset-images').addEventListener('click', async () => {
         if(!confirm("Are you sure? This will delete all 5 PHOTOS. Text and Passcode will remain safe.")) return;
         await resetData({
-            status: "empty", locked_at: null, scanned_at: null, proposal_accepted_at: null,
+            status: "empty", locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null,
             image_1_url: null, caption_1: null, image_2_url: null, caption_2: null,
             image_3_url: null, caption_3: null, image_4_url: null, caption_4: null,
             image_5_url: null, caption_5: null
