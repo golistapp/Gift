@@ -93,25 +93,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 4. PRO FULL-SCREEN CHAT SYSTEM ---
-    function initDashboardChat() {
-        const chatContainer = document.getElementById('dashboard-chat-container');
-        
-        chatContainer.innerHTML = `
-            <div id="bf-chat-area" style="flex: 1; background: #e5ddd5; padding: 15px; border-radius: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom:10px; border:1px solid #ccc; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');">
-                </div>
+        // --- PROPOSAL & GIFT BOX LOGIC ---
+    document.addEventListener('mouseover', (e) => {
+        if(e.target.id === 'btn-no') {
+            const btn = e.target;
+            const container = btn.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            const randomX = Math.floor(Math.random() * (containerRect.width - 100)) - (containerRect.width/2);
+            const randomY = Math.floor(Math.random() * 80) - 40; 
+            btn.style.transform = `translate(${randomX}px, ${randomY}px)`;
             
-            <div style="display:flex; gap:10px; background: #f0f0f0; padding: 10px; border-radius: 30px; border: 1px solid #ddd; align-items:center;">
-                <input type="text" id="bf-chat-input" placeholder="Wait for her first message..." style="flex:1; padding:12px 15px; border-radius:20px; border:none; outline:none; font-family:'Poppins'; background:white;" disabled>
-                <button id="bf-send-btn" style="background: #00a884; color:white; border:none; width:45px; height:45px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" disabled><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-            <p id="bf-msg-count" style="text-align:center; font-size:11px; color:#888; margin-top:5px;">Messages: 0 / 100</p>
-        `;
+            document.getElementById('question-gif-card').style.display = 'inline-block';
+            document.getElementById('proposal-gif').src = "https://media.giphy.com/media/xT0GqfvuVpNqEf3z2w/giphy.gif";
+        }
+    });
 
-        document.getElementById('bf-send-btn').addEventListener('click', sendBfMessage);
+    window.acceptProposal = function(event) {
+        document.getElementById('proposal-state').style.display = 'none';
+        document.getElementById('success-state').style.display = 'block'; 
+        fireConfettiAndHearts();
+    };
+
+    let minimalGiftOpened = false;
+    window.openGift = function() {
+        if (minimalGiftOpened) return;
+        minimalGiftOpened = true;
         
-        renderDashboardUI();
-    }
+        const giftBox = document.getElementById("minimal-gift");
+        giftBox.querySelector('.minimal-gift-lid').style.transform = 'translateY(-80px) rotate(-10deg)';
+        giftBox.querySelector('.minimal-gift-lid').style.opacity = '0';
+        
+        const ring = document.createElement('div');
+        ring.innerHTML = '💍'; 
+        ring.style.position = 'absolute';
+        ring.style.top = '30px';
+        ring.style.left = '50%';
+        ring.style.transform = 'translate(-50%, 0) scale(0.1) rotate(-180deg)';
+        ring.style.fontSize = '4.5rem';
+        ring.style.transition = 'all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        giftBox.appendChild(ring);
+        
+        setTimeout(() => {
+            ring.style.transform = 'translate(-50%, -100px) scale(1) rotate(0deg)';
+        }, 100);
+
+        setTimeout(() => {
+            document.getElementById("surpriseMessage").style.opacity = '1';
+            document.getElementById("surpriseMessage").style.transform = 'translateY(0) scale(1)';
+            fireConfettiAndHearts();
+        }, 1100); 
+    };
+
+    window.fireConfettiAndHearts = function() {
+        for(let i=0; i<30; i++) {
+            const h = document.createElement('div');
+            h.innerHTML = Math.random() > 0.5 ? '❤️' : '✨';
+            h.style.position = 'fixed'; 
+            h.style.left = '50%'; h.style.top = '50%';
+            h.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            h.style.pointerEvents = 'none'; h.style.zIndex = '99999';
+            h.style.transition = 'all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            document.body.appendChild(h);
+            setTimeout(() => {
+                h.style.transform = `translate(${(Math.random()-0.5)*500}px, ${(Math.random()-0.5)*500}px) scale(${Math.random() + 0.5})`;
+                h.style.opacity = '0';
+            }, 50);
+            setTimeout(() => h.remove(), 1500);
+        }
+    };
+
 
     function startDashboardPolling() {
         dashboardInterval = setInterval(async () => {
