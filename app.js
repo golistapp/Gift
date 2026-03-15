@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 6. ENVELOPE OPEN & LETTER FADE ---
+     // --- 6. ENVELOPE OPEN & LETTER FADE ---
     const envelopeSection = document.getElementById('envelope-section');
     const hiddenSurpriseContent = document.getElementById('hidden-surprise-content');
     
@@ -181,7 +181,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.classList.add('hidden'); 
             hiddenSurpriseContent.classList.remove('hidden'); 
             
-            // Play music smoothly now
+            // 🔴 NAYA CODE: Music button ko show karo aur music play karo
+            const musicBtn = document.getElementById('music-toggle-btn');
+            if (musicBtn) {
+                musicBtn.style.display = 'flex'; // Button ab dikhega
+            }
             toggleMusic(true); 
 
             const letterContainer = document.getElementById('dynamic-letter-container');
@@ -197,6 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     }
+
 
       // --- 7. NAVIGATION & MUSIC ---
     window.toggleMusic = function(forcePlay = false) {
@@ -442,7 +447,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(event) event.preventDefault();
         document.getElementById('proposal-state').style.display = 'none';
         document.getElementById('success-state').style.display = 'block'; 
-        if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
+        
+        // 🔴 NAYA CODE: Teddy Bear emojis ki barish
+        if(window.fireTeddyBears) window.fireTeddyBears();
     };
 
     document.addEventListener('mouseover', (e) => {
@@ -471,6 +478,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lid.style.transform = 'translateY(-80px) rotate(-10deg)';
                 lid.style.opacity = '0';
             }
+
+            // 🔴 NAYA CODE: Ring (💍) Animation
+            const ring = document.createElement('div');
+            ring.innerHTML = '💍'; 
+            ring.style.position = 'absolute';
+            ring.style.top = '30px';
+            ring.style.left = '50%';
+            ring.style.transform = 'translate(-50%, 0) scale(0.1) rotate(-180deg)';
+            ring.style.fontSize = '4.5rem';
+            ring.style.transition = 'all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            giftBox.appendChild(ring);
+            
+            setTimeout(() => {
+                ring.style.transform = 'translate(-50%, -100px) scale(1) rotate(0deg)';
+            }, 100);
         }
         
         setTimeout(() => {
@@ -483,7 +505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }, 50);
             }
             if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
-        }, 800); 
+        }, 1100); // Ring ka animation pura hone ka wait
     };
 
     window.fireConfettiAndHearts = function() {
@@ -498,6 +520,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.body.appendChild(h);
             setTimeout(() => {
                 h.style.transform = `translate(${(Math.random()-0.5)*500}px, ${(Math.random()-0.5)*500}px) scale(${Math.random() + 0.5})`;
+                h.style.opacity = '0';
+            }, 50);
+            setTimeout(() => h.remove(), 1500);
+        }
+    };
+
+    // 🔴 NAYA CODE: Teddy Bear Animation Function
+    window.fireTeddyBears = function() {
+        for(let i=0; i<35; i++) {
+            const h = document.createElement('div');
+            const emojis = ['🧸', '❤️', '💖', '✨']; // Teddy bear aur hearts ka mix
+            h.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            h.style.position = 'fixed'; 
+            h.style.left = '50%'; h.style.top = '50%';
+            h.style.fontSize = (Math.random() * 25 + 15) + 'px';
+            h.style.pointerEvents = 'none'; h.style.zIndex = '99999';
+            h.style.transition = 'all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            document.body.appendChild(h);
+            setTimeout(() => {
+                h.style.transform = `translate(${(Math.random()-0.5)*600}px, ${(Math.random()-0.5)*600}px) scale(${Math.random() + 0.5})`;
                 h.style.opacity = '0';
             }, 50);
             setTimeout(() => h.remove(), 1500);
