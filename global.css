@@ -122,3 +122,45 @@ body.viewer-theme {
 .airmail-card { height: 220px; perspective: 1000px; position: relative; }
 .live-reaction-box { width: 100%; max-width: 500px; padding: 20px; margin-top: 30px; }
 .reaction-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--primary-pink); outline: none; margin-bottom: 10px; resize: none; }
+
+
+/* =========================================
+   MOBILE RESPONSIVENESS FIX (ADMIN PANEL)
+   ========================================= */
+@media screen and (max-width: 768px) {
+    /* Navbar ko stack karna */
+    .top-nav {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    /* Stats grid ko single column karna */
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Dashboard dono cards ko ek ke niche ek lana */
+    .dashboard-grid {
+        display: flex !important;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    /* Table ko scrollable banana taaki screen se bahar na jaye */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .data-table {
+        min-width: 500px; /* Table ko sikudne se rokega */
+    }
+    
+    .admin-card {
+        padding: 15px;
+    }
+}
+
