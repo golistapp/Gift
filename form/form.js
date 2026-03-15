@@ -163,6 +163,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
 
+    function initDashboardChat() {
+        const chatContainer = document.getElementById('dashboard-chat-container');
+        
+        chatContainer.innerHTML = `
+            <div style="text-align:center; padding: 6px; background: #eafbea; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 10px;">
+                <span style="font-size:11px; color:#166534;"><i class="fa-solid fa-lock"></i> Messages are End-to-End Encrypted</span>
+            </div>
+            
+            <div id="bf-chat-area" style="flex: 1; background: #e5ddd5; padding: 15px; border-radius: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom:10px; border:1px solid #ccc; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');">
+            </div>
+            
+            <div style="display:flex; gap:10px; background: #f0f0f0; padding: 10px; border-radius: 30px; border: 1px solid #ddd; align-items:center;">
+                <input type="text" id="bf-chat-input" placeholder="Wait for her first message..." style="flex:1; padding:12px 15px; border-radius:20px; border:none; outline:none; font-family:'Poppins'; background:white;" disabled>
+                <button id="bf-send-btn" style="background: #00a884; color:white; border:none; width:45px; height:45px; flex-shrink:0; display:flex; align-items:center; justify-content:center; border-radius:50%; cursor:pointer; font-size:16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" disabled><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <p id="bf-msg-count" style="text-align:center; font-size:11px; color:#888; margin-top:5px;">Messages: 0 / 100</p>
+        `;
+
+        document.getElementById('bf-send-btn').addEventListener('click', sendBfMessage);
+        renderDashboardUI();
+    }
+
+
+
+
     function startDashboardPolling() {
         dashboardInterval = setInterval(async () => {
             try {
