@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - QR Memory Gift</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="../api/firebase.config.js"></script>
+</head>
+<body style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #eef2f5;">
+
+    <div class="admin-card" style="width: 100%; max-width: 400px; text-align: center;">
+        <div style="font-size: 45px; color: #2563eb; margin-bottom: 10px;"><i class="fa-solid fa-shield-halved"></i></div>
+        <h2 style="border: none; padding-bottom: 0;">Admin Access</h2>
+        <p style="color: #64748b; margin-bottom: 25px; font-size: 14px;">Secure login for QR Generation</p>
+
+        <form id="login-form">
+            <div class="input-group" style="text-align: left;">
+                <label>Email ID</label>
+                <input type="email" id="email" placeholder="admin@example.com" required>
+            </div>
+            <div class="input-group" style="text-align: left;">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div id="error-msg" class="hidden" style="color: #dc2626; background: #fef2f2; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; border: 1px solid #fecaca;"></div>
+
+            <button type="submit" id="login-btn" class="primary-btn">
+                <i class="fa-solid fa-right-to-bracket"></i> Login to Dashboard
+            </button>
+        </form>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
