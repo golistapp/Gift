@@ -1,5 +1,5 @@
 // ==========================================
-// 🧩 THE COMPONENT SYSTEM 
+// 🧩 THE ADVANCED COMPONENT SYSTEM 
 // ==========================================
 
 const AppComponents = {
@@ -45,18 +45,18 @@ const AppComponents = {
         `;
     },
 
-    // ✨ Vault Magic Animation & Sound
     attachVaultMagic: function() {
         const keys = document.querySelectorAll('.magic-key');
         const tickSound = document.getElementById('tick-sound');
 
         keys.forEach(key => {
             key.addEventListener('click', function(e) {
-                // 1. Play Sound
-                tickSound.currentTime = 0;
-                tickSound.play().catch(err => console.log("Sound blocked"));
+                if(tickSound) {
+                    tickSound.currentTime = 0;
+                    tickSound.play().catch(err => console.log("Sound blocked"));
+                }
 
-                // 2. Heart Pop Animation
+                // Heart Pop Animation
                 const heart = document.createElement('div');
                 heart.innerHTML = '❤️';
                 heart.style.position = 'absolute';
@@ -67,32 +67,34 @@ const AppComponents = {
                 heart.style.pointerEvents = 'none';
                 heart.style.transition = 'all 0.6s ease-out';
                 heart.style.opacity = '1';
+                heart.style.zIndex = '100';
                 
-                this.style.position = 'relative'; // Keypad button position
+                this.style.position = 'relative'; 
                 this.appendChild(heart);
 
-                // Animate up and fade out
                 setTimeout(() => {
-                    heart.style.top = '-30px';
+                    heart.style.top = '-40px';
                     heart.style.opacity = '0';
-                    heart.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                    heart.style.transform = 'translate(-50%, -50%) scale(1.5) rotate(15deg)';
                 }, 10);
 
-                // Remove from DOM after animation
                 setTimeout(() => { heart.remove(); }, 600);
             });
         });
     },
 
     // ------------------------------------------
-    // 2. THE SURPRISE COMPONENT (Envelope, Gallery)
+    // 2. THE SURPRISE COMPONENT (Hero, Envelope, Letter, Cards)
     // ------------------------------------------
     getSurpriseHTML: function() {
         return `
         <div class="viewer-section" style="min-height: 80vh; padding-top:40px; text-align:center;">
-            <h1 class="hero-title" id="dynamic-gf-name" style="font-family: 'Dancing Script'; font-size: 5rem; color: #cc0033;">My Love</h1>
-            <p class="hero-subtitle" style="font-family: 'Playfair Display'; font-size: 1.5rem; margin-top:10px;">"My heart beats only for you."</p>
-            <i class="fa-solid fa-arrow-down" style="font-size: 24px; color: #cc0033; animation: bounce 2s infinite; margin-top:30px;"></i>
+            <div class="glass-card" style="padding: 30px; border-radius: 20px;">
+                <h1 class="hero-title" id="dynamic-occasion" style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #cc0033; margin-bottom:10px;">A Special Surprise</h1>
+                <h1 class="hero-name" id="dynamic-gf-name" style="font-family: 'Dancing Script'; font-size: 4.5rem; color: #ff4d79;">My Love</h1>
+                <p class="hero-subtitle" style="font-family: 'Playfair Display'; font-size: 1.2rem; margin-top:15px;">Every moment with you is a beautiful dream come true.</p>
+                <i class="fa-solid fa-arrow-down" style="font-size: 24px; color: #cc0033; animation: bounce 2s infinite; margin-top:20px;"></i>
+            </div>
         </div>
 
         <div class="viewer-section" id="envelope-section" style="padding: 40px 20px; text-align:center;">
@@ -103,70 +105,142 @@ const AppComponents = {
                     <div class="heart-seal" style="position: absolute; top: 115px; left: 50%; transform: translateX(-50%); color: white; font-size: 30px; z-index: 5;"><i class="fa-solid fa-heart"></i></div>
                 </div>
             </div>
-            <p style="margin-top: 30px; font-weight: 500;">Tap to open my heart 💌</p>
+            <p style="margin-top: 30px; font-weight: 500; color:#cc0033;">Tap to open my heart 💌</p>
         </div>
 
         <div id="hidden-surprise-content" class="hidden">
-            <div style="padding: 20px;">
-                <div class="glass-card" style="padding: 30px; text-align: left;">
+            <div style="padding: 20px; display:flex; justify-content:center;">
+                <div class="notebook-page glass-card" style="padding: 40px 20px; max-width:600px; text-align: left; position:relative; overflow:hidden;">
+                    <div style="position:absolute; left:25px; top:0; bottom:0; width:2px; background:rgba(255,0,0,0.3);"></div>
                     <h3 style="font-family: 'Dancing Script'; font-size: 30px; color: #cc0033; margin-bottom: 20px; text-align: center;">A Letter For You</h3>
-                    <p id="dynamic-letter-text" style="font-family: 'Playfair Display'; font-size: 16px; line-height: 1.8; white-space: pre-wrap;"></p>
-                    <p style="text-align: right; font-family: 'Dancing Script'; font-size: 24px; color: #cc0033; margin-top: 20px;">Forever Yours ❤️</p>
+                    <div id="dynamic-letter-container" style="padding-left: 40px; font-family: 'Dancing Script'; font-size: 24px; color: #333; line-height: 1.8;">
+                        </div>
+                    <p style="text-align: right; font-family: 'Dancing Script'; font-size: 26px; color: #cc0033; margin-top: 30px; font-weight:bold;">Forever Yours ❤️</p>
                 </div>
             </div>
 
             <div style="padding: 40px 20px; text-align:center;">
-                <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 40px;">Our Memories</h3>
-                <div id="polaroid-container" style="display: flex; flex-direction: column; gap: 30px; align-items: center;">
+                <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 30px;">Open When...</h3>
+                <div style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #10b981;">
+                        <h4 style="color:#10b981; margin-bottom:5px;"><i class="fa-solid fa-face-laugh-beam"></i> You're Happy</h4>
+                        <p id="dynamic-ow-happy" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
                     </div>
+                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #3b82f6;">
+                        <h4 style="color:#3b82f6; margin-bottom:5px;"><i class="fa-solid fa-face-frown-open"></i> You're Sad</h4>
+                        <p id="dynamic-ow-sad" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+                    </div>
+                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #f59e0b;">
+                        <h4 style="color:#f59e0b; margin-bottom:5px;"><i class="fa-solid fa-location-dot"></i> You Miss Me</h4>
+                        <p id="dynamic-ow-miss" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+                    </div>
+                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #8b5cf6;">
+                        <h4 style="color:#8b5cf6; margin-bottom:5px;"><i class="fa-solid fa-bed"></i> You Can't Sleep</h4>
+                        <p id="dynamic-ow-sleep" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+                    </div>
+                </div>
             </div>
         </div>
         `;
     },
 
     // ------------------------------------------
-    // 3. THE CHAT COMPONENT (Secret Messages)
+    // 3. THE GALLERY & LOVE BOOTH COMPONENT
+    // ------------------------------------------
+    getGalleryHTML: function() {
+        return `
+        <div style="padding: 20px; text-align:center;">
+            <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Our Memories</h3>
+            
+            <div id="polaroid-container" style="display: flex; flex-direction: column; gap: 30px; align-items: center; margin-bottom:50px;">
+            </div>
+
+            <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Love Booth 📸</h3>
+            <div class="glass-card" style="padding: 20px; border-radius: 20px; max-width: 500px; margin: 0 auto;">
+                
+                <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #1a1a1a; border-radius: 15px; overflow: hidden; margin-bottom:15px; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                    <video id="video-preview" autoplay muted style="display:none; width:100%; height:100%; object-fit:cover;"></video>
+                    <canvas id="canvas-output" style="display:none; width:100%; height:100%; object-fit:cover;"></canvas>
+                    <p id="camera-placeholder" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-family:'Poppins'; font-size:14px;">Camera inactive.<br>Start or Upload.</p>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <select id="frame-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ff4d79; outline:none; font-family:'Poppins';">
+                        <option value="none">No Frame</option>
+                        <option value="valentine" selected>Valentine Special ❤️</option>
+                        <option value="polaroid-love">Polaroid Love 📸</option>
+                        <option value="cute">Cute Frame ✨</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
+                    <button id="btn-start-cam" style="padding:10px 15px; border-radius:8px; border:none; background:#eee; color:#333; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-video"></i> Start</button>
+                    <button id="btn-snap" style="padding:10px 15px; border-radius:8px; border:none; background:#cc0033; color:white; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-camera"></i> Snap</button>
+                    <input type="file" id="upload-photo" accept="image/*" style="display:none;">
+                    <button id="btn-upload" style="padding:10px 15px; border-radius:8px; border:none; background:#eee; color:#333; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-upload"></i> Upload</button>
+                    <button id="btn-save-photo" style="padding:10px 15px; border-radius:8px; border:none; background:#10b981; color:white; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-download"></i> Save</button>
+                </div>
+            </div>
+            <br><br><br> </div>
+        `;
+    },
+
+    // ------------------------------------------
+    // 4. THE CHAT COMPONENT (Secret Messages)
     // ------------------------------------------
     getChatHTML: function() {
         return `
-        <div style="padding: 20px; min-height: 80vh;">
-            <h2 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; text-align: center; margin-bottom: 10px;">Secret Chat Room <i class="fa-solid fa-lock" style="font-size:18px;"></i></h2>
-            <p style="text-align:center; font-size:12px; color:#666; margin-bottom: 20px;">End-to-End Encrypted. Auto-deletes old messages.</p>
+        <div style="padding: 20px; min-height: 80vh; display:flex; flex-direction:column;">
+            <h2 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; text-align: center; margin-bottom: 5px;">Secret Chat Room <i class="fa-solid fa-lock" style="font-size:18px;"></i></h2>
+            <p style="text-align:center; font-size:11px; color:#666; margin-bottom: 15px;">End-to-End Encrypted. Auto-deletes old messages.</p>
             
-            <div id="chat-messages-area" style="background: rgba(255,255,255,0.6); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; min-height: 300px; max-height: 50vh; overflow-y: auto; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.8); display:flex; flex-direction:column; gap:10px;">
+            <div id="chat-messages-area" class="glass-card" style="flex:1; border-radius: 15px; padding: 15px; min-height: 350px; overflow-y: auto; margin-bottom: 20px; display:flex; flex-direction:column; gap:10px;">
                 <p style="text-align:center; color:#888; font-size:13px; margin-top:50px;">Send a message to start the conversation...</p>
             </div>
 
-            <div class="glass-card" style="padding: 15px; border-radius:15px; display:flex; gap:10px; align-items:center;">
-                <textarea id="live-msg-input" rows="1" placeholder="Type a message..." style="flex:1; padding:10px; border-radius:10px; border:1px solid #ff4d79; outline:none; resize:none; font-family:'Poppins';"></textarea>
-                <button id="send-msg-btn" style="background: #cc0033; color:white; border:none; width:45px; height:45px; border-radius:50%; font-size:18px; cursor:pointer; box-shadow: 0 4px 10px rgba(204,0,51,0.3);"><i class="fa-solid fa-paper-plane"></i></button>
+            <div class="glass-card" style="padding: 10px; border-radius:30px; display:flex; gap:10px; align-items:center;">
+                <input type="text" id="live-msg-input" placeholder="Type a message..." style="flex:1; padding:12px 15px; border-radius:20px; border:1px solid #ff4d79; outline:none; font-family:'Poppins';">
+                <button id="send-msg-btn" style="background: #cc0033; color:white; border:none; width:45px; height:45px; border-radius:50%; font-size:16px; cursor:pointer; box-shadow: 0 4px 10px rgba(204,0,51,0.3);"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
-            <p id="msg-count-display" style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Messages: 0 / 100</p>
+            <p id="msg-count-display" style="text-align:center; font-size:11px; color:#888; margin-top:10px; margin-bottom:60px;">Messages: 0 / 100</p>
         </div>
         `;
     },
 
     // ------------------------------------------
-    // 4. THE FOOTER COMPONENT (Bottom Nav & Music)
+    // 5. THE FOOTER COMPONENT (3 Tabs + Music Pill)
     // ------------------------------------------
     getFooterHTML: function() {
         return `
-        <button id="music-toggle-btn" style="position: fixed; bottom: 80px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: white; color: #cc0033; border: 2px solid #cc0033; font-size: 18px; z-index: 1000; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s;">
-            <i class="fa-solid fa-music"></i>
-        </button>
+        <div id="music-toggle-btn" class="pill-music-player" style="position: fixed; bottom: 85px; left: 15px; background: white; border-radius: 50px; padding: 6px 15px 6px 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 1000; transition: transform 0.3s;">
+            <div id="music-icon-bg" style="width: 35px; height: 35px; background: white; border: 2px solid #cc0033; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #cc0033; transition: 0.3s;">
+                <i class="fa-solid fa-music" id="music-icon"></i>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <span style="font-family: 'Poppins'; font-weight: 700; font-size: 11px; color: #333; line-height: 1.2;">Love Song</span>
+                <span id="music-status-text" style="font-family: 'Poppins'; font-size: 9px; color: #888;">Tap to play</span>
+            </div>
+        </div>
 
-        <div class="glass-card" style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; display: flex; justify-content: space-around; padding: 10px 0; border-radius: 30px; z-index: 999; box-shadow: 0 10px 30px rgba(204,0,51,0.2);">
+        <div class="glass-card" style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 30px; z-index: 999; box-shadow: 0 10px 30px rgba(204,0,51,0.2);">
             
-            <button id="nav-surprise" style="background:none; border:none; display:flex; flex-direction:column; align-items:center; color:#cc0033; cursor:pointer; font-family:'Poppins'; width:50%;">
-                <i class="fa-solid fa-gift" style="font-size:22px; margin-bottom:4px;"></i>
-                <span style="font-size:12px; font-weight:600;">Surprise</span>
+            <button id="nav-surprise" style="background:none; border:none; display:flex; flex-direction:column; align-items:center; color:#cc0033; cursor:pointer; font-family:'Poppins'; width:33%;">
+                <i class="fa-solid fa-gift" style="font-size:20px; margin-bottom:4px;"></i>
+                <span style="font-size:10px; font-weight:600;">Surprise</span>
             </button>
 
-            <div style="width:1px; background:rgba(204,0,51,0.2); height:30px; align-self:center;"></div>
+            <div style="width:1px; background:rgba(204,0,51,0.2); height:25px; align-self:center;"></div>
 
-            <button id="nav-chat" style="background:none; border:none; display:flex; flex-direction:column; align-items:center; color:#888; cursor:pointer; font-family:'Poppins'; width:50%; transition:0.3s;">
-                <i class="fa-solid fa-comment-dots" style="font-size:22px; margin-bottom:4px;"></i>
-                <span style="font-size:12px; font-weight:600;">Chat</span>
+            <button id="nav-gallery" style="background:none; border:none; display:flex; flex-direction:column; align-items:center; color:#888; cursor:pointer; font-family:'Poppins'; width:33%; transition:0.3s;">
+                <i class="fa-solid fa-camera-retro" style="font-size:20px; margin-bottom:4px;"></i>
+                <span style="font-size:10px; font-weight:600;">Gallery</span>
+            </button>
+
+            <div style="width:1px; background:rgba(204,0,51,0.2); height:25px; align-self:center;"></div>
+
+            <button id="nav-chat" style="background:none; border:none; display:flex; flex-direction:column; align-items:center; color:#888; cursor:pointer; font-family:'Poppins'; width:33%; transition:0.3s;">
+                <i class="fa-solid fa-comment-dots" style="font-size:20px; margin-bottom:4px;"></i>
+                <span style="font-size:10px; font-weight:600;">Chat</span>
             </button>
 
         </div>

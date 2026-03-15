@@ -123,7 +123,6 @@ body.viewer-theme {
 .live-reaction-box { width: 100%; max-width: 500px; padding: 20px; margin-top: 30px; }
 .reaction-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--primary-pink); outline: none; margin-bottom: 10px; resize: none; }
 
-
 /* =========================================
    MOBILE RESPONSIVENESS FIX (ADMIN PANEL)
    ========================================= */
@@ -164,3 +163,22 @@ body.viewer-theme {
     }
 }
 
+
+
+/* =========================================
+   🪄 STEP 4: MAGIC ANIMATIONS & NEW VIEWER UI
+   ========================================= */
+
+/* Floating Background Hearts */
+#hearts-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; overflow: hidden; }
+.bg-heart { position: absolute; bottom: -50px; color: rgba(255, 77, 121, 0.4); font-size: 20px; animation: floatUp linear infinite; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120vh) rotate(360deg) scale(1.5); opacity: 0; } }
+
+/* Notebook Fade Animation */
+.letter-line { opacity: 0; transform: translateY(15px); margin-bottom: 25px; }
+.fade-in-text { animation: romanticFade 1.5s ease-out forwards; }
+@keyframes romanticFade { to { opacity: 1; transform: translateY(0); } }
+
+/* Pill Music Player Status Animation */
+@keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(204,0,51,0.4); } 70% { box-shadow: 0 0 0 10px rgba(204,0,51,0); } 100% { box-shadow: 0 0 0 0 rgba(204,0,51,0); } }
+.music-playing #music-icon-bg { background: #cc0033 !important; color: white !important; animation: pulseGlow 2s infinite; }
