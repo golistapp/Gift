@@ -10,11 +10,11 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const generateForm = document.getElementById('generate-form');
-    const generateBtn = document.getElementById('generate-btn');    // Yahan
+    const generateBtn = document.getElementById('generate-btn');    
 
- tumhara exact GitHub Pages ka base link aayega
-    // "Gift" ko hata kar apne GitHub repository ka asli naam likh dena
+    // Yahan tumhara exact GitHub Pages ka base link aayega
     let baseUrl = "https://golistapp.github.io/Gift"; 
+
 
 // --- 2. LOAD DASHBOARD DATA (LIVE ANALYTICS & TABLE) ---
     async function loadDashboardData() {
