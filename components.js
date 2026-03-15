@@ -109,15 +109,17 @@ const AppComponents = {
 
         <div id="hidden-surprise-content" class="hidden">
             
-            <div style="padding: 20px; display:flex; justify-content:center;">
-                <div class="notebook-page glass-card" style="padding: 40px 20px; max-width:600px; width:100%; text-align: left; position:relative; overflow:hidden;">
-                    <div style="position:absolute; left:25px; top:0; bottom:0; width:2px; background:rgba(255,0,0,0.3);"></div>
-                    <h3 style="font-family: 'Dancing Script'; font-size: 30px; color: #cc0033; margin-bottom: 20px; text-align: center;">A Letter For You</h3>
-                    <div id="dynamic-letter-container" style="padding-left: 40px; font-family: 'Dancing Script'; font-size: 20px; color: #333; line-height: 1.8;">
+                        <div style="padding: 20px; display:flex; justify-content:center;">
+                <div class="notebook-page" style="padding: 40px 20px; max-width:600px; width:100%; text-align: left; position:relative; overflow:hidden;">
+                    <div class="romantic-letter">
+                        <h3 style="font-family: 'Dancing Script'; font-size: 30px; color: #cc0033; margin-bottom: 20px; text-align: center;">A Letter For You</h3>
+                        <div id="dynamic-letter-container" style="padding-left: 10px; font-family: 'Dancing Script'; font-size: 22px; color: #333; line-height: 1.8;">
+                        </div>
+                        <p class="letter-line signature" style="text-align: right; font-family: 'Dancing Script'; font-size: 28px; color: #cc0033; margin-top: 40px; font-weight:bold;">Forever Yours ❤️</p>
                     </div>
-                    <p style="text-align: right; font-family: 'Dancing Script'; font-size: 26px; color: #cc0033; margin-top: 30px; font-weight:bold;">Forever Yours ❤️</p>
                 </div>
             </div>
+
 
             <div style="padding: 40px 20px; text-align:center;">
                 <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Our Memories</h3>
@@ -171,28 +173,29 @@ const AppComponents = {
                 </div>
             </div>
 
-            <div id="proposal" class="clean-section" style="padding: 40px 20px; text-align: center; margin-top: 40px;">
+                        <div id="proposal" class="clean-section" style="padding: 40px 20px; text-align: center; margin-top: 40px;">
                 <div id="proposal-state">
-                    <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #ff4d79; margin-bottom: 25px;">Will you be my Valentine? <span style="font-size:2.5rem;">🌹</span></h2>
+                    <h2 class="script-heading" style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #ff4d79; margin-bottom: 25px;">Will you be my Valentine? <span style="font-size:2.5rem;">🌹</span></h2>
                     
-                    <div id="question-gif-card" style="display:none; background: #ffffff; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(255, 77, 121, 0.1); margin-bottom: 30px;">
-                        <img src="" id="proposal-gif" style="width: 200px; border-radius: 12px;">
+                    <div class="gif-card hidden-gif" id="question-gif-card" style="display:none; background: #ffffff; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(255, 77, 121, 0.1); margin-bottom: 30px;">
+                        <img src="" alt="Reaction Bear" class="main-gif" id="proposal-gif" style="width: 280px; height: 280px; object-fit: contain; border-radius: 12px;">
                     </div>
 
-                    <div style="display: flex; gap: 15px; justify-content: center; align-items: center; margin-top: 20px; position: relative; height: 70px;">
+                    <div class="proposal-buttons" style="display: flex; gap: 20px; justify-content: center; align-items: center; position: relative; height: 70px;">
                         <button class="btn-no" id="btn-no" style="background: #9ca3af; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; position: absolute; left: 20%; z-index: 10;">No 🥺</button>
                         <button class="btn-yes" id="btn-yes" onclick="acceptProposal(event)" style="background: #d81b60; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; box-shadow: 0 8px 20px rgba(216, 27, 96, 0.3); position: absolute; right: 20%; z-index: 5;">Yes! 💖</button>
                     </div>
                 </div>
 
                 <div id="success-state" style="display:none;">
-                    <h2 style="font-family: 'Dancing Script'; font-size: 4.5rem; color: #ff3366; margin-bottom: 10px;">✨ Yayyyyyy! ✨</h2>
-                    <p style="font-family: 'Poppins'; color: #333; font-size: 1.2rem; margin-bottom: 30px;">"I knew you'd say yes! I love you! 💖"</p>
-                    <div style="background: #ffffff; border-radius: 16px; padding: 20px; border: 2px solid #ff1a53; box-shadow: 0 15px 40px rgba(255, 26, 83, 0.2); display: inline-block;">
-                        <img src="https://media.tenor.com/T0bSg1H9b4MAAAAj/cute-bear.gif" style="width: 200px; border-radius: 12px;">
+                    <h2 class="script-heading accent-pink" style="font-family: 'Dancing Script'; font-size: 4.5rem; color: #ff3366; margin-bottom: 10px;">✨ Yayyyyyy! ✨</h2>
+                    <p class="success-subtext" style="font-family: 'Poppins'; color: #333; font-size: 1.2rem; margin-bottom: 30px;">"I knew you'd say yes! I love you! 💖"</p>
+                    <div class="gif-card success-card" style="background: #ffffff; border-radius: 16px; padding: 20px; border: 2px solid #ff1a53; box-shadow: 0 15px 40px rgba(255, 26, 83, 0.2); display: inline-block;">
+                        <img src="https://media.tenor.com/T0bSg1H9b4MAAAAj/cute-bear.gif" alt="Happy Bears" class="main-gif" style="width: 280px; height: 280px; object-fit: contain; border-radius: 12px;">
                     </div>
                 </div>
             </div>
+
 
             <div id="final-surprise" class="clean-section" style="padding: 60px 20px; text-align: center; padding-bottom: 150px; border-top: 2px dashed #ffe6ea;">
                 <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #4a1525; margin-bottom: 10px;">One Last Surprise...</h2>
@@ -285,14 +288,14 @@ const AppComponents = {
     // ------------------------------------------
     // 5. THE FOOTER COMPONENT
     // ------------------------------------------
-    getFooterHTML: function() {
+        getFooterHTML: function() {
         return `
-        <div id="music-toggle-btn" class="pill-music-player" style="position: fixed; bottom: 85px; left: 15px; background: white; border-radius: 50px; padding: 6px 15px 6px 6px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 1000; transition: transform 0.3s;">
-            <div id="music-icon-bg" style="width: 35px; height: 35px; background: white; border: 2px solid #cc0033; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #cc0033; transition: 0.3s;">
-                <i class="fa-solid fa-music" id="music-icon"></i>
+        <div id="music-toggle-btn" class="pill-music-player" onclick="window.toggleMusic()" style="position: fixed; bottom: 85px; left: 15px; background: white; border-radius: 50px; padding: 6px 15px 6px 6px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 1000; transition: transform 0.3s;">
+            <div id="music-icon-bg" style="width: 35px; height: 35px; background: #2b1b1b; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s;">
+                <i class="fa-solid fa-play" id="music-icon" style="color: white; font-size: 0.9rem; margin-left: 2px;"></i>
             </div>
             <div style="display: flex; flex-direction: column;">
-                <span style="font-family: 'Poppins'; font-weight: 700; font-size: 11px; color: #333; line-height: 1.2;">Love Song</span>
+                <span style="font-family: 'Poppins'; font-weight: 700; font-size: 11px; color: #2b1b1b; line-height: 1.2;">Love Song</span>
                 <span id="music-status-text" style="font-family: 'Poppins'; font-size: 9px; color: #888;">Tap to play</span>
             </div>
         </div>
@@ -313,6 +316,11 @@ const AppComponents = {
                 <span style="font-size:10px; font-weight:600;">Chat</span>
             </button>
         </div>
+
+        <audio id="bg-music" loop>
+            <source src="gift.mp3" type="audio/mpeg">
+        </audio>
+
+        <canvas id="confetti-canvas" aria-hidden="true" style="display:none; position:fixed; top:0; left:0; pointer-events:none; z-index:99999;"></canvas>
         `;
     }
-};
