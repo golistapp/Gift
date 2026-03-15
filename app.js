@@ -1,22 +1,33 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const memoryId = urlParams.get('id');
-    const mode = urlParams.get('mode'); // Check if Admin is previewing
+    const mode = urlParams.get('mode'); // Admin preview check
 
     if (!memoryId) {
         alert("Invalid Link! QR code me memory ID nahi hai.");
         return;
     }
 
-    const keys = document.querySelectorAll('.key[data-number]');
-    const clearBtn = document.querySelector('.clear-btn');
-    const dots = document.querySelectorAll('.dot');
-    const unlockBtn = document.getElementById('unlock-btn');
-    
+    // --- 1. INITIALIZE COMPONENTS ---
+    const vaultContainer = document.getElementById('vault-container');
+    const surpriseContainer = document.getElementById('surprise-container');
+    const chatContainer = document.getElementById('chat-container');
+    const footerContainer = document.getElementById('footer-container');
+
+    // UI inject karna components.js se
+    vaultContainer.innerHTML = AppComponents.getVaultHTML();
+    surpriseContainer.innerHTML = AppComponents.getSurpriseHTML();
+    chatContainer.innerHTML = AppComponents.getChatHTML();
+    footerContainer.innerHTML = AppComponents.getFooterHTML();
+
+    // Vault Tap Sound & Heart Magic activate karna
+    AppComponents.attachVaultMagic();
+
+    // --- 2. GLOBAL VARIABLES ---
+    let memoryData = null;
+    let userPasscode = ""; // Encryption Key banegi aage chalkar
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
-    let memoryData = null;
-    let userPasscode = ""; // Ise hum Encryption Key banayenge
 
     const musicTracks = {
         "romantic-piano": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -24,7 +35,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         "soft-violin": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
     };
 
-    // --- 1. FETCH DATA ---
+    const bgMusic = document.getElementById('bg-music');
+    let isMusicPlaying = false;
+
+    // --- DOM Elements ---
+    const keys = document.querySelectorAll('.key[data-number]');
+    const clearBtn = document.querySelector('.clear-btn');
+    const dots = document.querySelectorAll('.dot');
+    const unlockBtn = document.getElementById('unlock-btn');
+
+    // --- 3. FETCH DATA ---
     try {
         unlockBtn.innerText = "LOADING...";
         const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
@@ -35,21 +55,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             unlockBtn.innerText = "NOT READY";
             return;
         }
-        
-        // Agar Admin preview mode mein hai, toh direct khol do (No passcode needed)
+
+        // Admin Preview mode bypass
         if(mode === 'admin_preview') {
-            document.getElementById('vault-screen').classList.add('hidden');
-            document.getElementById('main-memory-screen').classList.remove('hidden');
+            vaultContainer.classList.add('hidden');
+            vaultContainer.classList.remove('active-screen');
+            surpriseContainer.classList.remove('hidden');
+            footerContainer.classList.remove('hidden');
             setupMainScreen();
+            setupNavigation();
             return;
         }
 
         unlockBtn.innerText = "UNLOCK GIFT";
+        updateUI();
     } catch (error) {
         console.error(error); alert("Internet connection check karein."); return;
     }
 
-    // --- 2. PASSCODE LOGIC ---
+    // --- 4. PASSCODE LOGIC ---
     function updateUI() {
         dots.forEach((dot, index) => {
             dot.style.background = index < enteredPasscode.length ? '#cc0033' : 'rgba(0,0,0,0.1)';
@@ -70,35 +94,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     unlockBtn.addEventListener('click', async () => {
         if (enteredPasscode === memoryData.passcode) {
-            
-            // Passcode sahi hai, isko variable mein save kar lo Encryption ke liye
-            userPasscode = enteredPasscode; 
+            userPasscode = enteredPasscode; // Save for encryption later
 
-            // FIREBASE TRACKING: Update 'scanned_at' time
+            // FIREBASE TRACKING: Scanned time
             await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scanned_at: new Date().toISOString() })
             });
 
-            document.getElementById('vault-screen').classList.add('hidden');
-            document.getElementById('main-memory-screen').classList.remove('hidden');
+            // Hide Vault, Show Surprise & Footer
+            vaultContainer.classList.add('hidden');
+            vaultContainer.classList.remove('active-screen');
+            surpriseContainer.classList.remove('hidden');
+            footerContainer.classList.remove('hidden');
+            
             setupMainScreen();
+            setupNavigation();
         } else {
             dots.forEach(dot => dot.style.background = 'red');
             setTimeout(() => { enteredPasscode = ""; updateUI(); }, 500);
         }
     });
 
-    // --- 3. INJECT DATA ---
+    // --- 5. INJECT DATA TO UI ---
     function setupMainScreen() {
         document.getElementById('dynamic-gf-name').innerText = memoryData.girlfriend_name || "My Love";
         document.getElementById('dynamic-letter-text').innerText = memoryData.message_text;
         
-        const bgMusic = document.getElementById('bg-music');
         bgMusic.src = musicTracks[memoryData.music_id] || musicTracks["romantic-piano"];
         bgMusic.volume = 0.5;
 
         const polaroidContainer = document.getElementById('polaroid-container');
+        polaroidContainer.innerHTML = '';
         for(let i = 1; i <= 5; i++) {
             if(memoryData[`image_${i}_url`]) {
                 polaroidContainer.innerHTML += `
@@ -111,67 +138,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 4. ENVELOPE OPEN ---
-    document.getElementById('envelope-section').addEventListener('click', function() {
-        this.classList.add('hidden');
-        document.getElementById('letter-section').classList.remove('hidden');
-        document.getElementById('gallery-section').classList.remove('hidden');
-        document.getElementById('proposal-section').classList.remove('hidden');
-        document.getElementById('bg-music').play().catch(e => console.log("Music blocked by browser", e));
-    });
+    // --- 6. ENVELOPE OPEN LOGIC ---
+    const envelopeSection = document.getElementById('envelope-section');
+    const hiddenSurpriseContent = document.getElementById('hidden-surprise-content');
+    
+    if(envelopeSection) {
+        envelopeSection.addEventListener('click', function() {
+            this.classList.add('hidden'); // Hide envelope
+            hiddenSurpriseContent.classList.remove('hidden'); // Show gallery & letter
+            toggleMusic(true); // Auto play music on open
+        });
+    }
 
-    // --- 5. RUNAWAY NO & YES LOGIC ---
-    const btnNo = document.getElementById('btn-no');
-    const btnYes = document.getElementById('btn-yes');
-
-    const evadeCursor = () => {
-        const x = Math.random() * 150 - 75; const y = Math.random() * 100 - 50;
-        btnNo.style.transform = `translate(${x}px, ${y}px)`;
-    };
-    btnNo.addEventListener('mouseover', evadeCursor);
-    btnNo.addEventListener('touchstart', (e) => { e.preventDefault(); evadeCursor(); });
-
-    btnYes.addEventListener('click', async () => {
-        alert("Yayyy! I knew you'd say YES! ❤️");
-        btnNo.style.display = 'none';
-        btnYes.innerText = "FOREVER MINE! 💖";
-        btnYes.style.transform = "scale(1.1)";
-        
-        if(mode !== 'admin_preview') {
-            // FIREBASE TRACKING: Proposal Time (Only if not admin)
-            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ proposal_accepted_at: new Date().toISOString() })
-            });
+    // --- 7. BOTTOM NAVIGATION & MUSIC TOGGLE LOGIC ---
+    function toggleMusic(forcePlay = false) {
+        const musicBtn = document.getElementById('music-toggle-btn');
+        if (isMusicPlaying && !forcePlay) {
+            bgMusic.pause();
+            isMusicPlaying = false;
+            musicBtn.style.background = 'white';
+            musicBtn.style.color = '#cc0033';
+        } else {
+            bgMusic.play().catch(e => console.log("Browser blocked music autoplay", e));
+            isMusicPlaying = true;
+            musicBtn.style.background = '#cc0033';
+            musicBtn.style.color = 'white';
         }
-    });
+    }
 
-    // --- 6. SECURE LIVE MESSAGE TO BOYFRIEND (ENCRYPTION) ---
-    document.getElementById('send-msg-btn').addEventListener('click', async () => {
-        const msg = document.getElementById('live-msg-input').value;
-        if (!msg) return alert("Please write a message first!");
-        
-        if (mode === 'admin_preview') {
-            return alert("You are in Admin Preview mode. Messages cannot be sent.");
-        }
+    function setupNavigation() {
+        const btnSurprise = document.getElementById('nav-surprise');
+        const btnChat = document.getElementById('nav-chat');
+        const musicBtn = document.getElementById('music-toggle-btn');
 
-        const btn = document.getElementById('send-msg-btn');
-        btn.innerText = "Encrypting & Sending..."; btn.disabled = true;
+        // Music Button click handler
+        musicBtn.addEventListener('click', () => toggleMusic());
 
-        try {
-            // 🔴 ENCRYPTION MAGIC: Message ko Passcode se lock karo
-            const encryptedMessage = CryptoJS.AES.encrypt(msg, userPasscode).toString();
-
-            // Sirf encrypted kachra text Firebase jayega
-            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ girlfriend_message: encryptedMessage })
-            });
+        // Surprise Tab Click
+        btnSurprise.addEventListener('click', () => {
+            surpriseContainer.classList.remove('hidden');
+            chatContainer.classList.add('hidden');
             
-            btn.innerHTML = 'Secret Message Sent! <i class="fa-solid fa-lock"></i>';
-            btn.style.background = "#10b981"; // Green color
-        } catch(e) {
-            btn.innerText = "Error sending!"; btn.disabled = false;
-        }
-    });
+            btnSurprise.style.color = '#cc0033'; // Active color
+            btnChat.style.color = '#888';        // Inactive color
+        });
+
+        // Chat Tab Click
+        btnChat.addEventListener('click', () => {
+            chatContainer.classList.remove('hidden');
+            surpriseContainer.classList.add('hidden');
+            
+            btnChat.style.color = '#cc0033';     // Active color
+            btnSurprise.style.color = '#888';    // Inactive color
+        });
+    }
+
+    // ==========================================
+    // CHAT SYSTEM LOGIC WILL COME IN STEP 2
+    // ==========================================
 });
