@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const memoryId = urlParams.get('id');
+    const mode = urlParams.get('mode'); // Check if Admin is previewing
 
     if (!memoryId) {
         alert("Invalid Link! QR code me memory ID nahi hai.");
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
     let memoryData = null;
+    let userPasscode = ""; // Ise hum Encryption Key banayenge
 
     const musicTracks = {
         "romantic-piano": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -33,6 +35,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             unlockBtn.innerText = "NOT READY";
             return;
         }
+        
+        // Agar Admin preview mode mein hai, toh direct khol do (No passcode needed)
+        if(mode === 'admin_preview') {
+            document.getElementById('vault-screen').classList.add('hidden');
+            document.getElementById('main-memory-screen').classList.remove('hidden');
+            setupMainScreen();
+            return;
+        }
+
         unlockBtn.innerText = "UNLOCK GIFT";
     } catch (error) {
         console.error(error); alert("Internet connection check karein."); return;
@@ -59,6 +70,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     unlockBtn.addEventListener('click', async () => {
         if (enteredPasscode === memoryData.passcode) {
+            
+            // Passcode sahi hai, isko variable mein save kar lo Encryption ke liye
+            userPasscode = enteredPasscode; 
+
             // FIREBASE TRACKING: Update 'scanned_at' time
             await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -102,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('letter-section').classList.remove('hidden');
         document.getElementById('gallery-section').classList.remove('hidden');
         document.getElementById('proposal-section').classList.remove('hidden');
-        document.getElementById('bg-music').play();
+        document.getElementById('bg-music').play().catch(e => console.log("Music blocked by browser", e));
     });
 
     // --- 5. RUNAWAY NO & YES LOGIC ---
@@ -122,28 +137,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnYes.innerText = "FOREVER MINE! 💖";
         btnYes.style.transform = "scale(1.1)";
         
-        // FIREBASE TRACKING: Proposal Time
-        await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ proposal_accepted_at: new Date().toISOString() })
-        });
+        if(mode !== 'admin_preview') {
+            // FIREBASE TRACKING: Proposal Time (Only if not admin)
+            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ proposal_accepted_at: new Date().toISOString() })
+            });
+        }
     });
 
-    // --- 6. LIVE MESSAGE TO BOYFRIEND ---
+    // --- 6. SECURE LIVE MESSAGE TO BOYFRIEND (ENCRYPTION) ---
     document.getElementById('send-msg-btn').addEventListener('click', async () => {
         const msg = document.getElementById('live-msg-input').value;
         if (!msg) return alert("Please write a message first!");
         
+        if (mode === 'admin_preview') {
+            return alert("You are in Admin Preview mode. Messages cannot be sent.");
+        }
+
         const btn = document.getElementById('send-msg-btn');
-        btn.innerText = "Sending..."; btn.disabled = true;
+        btn.innerText = "Encrypting & Sending..."; btn.disabled = true;
 
         try {
+            // 🔴 ENCRYPTION MAGIC: Message ko Passcode se lock karo
+            const encryptedMessage = CryptoJS.AES.encrypt(msg, userPasscode).toString();
+
+            // Sirf encrypted kachra text Firebase jayega
             await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ girlfriend_message: msg })
+                body: JSON.stringify({ girlfriend_message: encryptedMessage })
             });
-            btn.innerText = "Message Sent! ❤️";
-            btn.style.background = "#27ae60";
+            
+            btn.innerHTML = 'Secret Message Sent! <i class="fa-solid fa-lock"></i>';
+            btn.style.background = "#10b981"; // Green color
         } catch(e) {
             btn.innerText = "Error sending!"; btn.disabled = false;
         }

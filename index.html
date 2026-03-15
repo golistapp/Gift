@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="global.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="viewer-theme">
 
@@ -89,9 +91,11 @@
             </div>
             
             <div class="live-reaction-box glass-card" style="margin-top: 60px;">
-                <h4 style="font-size: 16px; color: #cc0033; margin-bottom: 10px;">Send a live reaction to him 💌</h4>
+                <h4 style="font-size: 16px; color: #cc0033; margin-bottom: 5px;">Send a secret reaction to him 💌</h4>
+                <p style="font-size: 11px; color: #666; margin-bottom: 15px;"><i class="fa-solid fa-lock" style="color:#10b981;"></i> End-to-End Encrypted. Only he can read this.</p>
+                
                 <textarea id="live-msg-input" class="reaction-input" rows="3" placeholder="I loved it! Thank you so much..."></textarea>
-                <button id="send-msg-btn" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: #cc0033; color: white; font-weight: bold; cursor: pointer;">Send Reaction <i class="fa-solid fa-paper-plane"></i></button>
+                <button id="send-msg-btn" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: #cc0033; color: white; font-weight: bold; cursor: pointer;">Send Secret Message <i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
