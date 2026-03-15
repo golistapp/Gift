@@ -111,16 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('form-link').value = formUrl;
             document.getElementById('view-link').value = viewUrl;
 
-            // 🔴 PRO QR CODE GENERATION (Red Color + High Correction)
+            // Generate Basic QR in DOM (We will stylize it on download)
             const qrcodeContainer = document.getElementById('qrcode-container');
             qrcodeContainer.innerHTML = ''; 
             new QRCode(qrcodeContainer, { 
                 text: viewUrl, 
                 width: 250, 
                 height: 250,
-                colorDark : "#cc0033", // Deep Red
-                colorLight : "#ffffff", // White
-                correctLevel : QRCode.CorrectLevel.H // High Error Correction (easy scan)
+                colorDark : "#cc0033", 
+                colorLight : "#ffffff", 
+                correctLevel : QRCode.CorrectLevel.H 
             });
 
             document.getElementById('result-section').classList.remove('hidden');
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 4. ADVANCED DOWNLOAD QR CODE LOGIC (WITH PADDING & TEXT) ---
+    // --- 4. ADVANCED DOWNLOAD QR LOGIC (CENTER HEART & TEXT) ---
     downloadQrBtn.addEventListener('click', () => {
         const qrcodeContainer = document.getElementById('qrcode-container');
         createProQRCanvasAndDownload(qrcodeContainer, document.getElementById('display-id').innerText);
@@ -155,10 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setTimeout(() => {
             createProQRCanvasAndDownload(hiddenContainer, id);
-        }, 400); // Give it time to render in background
+        }, 400); 
     }
 
-    // Yeh function Canvas banakar QR ko Padding + Text deta hai
     function createProQRCanvasAndDownload(container, id) {
         const qrCanvas = container.querySelector('canvas');
         const qrImg = container.querySelector('img');
@@ -172,33 +171,46 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Please wait, QR code is generating..."); return;
         }
 
-        // Naya Premium Canvas Banayenge
         const finalCanvas = document.createElement('canvas');
         const ctx = finalCanvas.getContext('2d');
         
         const qrSize = 300;
-        const padding = 50; // White border space
+        const padding = 50; 
         
         finalCanvas.width = qrSize + (padding * 2);
-        finalCanvas.height = qrSize + (padding * 2) + 60; // Extra 60px for text at bottom
+        finalCanvas.height = qrSize + (padding * 2) + 60; 
         
-        // Background White Fill
+        // 1. Fill White Background
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
-        // Scan Me ❤️ Text Draw
-        ctx.fillStyle = "#cc0033";
-        ctx.font = "bold 26px 'Poppins', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Scan Me ❤️", finalCanvas.width / 2, finalCanvas.height - 30);
-
-        // Load QR Image and Draw it on canvas
         const img = new Image();
         img.crossOrigin = "Anonymous";
         img.onload = () => {
+            // 2. Draw QR Code
             ctx.drawImage(img, padding, padding, qrSize, qrSize);
             
-            // Download the final edited Canvas
+            // 3. Draw Center White Circle (To hide center QR pixels)
+            const centerX = finalCanvas.width / 2;
+            const centerY = padding + (qrSize / 2);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            
+            // 4. Draw ❤️ in the center
+            ctx.font = "40px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("❤️", centerX, centerY + 2); // Small offset for optical alignment
+            
+            // 5. Draw "Scan Me 👉 🔗" Text at bottom
+            ctx.fillStyle = "#cc0033";
+            ctx.font = "bold 26px 'Poppins', sans-serif";
+            ctx.textBaseline = "alphabetic";
+            ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
+            
+            // 6. Download the final magical QR Canvas
             const link = document.createElement('a');
             link.download = `Premium_MemoryGift_QR_${id}.png`;
             link.href = finalCanvas.toDataURL("image/png");
