@@ -14,20 +14,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatContainer = document.getElementById('chat-container');
     const footerContainer = document.getElementById('footer-container');
 
-    // UI inject karna components.js se
     vaultContainer.innerHTML = AppComponents.getVaultHTML();
     surpriseContainer.innerHTML = AppComponents.getSurpriseHTML();
     chatContainer.innerHTML = AppComponents.getChatHTML();
     footerContainer.innerHTML = AppComponents.getFooterHTML();
 
-    // Vault Tap Sound & Heart Magic activate karna
     AppComponents.attachVaultMagic();
 
     // --- 2. GLOBAL VARIABLES ---
     let memoryData = null;
-    let userPasscode = ""; // Encryption Key banegi aage chalkar
+    let userPasscode = ""; // Encryption Key
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
+    let chatInterval = null; // Auto-refresh ke liye
 
     const musicTracks = {
         "romantic-piano": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -38,7 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const bgMusic = document.getElementById('bg-music');
     let isMusicPlaying = false;
 
-    // --- DOM Elements ---
     const keys = document.querySelectorAll('.key[data-number]');
     const clearBtn = document.querySelector('.clear-btn');
     const dots = document.querySelectorAll('.dot');
@@ -56,7 +54,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Admin Preview mode bypass
         if(mode === 'admin_preview') {
             vaultContainer.classList.add('hidden');
             vaultContainer.classList.remove('active-screen');
@@ -64,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             footerContainer.classList.remove('hidden');
             setupMainScreen();
             setupNavigation();
+            startChatSystem(); // Start polling chat
             return;
         }
 
@@ -94,15 +92,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     unlockBtn.addEventListener('click', async () => {
         if (enteredPasscode === memoryData.passcode) {
-            userPasscode = enteredPasscode; // Save for encryption later
+            userPasscode = enteredPasscode;
 
-            // FIREBASE TRACKING: Scanned time
             await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scanned_at: new Date().toISOString() })
             });
 
-            // Hide Vault, Show Surprise & Footer
             vaultContainer.classList.add('hidden');
             vaultContainer.classList.remove('active-screen');
             surpriseContainer.classList.remove('hidden');
@@ -110,13 +106,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             setupMainScreen();
             setupNavigation();
+            startChatSystem(); // 🔴 CHAT START (After successful unlock)
         } else {
             dots.forEach(dot => dot.style.background = 'red');
             setTimeout(() => { enteredPasscode = ""; updateUI(); }, 500);
         }
     });
 
-    // --- 5. INJECT DATA TO UI ---
+    // --- 5. INJECT DATA ---
     function setupMainScreen() {
         document.getElementById('dynamic-gf-name').innerText = memoryData.girlfriend_name || "My Love";
         document.getElementById('dynamic-letter-text').innerText = memoryData.message_text;
@@ -138,19 +135,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 6. ENVELOPE OPEN LOGIC ---
     const envelopeSection = document.getElementById('envelope-section');
     const hiddenSurpriseContent = document.getElementById('hidden-surprise-content');
     
     if(envelopeSection) {
         envelopeSection.addEventListener('click', function() {
-            this.classList.add('hidden'); // Hide envelope
-            hiddenSurpriseContent.classList.remove('hidden'); // Show gallery & letter
-            toggleMusic(true); // Auto play music on open
+            this.classList.add('hidden'); 
+            hiddenSurpriseContent.classList.remove('hidden'); 
+            toggleMusic(true); 
         });
     }
 
-    // --- 7. BOTTOM NAVIGATION & MUSIC TOGGLE LOGIC ---
     function toggleMusic(forcePlay = false) {
         const musicBtn = document.getElementById('music-toggle-btn');
         if (isMusicPlaying && !forcePlay) {
@@ -159,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             musicBtn.style.background = 'white';
             musicBtn.style.color = '#cc0033';
         } else {
-            bgMusic.play().catch(e => console.log("Browser blocked music autoplay", e));
+            bgMusic.play().catch(e => console.log("Blocked by browser", e));
             isMusicPlaying = true;
             musicBtn.style.background = '#cc0033';
             musicBtn.style.color = 'white';
@@ -171,29 +166,146 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnChat = document.getElementById('nav-chat');
         const musicBtn = document.getElementById('music-toggle-btn');
 
-        // Music Button click handler
         musicBtn.addEventListener('click', () => toggleMusic());
 
-        // Surprise Tab Click
         btnSurprise.addEventListener('click', () => {
             surpriseContainer.classList.remove('hidden');
             chatContainer.classList.add('hidden');
-            
-            btnSurprise.style.color = '#cc0033'; // Active color
-            btnChat.style.color = '#888';        // Inactive color
+            btnSurprise.style.color = '#cc0033'; 
+            btnChat.style.color = '#888';        
         });
 
-        // Chat Tab Click
         btnChat.addEventListener('click', () => {
             chatContainer.classList.remove('hidden');
             surpriseContainer.classList.add('hidden');
-            
-            btnChat.style.color = '#cc0033';     // Active color
-            btnSurprise.style.color = '#888';    // Inactive color
+            btnChat.style.color = '#cc0033';     
+            btnSurprise.style.color = '#888';    
+            renderChatUI(); // Scroll down when opened
         });
     }
 
     // ==========================================
-    // CHAT SYSTEM LOGIC WILL COME IN STEP 2
+    // 🔴 STEP 2: CHAT SYSTEM LOGIC
     // ==========================================
+
+    function startChatSystem() {
+        fetchChatData(); // First load
+        // Har 5 second me auto-refresh taaki BF ka naya message dikhe
+        chatInterval = setInterval(fetchChatData, 5000); 
+    }
+
+    async function fetchChatData() {
+        try {
+            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
+            const data = await res.json();
+            if(data) {
+                memoryData = data;
+                renderChatUI();
+            }
+        } catch(e) { console.log("Silent error in polling."); }
+    }
+
+    function renderChatUI() {
+        const count = memoryData.message_count || 0;
+        document.getElementById('msg-count-display').innerText = `Messages: ${count} / 100`;
+
+        const chatArea = document.getElementById('chat-messages-area');
+        const chatList = memoryData.chat || [];
+        
+        chatArea.innerHTML = '';
+
+        if(chatList.length === 0) {
+            chatArea.innerHTML = '<p style="text-align:center; color:#888; font-size:13px; margin-top:50px;">Send a message to start the conversation...</p>';
+            return;
+        }
+
+        chatList.forEach(msgObj => {
+            let decryptedText = "";
+            try {
+                // Passcode na hone par (Admin Preview), decryption fail hoga
+                const bytes = CryptoJS.AES.decrypt(msgObj.text, userPasscode);
+                decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+            } catch(e) { decryptedText = ""; }
+            
+            // Security check
+            if(!decryptedText || mode === 'admin_preview') {
+                decryptedText = "<i>🔒 Encrypted Message</i>";
+            }
+
+            // GF messages: Pink & Right | BF messages: White & Left
+            const isGf = msgObj.sender === 'gf';
+            const align = isGf ? 'flex-end' : 'flex-start';
+            const bg = isGf ? '#cc0033' : '#fff';
+            const color = isGf ? '#fff' : '#333';
+            const radius = isGf ? '15px 15px 0 15px' : '15px 15px 15px 0';
+            const shadow = isGf ? '0 4px 10px rgba(204,0,51,0.2)' : '0 4px 10px rgba(0,0,0,0.05)';
+
+            chatArea.innerHTML += `
+                <div style="align-self: ${align}; background: ${bg}; color: ${color}; padding: 10px 15px; border-radius: ${radius}; max-width: 80%; font-size: 14px; box-shadow: ${shadow}; border: 1px solid #fce4ec;">
+                    ${decryptedText}
+                </div>
+            `;
+        });
+        
+        // Auto scroll to latest message
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // Send Message Button Event
+    document.getElementById('send-msg-btn').addEventListener('click', async () => {
+        const inputEl = document.getElementById('live-msg-input');
+        const msgText = inputEl.value.trim();
+        
+        if(!msgText) return;
+        if(mode === 'admin_preview') return alert("Admin cannot send messages.");
+
+        let currentCount = memoryData.message_count || 0;
+        if(currentCount >= 100) return alert("Message limit reached (100/100).");
+
+        const btn = document.getElementById('send-msg-btn');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        try {
+            // Fresh fetch to avoid collision
+            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
+            const latestData = await res.json();
+            
+            let chatList = latestData.chat || [];
+            let newCount = (latestData.message_count || 0) + 1;
+            
+            if(newCount > 100) throw new Error("Limit Reached");
+
+            // Encrypt using Passcode
+            const encryptedMsg = CryptoJS.AES.encrypt(msgText, userPasscode).toString();
+            
+            // Add to array
+            chatList.push({
+                sender: 'gf', // Sender GF hai
+                text: encryptedMsg,
+                timestamp: new Date().toISOString()
+            });
+
+            // Auto-delete mechanism (Keep only last 5)
+            if(chatList.length > 5) {
+                chatList = chatList.slice(chatList.length - 5);
+            }
+
+            // Save to DB
+            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat: chatList, message_count: newCount })
+            });
+
+            inputEl.value = '';
+            await fetchChatData(); // UI Refresh
+        } catch(e) {
+            alert(e.message === "Limit Reached" ? "100 Messages Limit Reached!" : "Error sending message.");
+        }
+        
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+        btn.disabled = false;
+    });
+
 });
