@@ -10,13 +10,13 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const generateForm = document.getElementById('generate-form');
-    const generateBtn = document.getElementById('generate-btn');    
-
+    const generateBtn = document.getElementById('generate-btn');
+    const downloadQrBtn = document.getElementById('download-qr-btn'); 
+    
     // Yahan tumhara exact GitHub Pages ka base link aayega
     let baseUrl = "https://golistapp.github.io/Gift"; 
 
-
-// --- 2. LOAD DASHBOARD DATA (LIVE ANALYTICS & TABLE) ---
+    // --- 2. LOAD DASHBOARD DATA (LIVE ANALYTICS & TABLE) ---
     async function loadDashboardData() {
         const tbody = document.getElementById('orders-tbody');
         try {
@@ -42,17 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `<span class="badge badge-locked">Locked (Ready)</span>` 
                     : `<span class="badge badge-empty">Pending</span>`;
 
-                // 🔴 Updated Form Link Structure
                 const formLink = `${baseUrl}/form/form.html?id=${id}`;
+                const viewLink = `${baseUrl}/?id=${id}`;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${id}</strong><br><small style="color:#64748b">${memory.customer_name}</small></td>
                     <td>${statusBadge}</td>
-                    <td>
+                    <td style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button class="action-btn" style="color: #3b82f6;" title="Copy Form Link" onclick="copyToClipboard('${formLink}')"><i class="fa-solid fa-link"></i></button>
-                        <button class="action-btn" style="color: #8b5cf6;" title="Edit/View Form" onclick="window.open('${formLink}', '_blank')"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="action-btn" style="color: #f59e0b;" title="Reset Memory" onclick="resetMemory('${id}')"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button class="action-btn" style="color: #8b5cf6;" title="Admin Edit (Bypass Passcode)" onclick="window.open('${formLink}&mode=admin_edit', '_blank')"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="action-btn" style="color: #10b981;" title="Admin Preview (No Time Tracking)" onclick="window.open('${viewLink}&mode=admin_preview', '_blank')"><i class="fa-solid fa-eye"></i></button>
+                        
+                        <button class="action-btn" style="color: #ec4899;" title="Download QR Code" onclick="downloadTableQR('${viewLink}', '${id}')"><i class="fa-solid fa-qrcode"></i></button>
+                        
+                        <button class="action-btn" style="color: #f59e0b;" title="Advanced Reset" onclick="openResetModal('${id}')"><i class="fa-solid fa-rotate-right"></i></button>
                         <button class="action-btn" style="color: #ef4444;" title="Delete Forever" onclick="deleteMemory('${id}')"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
@@ -100,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(initialData)
             });
 
-            // 🔴 Naye paths root SPA structure ke hisaab se
             const formUrl = `${baseUrl}/form/form.html?id=${memoryId}`;
             const viewUrl = `${baseUrl}/?id=${memoryId}`; 
 
@@ -110,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const qrcodeContainer = document.getElementById('qrcode-container');
             qrcodeContainer.innerHTML = ''; 
-            new QRCode(qrcodeContainer, { text: viewUrl, width: 130, height: 130 });
+            new QRCode(qrcodeContainer, { text: viewUrl, width: 200, height: 200 });
 
             document.getElementById('result-section').classList.remove('hidden');
             loadDashboardData();
@@ -124,37 +127,106 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Copy Links Logic
-    document.querySelectorAll('.copy-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const inputEl = document.getElementById(btn.getAttribute('data-target'));
-            copyToClipboard(inputEl.value);
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-            setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
+    // --- 4. DOWNLOAD QR CODE LOGIC (MAIN & TABLE) ---
+    downloadQrBtn.addEventListener('click', () => {
+        const qrcodeContainer = document.getElementById('qrcode-container');
+        downloadCanvasAsImage(qrcodeContainer, document.getElementById('display-id').innerText);
+    });
+
+    window.downloadTableQR = (url, id) => {
+        const hiddenContainer = document.getElementById('hidden-qr-container');
+        hiddenContainer.innerHTML = ''; 
+        new QRCode(hiddenContainer, { text: url, width: 300, height: 300 });
+        
+        // Wait for 300ms for QR to render in background
+        setTimeout(() => {
+            downloadCanvasAsImage(hiddenContainer, id);
+        }, 300);
+    }
+
+    function downloadCanvasAsImage(container, id) {
+        const canvas = container.querySelector('canvas');
+        const img = container.querySelector('img');
+        let dataUrl = '';
+        if (img && img.src && img.src.startsWith('data:image')) {
+            dataUrl = img.src;
+        } else if (canvas) {
+            dataUrl = canvas.toDataURL("image/png");
+        } else {
+            alert("Please wait, QR code is generating..."); return;
+        }
+
+        const link = document.createElement('a');
+        link.download = `MemoryGift_QR_${id}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // --- 5. ADVANCED RESET SYSTEM LOGIC ---
+    let currentResetId = null;
+    const resetModal = document.getElementById('reset-modal');
+    
+    window.openResetModal = (id) => {
+        currentResetId = id;
+        document.getElementById('reset-memory-id').innerText = id;
+        resetModal.classList.remove('hidden');
+    }
+
+    document.getElementById('close-reset-modal').addEventListener('click', () => {
+        resetModal.classList.add('hidden');
+        currentResetId = null;
+    });
+
+    // Option 1: Full Reset
+    document.getElementById('btn-reset-full').addEventListener('click', async () => {
+        if(!confirm("Are you sure? This will delete ALL photos, text, and passwords.")) return;
+        await resetData({
+            status: "empty", passcode: null, music_id: null, message_text: null, girlfriend_name: null,
+            open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null,
+            girlfriend_message: null, locked_at: null, scanned_at: null, proposal_accepted_at: null,
+            image_1_url: null, caption_1: null, image_2_url: null, caption_2: null,
+            image_3_url: null, caption_3: null, image_4_url: null, caption_4: null,
+            image_5_url: null, caption_5: null
         });
     });
-    
-    window.copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
-        alert("Link Copied!");
+
+    // Option 2: Reset Text Only
+    document.getElementById('btn-reset-text').addEventListener('click', async () => {
+        if(!confirm("Are you sure? This will delete all TEXT and Passcode. Photos will remain safe.")) return;
+        await resetData({
+            status: "empty", passcode: null, message_text: null, girlfriend_name: null,
+            open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null,
+            girlfriend_message: null, locked_at: null, scanned_at: null, proposal_accepted_at: null
+        });
+    });
+
+    // Option 3: Reset Images Only
+    document.getElementById('btn-reset-images').addEventListener('click', async () => {
+        if(!confirm("Are you sure? This will delete all 5 PHOTOS. Text and Passcode will remain safe.")) return;
+        await resetData({
+            status: "empty", locked_at: null, scanned_at: null, proposal_accepted_at: null,
+            image_1_url: null, caption_1: null, image_2_url: null, caption_2: null,
+            image_3_url: null, caption_3: null, image_4_url: null, caption_4: null,
+            image_5_url: null, caption_5: null
+        });
+    });
+
+    async function resetData(payload) {
+        try {
+            await fetch(`${firebaseConfig.databaseURL}/memories/${currentResetId}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            alert("Reset Successful! Status changed to Pending.");
+            resetModal.classList.add('hidden');
+            loadDashboardData();
+        } catch(e) { alert("Error resetting."); }
     }
 
-    // --- 4. RESET MEMORY LOGIC ---
-    window.resetMemory = async (id) => {
-        if(confirm(`Are you sure you want to RESET memory ID: ${id}? Yeh photos aur text mita dega.`)) {
-            try {
-                await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: "empty" })
-                });
-                alert("Memory Reset Successful! Client dobara form bhar sakta hai.");
-                loadDashboardData();
-            } catch(e) { alert("Error resetting."); }
-        }
-    }
-
-    // --- 5. DELETE MEMORY LOGIC ---
+    // --- 6. DELETE LOGIC ---
     window.deleteMemory = async (id) => {
         if(confirm(`DANGER! Kya aap ID: ${id} ko hamesha ke liye delete karna chahte hain?`)) {
             try {
@@ -163,5 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadDashboardData();
             } catch(e) { alert("Error deleting."); }
         }
+    }
+
+    window.copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert("Link Copied!");
     }
 });
