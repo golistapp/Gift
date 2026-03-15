@@ -8,14 +8,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Screens
     const editorScreen = document.getElementById('editor-screen');
     const lockScreen = document.getElementById('lock-screen');
     const dashboardScreen = document.getElementById('dashboard-screen');
     const memoryForm = document.getElementById('memory-form');
     
     let memoryData = null;
-    let userPasscode = ""; // Decryption Key
+    let userPasscode = ""; 
     let dashboardInterval = null;
     const imageInputsData = [];
 
@@ -54,9 +53,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function populateFormForEdit() {
         if(!memoryData) return;
         
+        // NAYA FIELD: Occasion
+        document.getElementById('occasion-select').value = memoryData.occasion || 'Happy Birthday';
+        
         document.getElementById('gf-name').value = memoryData.girlfriend_name || '';
         document.getElementById('passcode-input').value = memoryData.passcode || '';
-        document.getElementById('music-select').value = memoryData.music_id || '';
+        document.getElementById('music-select').value = memoryData.music_id || 'gift';
         document.getElementById('letter-text').value = memoryData.message_text || '';
         document.getElementById('ow-happy').value = memoryData.open_when_happy || '';
         document.getElementById('ow-sad').value = memoryData.open_when_sad || '';
@@ -80,39 +82,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         const errorMsg = document.getElementById('passcode-error');
 
         if (entered === memoryData.passcode) {
-            userPasscode = entered; // Save for Chat Decryption
+            userPasscode = entered; 
             lockScreen.classList.add('hidden');
             dashboardScreen.classList.remove('hidden');
             
-            initDashboardChat(); // Chat UI banayega
-            startDashboardPolling(); // 5s auto-refresh shuru karega
+            initDashboardChat(); 
+            startDashboardPolling(); 
         } else {
             errorMsg.classList.remove('hidden');
         }
     });
 
-    // --- 4. DASHBOARD CHAT SYSTEM (THE MAGIC) ---
+    // --- 4. PRO FULL-SCREEN CHAT SYSTEM ---
     function initDashboardChat() {
-        const liveMessagesDiv = document.querySelector('.live-messages');
+        const chatContainer = document.getElementById('dashboard-chat-container');
         
-        // Dynamic Chat UI Inject karna (Saves HTML editing)
-        liveMessagesDiv.innerHTML = `
-            <h3 style="color: #D81B60; border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px;">
-                <i class="fa-solid fa-comments"></i> Secret Chat Room
-            </h3>
-            <p style="text-align:center; font-size:11px; color:#888; margin-bottom: 10px;"><i class="fa-solid fa-lock" style="color:#10b981;"></i> End-to-End Encrypted</p>
+        chatContainer.innerHTML = `
+            <div id="bf-chat-area" style="flex: 1; background: #e5ddd5; padding: 15px; border-radius: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom:10px; border:1px solid #ccc; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');">
+                </div>
             
-            <div id="bf-chat-area" style="background: #f9f9f9; padding: 15px; border-radius: 10px; height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom:10px; border:1px solid #eee;">
+            <div style="display:flex; gap:10px; background: #f0f0f0; padding: 10px; border-radius: 30px; border: 1px solid #ddd; align-items:center;">
+                <input type="text" id="bf-chat-input" placeholder="Wait for her first message..." style="flex:1; padding:12px 15px; border-radius:20px; border:none; outline:none; font-family:'Poppins'; background:white;" disabled>
+                <button id="bf-send-btn" style="background: #00a884; color:white; border:none; width:45px; height:45px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" disabled><i class="fa-solid fa-paper-plane"></i></button>
             </div>
-            
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="bf-chat-input" placeholder="Wait for her first message..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; outline:none;" disabled>
-                <button id="bf-send-btn" style="background: #D81B60; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer;" disabled><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-            <p id="bf-msg-count" style="text-align:right; font-size:11px; color:#888; margin-top:5px;">Messages: 0 / 100</p>
+            <p id="bf-msg-count" style="text-align:center; font-size:11px; color:#888; margin-top:5px;">Messages: 0 / 100</p>
         `;
 
-        // Send Button Event Listener
         document.getElementById('bf-send-btn').addEventListener('click', sendBfMessage);
         
         renderDashboardUI();
@@ -128,19 +123,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     renderDashboardUI();
                 }
             } catch(e) { console.log("Silent polling error."); }
-        }, 5000); // 5 Seconds refresh
+        }, 5000);
+    }
+
+    function formatShortDate(isoString) {
+        if(!isoString) return "Waiting...";
+        const d = new Date(isoString);
+        return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
 
     function renderDashboardUI() {
-        // Track Times
-        if (memoryData.scanned_at) {
-            document.getElementById('track-scanned').innerText = new Date(memoryData.scanned_at).toLocaleString();
-        }
-        if (memoryData.proposal_accepted_at) {
-            document.getElementById('track-proposal').innerText = new Date(memoryData.proposal_accepted_at).toLocaleString();
-        }
+        document.getElementById('track-scanned').innerText = formatShortDate(memoryData.scanned_at);
+        document.getElementById('track-proposal').innerText = formatShortDate(memoryData.proposal_accepted_at);
 
-        // Chat Logic
         const chatList = memoryData.chat || [];
         const count = memoryData.message_count || 0;
         
@@ -150,7 +145,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         document.getElementById('bf-msg-count').innerText = `Messages: ${count} / 100`;
 
-        // RULE: Enable typing only if GF has sent at least 1 message
         const gfStarted = chatList.length > 0;
         if(gfStarted && count < 100) {
             bfChatInput.disabled = false;
@@ -164,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         bfChatArea.innerHTML = '';
         if(!gfStarted) {
-            bfChatArea.innerHTML = '<p style="text-align:center; color:#888; font-size:13px; margin-top:20px;">Waiting for her reply...</p>';
+            bfChatArea.innerHTML = '<div style="background:rgba(255,255,255,0.8); padding:5px 15px; border-radius:15px; font-size:12px; align-self:center; margin-top:20px;">Waiting for her reply...</div>';
             return;
         }
 
@@ -175,21 +169,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
             } catch(e) { decryptedText = "🔒 Error reading message"; }
 
-            // Boyfriend uses D81B60 (Pink), GF uses White
+            // Boyfriend uses Light Green, GF uses White (WhatsApp Style)
             const isBf = msgObj.sender === 'bf';
             const align = isBf ? 'flex-end' : 'flex-start';
-            const bg = isBf ? '#D81B60' : '#fff';
-            const color = isBf ? '#fff' : '#333';
-            const radius = isBf ? '15px 15px 0 15px' : '15px 15px 15px 0';
+            const bg = isBf ? '#d9fdd3' : '#fff';
+            const radius = isBf ? '10px 0px 10px 10px' : '0px 10px 10px 10px';
 
             bfChatArea.innerHTML += `
-                <div style="align-self: ${align}; background: ${bg}; color: ${color}; padding: 8px 12px; border-radius: ${radius}; max-width: 80%; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #fce4ec;">
+                <div style="align-self: ${align}; background: ${bg}; color: #111; padding: 8px 12px; border-radius: ${radius}; max-width: 80%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                     ${decryptedText}
                 </div>
             `;
         });
         
-        bfChatArea.scrollTop = bfChatArea.scrollHeight; // Auto scroll to bottom
+        bfChatArea.scrollTop = bfChatArea.scrollHeight; 
     }
 
     async function sendBfMessage() {
@@ -205,7 +198,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = true;
 
         try {
-            // Fresh fetch to prevent overwrite
             const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
             const latestData = await res.json();
             
@@ -214,16 +206,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if(newCount > 100) throw new Error("Limit Reached");
 
-            // ENCRYPT with Passcode
             const encryptedMsg = CryptoJS.AES.encrypt(msgText, userPasscode).toString();
             
             chatList.push({
-                sender: 'bf', // Sender is Boyfriend
+                sender: 'bf',
                 text: encryptedMsg,
                 timestamp: new Date().toISOString()
             });
 
-            // Keep only last 5
             if(chatList.length > 5) chatList = chatList.slice(chatList.length - 5);
 
             await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
@@ -233,7 +223,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             inputEl.value = '';
-            // Instant UI update
             const res2 = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
             memoryData = await res2.json();
             renderDashboardUI();
@@ -279,36 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 6. PREVIEW SYSTEM LOGIC ---
-    const previewBtn = document.getElementById('preview-btn');
-    const previewOverlay = document.getElementById('preview-overlay');
-    
-    previewBtn.addEventListener('click', () => {
-        document.getElementById('preview-name').innerText = document.getElementById('gf-name').value || "Girlfriend's Name";
-        document.getElementById('preview-letter').innerText = document.getElementById('letter-text').value || "Your letter will appear here...";
-        
-        const photosContainer = document.getElementById('preview-photos');
-        photosContainer.innerHTML = '';
-        
-        imageInputsData.forEach((img, index) => {
-            if(img.file || img.previewEl.src.includes('ik.imagekit.io')) {
-                photosContainer.innerHTML += `
-                    <div style="background: white; padding: 10px; width: 80%; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        <img src="${img.previewEl.src}" style="width: 100%; border-radius: 3px;">
-                        <p style="font-family: 'Dancing Script'; font-size: 24px; margin-top: 10px;">${document.getElementById(img.captionId).value || `Caption ${index+1}`}</p>
-                    </div>
-                `;
-            }
-        });
-        
-        previewOverlay.classList.remove('hidden');
-    });
-
-    document.getElementById('close-preview').addEventListener('click', () => {
-        previewOverlay.classList.add('hidden');
-    });
-
-    // --- 7. COMPRESSION, UPLOAD & SAVE LOGIC ---
+    // --- 6. COMPRESSION, UPLOAD & SAVE LOGIC ---
     async function compressImage(file) {
         const options = { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true, initialQuality: 0.5 };
         try { return await imageCompression(file, options); } catch (e) { return file; }
@@ -354,6 +314,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const updatedData = {
                 status: "locked",
                 locked_at: memoryData?.locked_at || new Date().toISOString(),
+                
+                // 🔴 NEW DATA FIELDS
+                occasion: document.getElementById('occasion-select').value,
+                
                 passcode: document.getElementById('passcode-input').value,
                 girlfriend_name: document.getElementById('gf-name').value,
                 music_id: document.getElementById('music-select').value,
