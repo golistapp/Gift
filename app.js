@@ -3,12 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const memoryId = urlParams.get('id');
     const mode = urlParams.get('mode'); 
 
-    if (!memoryId) {
-        alert("Invalid Link! QR code me memory ID nahi hai.");
-        return;
-    }
-
-    // --- 1. INITIALIZE COMPONENTS ---
+    // --- 1. INITIALIZE COMPONENTS (SABSE PEHLE UI LOAD KARO) ---
     const appRoot = document.getElementById('app-root');
     const vaultContainer = document.getElementById('vault-container');
     const surpriseContainer = document.getElementById('surprise-container');
@@ -28,6 +23,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     footerContainer.innerHTML = AppComponents.getFooterHTML();
 
     AppComponents.attachVaultMagic();
+
+    // ID CHACK AB UI LOAD HONE KE BAAD HOGA (Taaki screen blank na rahe)
+    if (!memoryId) {
+        alert("Invalid Link! QR code me memory ID nahi hai.");
+        document.getElementById('unlock-btn').innerText = "INVALID LINK";
+        return; // Process yahan ruk jayega par screen blank nahi hogi
+    }
+
 
     // --- 2. GLOBAL VARIABLES ---
     let memoryData = null;
