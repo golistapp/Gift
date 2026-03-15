@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Surprise For You ❤️</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="viewer-theme">
+
+    <audio id="bg-music" loop></audio>
+
+    <div id="vault-screen" class="vault-screen">
+        <div class="glass-card" style="padding: 40px 30px; text-align: center; width: 90%; max-width: 350px;">
+            <i class="fa-solid fa-lock" style="font-size: 40px; color: #cc0033; margin-bottom: 10px;"></i>
+            <h2 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033;">The Vault</h2>
+            <p style="font-size: 13px; color: #555; margin-bottom: 20px;">Enter the secret passcode to unlock</p>
+            
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 30px;" id="dots-container">
+                <div class="dot" style="width:15px; height:15px; border-radius:50%; background:rgba(0,0,0,0.1);"></div>
+                <div class="dot" style="width:15px; height:15px; border-radius:50%; background:rgba(0,0,0,0.1);"></div>
+                <div class="dot" style="width:15px; height:15px; border-radius:50%; background:rgba(0,0,0,0.1);"></div>
+                <div class="dot" style="width:15px; height:15px; border-radius:50%; background:rgba(0,0,0,0.1);"></div>
+                <div class="dot" style="width:15px; height:15px; border-radius:50%; background:rgba(0,0,0,0.1);"></div>
+                <div class="dot" style="width:15px; height:15px; border-radius:50%; background:rgba(0,0,0,0.1);"></div>
+            </div>
+
+            <div class="keypad">
+                <button class="key" data-number="1">1</button>
+                <button class="key" data-number="2">2</button>
+                <button class="key" data-number="3">3</button>
+                <button class="key" data-number="4">4</button>
+                <button class="key" data-number="5">5</button>
+                <button class="key" data-number="6">6</button>
+                <button class="key" data-number="7">7</button>
+                <button class="key" data-number="8">8</button>
+                <button class="key" data-number="9">9</button>
+                <button class="key clear-btn"><i class="fa-solid fa-delete-left"></i></button>
+                <button class="key" data-number="0">0</button>
+                <button class="key" style="visibility:hidden;"></button>
+            </div>
+
+            <button id="unlock-btn" style="width: 100%; padding: 15px; border: none; border-radius: 25px; background: linear-gradient(135deg, #ff758c, #ff7eb3); color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(216, 27, 96, 0.3);" disabled>UNLOCK GIFT</button>
+        </div>
+    </div>
+
+    <div id="main-memory-screen" class="hidden" style="max-width: 600px; margin: 0 auto;">
+        
+        <div class="viewer-section" style="min-height: 80vh;">
+            <h1 class="hero-title" id="dynamic-gf-name" style="margin-top: 20px;">My Love</h1>
+            <p class="hero-subtitle">"My heart beats only for you."</p>
+            <i class="fa-solid fa-arrow-down" style="font-size: 24px; color: #cc0033; animation: bounce 2s infinite;"></i>
+        </div>
+
+        <div class="viewer-section" id="envelope-section" style="min-height: auto; padding: 40px 20px;">
+            <div class="envelope-wrapper">
+                <div class="envelope">
+                    <div class="env-flap"></div>
+                    <div class="env-front"></div>
+                    <div class="heart-seal"><i class="fa-solid fa-heart"></i></div>
+                </div>
+            </div>
+            <p style="margin-top: 30px; font-weight: 500;">Tap to open my heart 💌</p>
+        </div>
+
+        <div id="letter-section" class="viewer-section hidden" style="min-height: auto; padding: 20px;">
+            <div class="glass-card" style="padding: 30px; text-align: left;">
+                <h3 style="font-family: 'Dancing Script'; font-size: 30px; color: #cc0033; margin-bottom: 20px; text-align: center;">A Letter For You</h3>
+                <p id="dynamic-letter-text" style="font-family: 'Playfair Display'; font-size: 16px; line-height: 1.8; white-space: pre-wrap;"></p>
+                <p style="text-align: right; font-family: 'Dancing Script'; font-size: 24px; color: #cc0033; margin-top: 20px;">Forever Yours ❤️</p>
+            </div>
+        </div>
+
+        <div id="gallery-section" class="viewer-section hidden" style="padding: 40px 20px;">
+            <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 40px;">Our Memories</h3>
+            <div id="polaroid-container" style="display: flex; flex-direction: column; gap: 30px; align-items: center;">
+                </div>
+        </div>
+
+        <div id="proposal-section" class="viewer-section hidden" style="padding: 40px 20px; text-align: center;">
+            <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Will you be mine forever? 🌹</h3>
+            <div style="display: flex; justify-content: center; gap: 20px; position: relative; height: 100px; align-items: center; width: 100%;">
+                <button id="btn-yes" style="padding: 12px 35px; border: none; border-radius: 25px; font-size: 18px; font-weight: 600; cursor: pointer; background: #cc0033; color: white;">YES! ❤️</button>
+                <button id="btn-no" style="padding: 12px 35px; border: 2px solid #cc0033; border-radius: 25px; font-size: 18px; font-weight: 600; cursor: pointer; background: white; color: #cc0033; position: relative;">NO 😢</button>
+            </div>
+            
+            <div class="live-reaction-box glass-card" style="margin-top: 60px;">
+                <h4 style="font-size: 16px; color: #cc0033; margin-bottom: 10px;">Send a live reaction to him 💌</h4>
+                <textarea id="live-msg-input" class="reaction-input" rows="3" placeholder="I loved it! Thank you so much..."></textarea>
+                <button id="send-msg-btn" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: #cc0033; color: white; font-weight: bold; cursor: pointer;">Send Reaction <i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api/firebase.config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
