@@ -1,5 +1,5 @@
 // ==========================================
-// 🧩 THE ADVANCED COMPONENT SYSTEM 
+// 🧩 THE ADVANCED COMPONENT SYSTEM (UI)
 // ==========================================
 
 const AppComponents = {
@@ -56,7 +56,6 @@ const AppComponents = {
                     tickSound.play().catch(err => console.log("Sound blocked"));
                 }
 
-                // Heart Pop Animation
                 const heart = document.createElement('div');
                 heart.innerHTML = '❤️';
                 heart.style.position = 'absolute';
@@ -84,7 +83,7 @@ const AppComponents = {
     },
 
     // ------------------------------------------
-    // 2. THE SURPRISE COMPONENT (Hero, Envelope, Letter, Cards)
+    // 2. THE SURPRISE COMPONENT (Hero, Envelope, Letter, 1:1 Gallery, Cards)
     // ------------------------------------------
     getSurpriseHTML: function() {
         return `
@@ -109,59 +108,92 @@ const AppComponents = {
         </div>
 
         <div id="hidden-surprise-content" class="hidden">
+            
             <div style="padding: 20px; display:flex; justify-content:center;">
-                <div class="notebook-page glass-card" style="padding: 40px 20px; max-width:600px; text-align: left; position:relative; overflow:hidden;">
+                <div class="notebook-page glass-card" style="padding: 40px 20px; max-width:600px; width:100%; text-align: left; position:relative; overflow:hidden;">
                     <div style="position:absolute; left:25px; top:0; bottom:0; width:2px; background:rgba(255,0,0,0.3);"></div>
                     <h3 style="font-family: 'Dancing Script'; font-size: 30px; color: #cc0033; margin-bottom: 20px; text-align: center;">A Letter For You</h3>
-                    <div id="dynamic-letter-container" style="padding-left: 40px; font-family: 'Dancing Script'; font-size: 24px; color: #333; line-height: 1.8;">
-                        </div>
+                    <div id="dynamic-letter-container" style="padding-left: 40px; font-family: 'Dancing Script'; font-size: 20px; color: #333; line-height: 1.8;">
+                    </div>
                     <p style="text-align: right; font-family: 'Dancing Script'; font-size: 26px; color: #cc0033; margin-top: 30px; font-weight:bold;">Forever Yours ❤️</p>
                 </div>
             </div>
 
             <div style="padding: 40px 20px; text-align:center;">
+                <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Our Memories</h3>
+                <div class="gallery-grid" id="polaroid-container">
+                    </div>
+            </div>
+
+            <div style="padding: 40px 20px; text-align:center; padding-bottom: 100px;">
                 <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 30px;">Open When...</h3>
-                <div style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
-                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #10b981;">
-                        <h4 style="color:#10b981; margin-bottom:5px;"><i class="fa-solid fa-face-laugh-beam"></i> You're Happy</h4>
-                        <p id="dynamic-ow-happy" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+                <div class="cards-grid">
+                    
+                    <div class="airmail-card" onclick="this.classList.toggle('opened');">
+                        <div class="airmail-inner">
+                            <div class="airmail-front">
+                                <div class="airmail-label">To: You</div>
+                                <i class="fa-solid fa-face-laugh-beam"></i>
+                                <h3>You are happy</h3>
+                            </div>
+                            <div class="airmail-back airmail-letter" id="dynamic-ow-happy"></div>
+                        </div>
                     </div>
-                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #3b82f6;">
-                        <h4 style="color:#3b82f6; margin-bottom:5px;"><i class="fa-solid fa-face-frown-open"></i> You're Sad</h4>
-                        <p id="dynamic-ow-sad" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+
+                    <div class="airmail-card" onclick="this.classList.toggle('opened');">
+                        <div class="airmail-inner">
+                            <div class="airmail-front">
+                                <div class="airmail-label">To: You</div>
+                                <i class="fa-solid fa-face-frown-open"></i>
+                                <h3>You are sad</h3>
+                            </div>
+                            <div class="airmail-back airmail-letter" id="dynamic-ow-sad"></div>
+                        </div>
                     </div>
-                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #f59e0b;">
-                        <h4 style="color:#f59e0b; margin-bottom:5px;"><i class="fa-solid fa-location-dot"></i> You Miss Me</h4>
-                        <p id="dynamic-ow-miss" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+
+                    <div class="airmail-card" onclick="this.classList.toggle('opened');">
+                        <div class="airmail-inner">
+                            <div class="airmail-front">
+                                <div class="airmail-label">To: You</div>
+                                <i class="fa-solid fa-location-dot"></i>
+                                <h3>You miss me</h3>
+                            </div>
+                            <div class="airmail-back airmail-letter" id="dynamic-ow-miss"></div>
+                        </div>
                     </div>
-                    <div class="glass-card" style="padding:15px; width:90%; max-width:400px; text-align:left; border-left: 5px solid #8b5cf6;">
-                        <h4 style="color:#8b5cf6; margin-bottom:5px;"><i class="fa-solid fa-bed"></i> You Can't Sleep</h4>
-                        <p id="dynamic-ow-sleep" style="font-family:'Playfair Display'; font-size:14px; color:#555;"></p>
+
+                    <div class="airmail-card" onclick="this.classList.toggle('opened');">
+                        <div class="airmail-inner">
+                            <div class="airmail-front">
+                                <div class="airmail-label">To: You</div>
+                                <i class="fa-solid fa-bed"></i>
+                                <h3>You can't sleep</h3>
+                            </div>
+                            <div class="airmail-back airmail-letter" id="dynamic-ow-sleep"></div>
+                        </div>
                     </div>
+
                 </div>
             </div>
+
         </div>
         `;
     },
 
     // ------------------------------------------
-    // 3. THE GALLERY & LOVE BOOTH COMPONENT
+    // 3. THE GALLERY (LOVE BOOTH) COMPONENT
     // ------------------------------------------
     getGalleryHTML: function() {
         return `
-        <div style="padding: 20px; text-align:center;">
-            <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Our Memories</h3>
-            
-            <div id="polaroid-container" style="display: flex; flex-direction: column; gap: 30px; align-items: center; margin-bottom:50px;">
-            </div>
-
+        <div style="padding: 20px; text-align:center; padding-bottom: 120px;">
             <h3 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; margin-bottom: 20px;">Love Booth 📸</h3>
+            
             <div class="glass-card" style="padding: 20px; border-radius: 20px; max-width: 500px; margin: 0 auto;">
                 
                 <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #1a1a1a; border-radius: 15px; overflow: hidden; margin-bottom:15px; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
                     <video id="video-preview" autoplay muted style="display:none; width:100%; height:100%; object-fit:cover;"></video>
                     <canvas id="canvas-output" style="display:none; width:100%; height:100%; object-fit:cover;"></canvas>
-                    <p id="camera-placeholder" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-family:'Poppins'; font-size:14px;">Camera inactive.<br>Start or Upload.</p>
+                    <p id="camera-placeholder" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-family:'Poppins'; font-size:14px;">Camera inactive.<br>Start or Select Image.</p>
                 </div>
 
                 <div style="margin-bottom:15px;">
@@ -173,15 +205,20 @@ const AppComponents = {
                     </select>
                 </div>
 
-                <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
+                <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
                     <button id="btn-start-cam" style="padding:10px 15px; border-radius:8px; border:none; background:#eee; color:#333; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-video"></i> Start</button>
                     <button id="btn-snap" style="padding:10px 15px; border-radius:8px; border:none; background:#cc0033; color:white; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-camera"></i> Snap</button>
-                    <input type="file" id="upload-photo" accept="image/*" style="display:none;">
-                    <button id="btn-upload" style="padding:10px 15px; border-radius:8px; border:none; background:#eee; color:#333; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-upload"></i> Upload</button>
                     <button id="btn-save-photo" style="padding:10px 15px; border-radius:8px; border:none; background:#10b981; color:white; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-download"></i> Save</button>
                 </div>
+
+                <hr style="border:none; border-top: 1px dashed #ccc; margin-bottom:15px;">
+                <p style="font-size:12px; color:#555; margin-bottom:10px;">Or select a memory to edit:</p>
+                
+                <div id="booth-thumbnails" style="display:flex; gap:10px; justify-content:center; overflow-x:auto; padding-bottom:10px;">
+                    </div>
+                
             </div>
-            <br><br><br> </div>
+        </div>
         `;
     },
 
@@ -190,7 +227,7 @@ const AppComponents = {
     // ------------------------------------------
     getChatHTML: function() {
         return `
-        <div style="padding: 20px; min-height: 80vh; display:flex; flex-direction:column;">
+        <div style="padding: 20px; min-height: 80vh; display:flex; flex-direction:column; padding-bottom:120px;">
             <h2 style="font-family: 'Dancing Script'; font-size: 35px; color: #cc0033; text-align: center; margin-bottom: 5px;">Secret Chat Room <i class="fa-solid fa-lock" style="font-size:18px;"></i></h2>
             <p style="text-align:center; font-size:11px; color:#666; margin-bottom: 15px;">End-to-End Encrypted. Auto-deletes old messages.</p>
             
@@ -202,7 +239,7 @@ const AppComponents = {
                 <input type="text" id="live-msg-input" placeholder="Type a message..." style="flex:1; padding:12px 15px; border-radius:20px; border:1px solid #ff4d79; outline:none; font-family:'Poppins';">
                 <button id="send-msg-btn" style="background: #cc0033; color:white; border:none; width:45px; height:45px; border-radius:50%; font-size:16px; cursor:pointer; box-shadow: 0 4px 10px rgba(204,0,51,0.3);"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
-            <p id="msg-count-display" style="text-align:center; font-size:11px; color:#888; margin-top:10px; margin-bottom:60px;">Messages: 0 / 100</p>
+            <p id="msg-count-display" style="text-align:center; font-size:11px; color:#888; margin-top:10px;">Messages: 0 / 100</p>
         </div>
         `;
     },

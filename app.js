@@ -44,21 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dots = document.querySelectorAll('.dot');
     const unlockBtn = document.getElementById('unlock-btn');
 
-    // Background Floating Hearts
-    setInterval(() => {
-        const container = document.getElementById('hearts-bg');
-        if (!container || document.querySelectorAll('.bg-heart').length > 30) return; 
-        const heart = document.createElement('div');
-        heart.classList.add('bg-heart');
-        heart.innerHTML = '<i class="fa-solid fa-heart"></i>';
-        heart.style.left = Math.random() * 100 + 'vw';
-        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-        heart.style.animationDuration = (Math.random() * 5 + 6) + 's';
-        container.appendChild(heart);
-        setTimeout(() => heart.remove(), 11000);
-    }, 600);
-
-    // Screen Touch Mini Hearts
+    // Mini Hearts on Screen Touch
     document.addEventListener('click', (e) => {
         if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         for(let i=0; i<5; i++) {
@@ -99,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(error); alert("Internet connection error."); return;
     }
 
-    // --- 4. PASSCODE LOGIC ---
+    // --- 4. PASSCODE & AUDIO UNLOCK LOGIC ---
     function updateUI() {
         dots.forEach((dot, index) => {
             dot.style.background = index < enteredPasscode.length ? '#cc0033' : 'rgba(0,0,0,0.1)';
@@ -114,6 +100,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     unlockBtn.addEventListener('click', async () => {
         if (enteredPasscode === memoryData.passcode) {
             userPasscode = enteredPasscode;
+            
+            // 🔴 MUSIC FIX: Unlock audio context on first user tap
+            bgMusic.src = (memoryData.music_id === 'gift' || !memoryData.music_id) ? 'gift.mp3' : memoryData.music_id;
+            bgMusic.volume = 0.5;
+            bgMusic.play().then(() => { bgMusic.pause(); }).catch(e => console.log("Audio prep", e));
+
             await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scanned_at: new Date().toISOString() }) });
             openMainApp();
         } else {
@@ -127,15 +119,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         vaultContainer.classList.remove('active-screen');
         surpriseContainer.classList.remove('hidden');
         footerContainer.classList.remove('hidden');
-        
-        // Setup Music (Use default gift.mp3 if selected)
-        bgMusic.src = (memoryData.music_id === 'gift' || !memoryData.music_id) ? 'gift.mp3' : memoryData.music_id;
-        bgMusic.volume = 0.5;
 
-        // Background Hearts Container Inject
+        // Background Hearts Init
         if(!document.getElementById('hearts-bg')) {
             const hbg = document.createElement('div'); hbg.id = 'hearts-bg';
             document.body.prepend(hbg);
+            setInterval(() => {
+                if (document.querySelectorAll('.bg-heart').length > 30) return; 
+                const heart = document.createElement('div');
+                heart.classList.add('bg-heart'); heart.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                heart.style.left = Math.random() * 100 + 'vw'; heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                heart.style.animationDuration = (Math.random() * 5 + 6) + 's';
+                document.getElementById('hearts-bg').appendChild(heart);
+                setTimeout(() => heart.remove(), 11000);
+            }, 600);
         }
 
         setupMainScreen();
@@ -149,21 +146,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('dynamic-occasion').innerText = memoryData.occasion || "A Special Surprise";
         document.getElementById('dynamic-gf-name').innerText = memoryData.girlfriend_name || "My Love";
         
-        // Open When Texts
         document.getElementById('dynamic-ow-happy').innerText = memoryData.open_when_happy || "Smile!";
         document.getElementById('dynamic-ow-sad').innerText = memoryData.open_when_sad || "Cheer up!";
         document.getElementById('dynamic-ow-miss').innerText = memoryData.open_when_miss_me || "I am here.";
         document.getElementById('dynamic-ow-sleep').innerText = memoryData.open_when_cant_sleep || "Dream of me.";
 
-        // Inject Polaroids
         const polaroidContainer = document.getElementById('polaroid-container');
         polaroidContainer.innerHTML = '';
         for(let i = 1; i <= 5; i++) {
             if(memoryData[`image_${i}_url`]) {
                 polaroidContainer.innerHTML += `
-                    <div style="background: white; padding: 15px 15px 30px 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 4px; transform: rotate(${i%2===0 ? '3deg' : '-3deg'}); width: 90%; max-width: 300px;">
-                        <img src="${memoryData[`image_${i}_url`]}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 2px;">
-                        <p style="font-family: 'Dancing Script'; font-size: 24px; color: #333; margin-top: 15px; text-align: center;">${memoryData[`caption_${i}`]}</p>
+                    <div class="polaroid-flip" onclick="this.classList.toggle('is-flipped');">
+                        <div class="polaroid-inner">
+                            <div class="polaroid-front">
+                                <img src="${memoryData[`image_${i}_url`]}" alt="Memory">
+                                <p>${memoryData[`caption_${i}`]}</p>
+                            </div>
+                            <div class="polaroid-back">
+                                "Every moment with you is a treasure. ❤️"
+                            </div>
+                        </div>
                     </div>
                 `;
             }
@@ -178,18 +180,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         envelopeSection.addEventListener('click', function() {
             this.classList.add('hidden'); 
             hiddenSurpriseContent.classList.remove('hidden'); 
+            
+            // Play music smoothly now
             toggleMusic(true); 
 
-            // Notebook Fade Animation Logic
             const letterContainer = document.getElementById('dynamic-letter-container');
             const lines = (memoryData.message_text || "I love you.").split('\n');
             letterContainer.innerHTML = '';
             
             lines.forEach((lineText, index) => {
                 if(lineText.trim() !== "") {
-                    const p = document.createElement('p');
-                    p.className = 'letter-line';
-                    p.innerText = lineText;
+                    const p = document.createElement('p'); p.className = 'letter-line'; p.innerText = lineText;
                     letterContainer.appendChild(p);
                     setTimeout(() => { p.classList.add('fade-in-text'); }, 600 + (index * 800)); 
                 }
@@ -203,15 +204,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const statusText = document.getElementById('music-status-text');
 
         if (isMusicPlaying && !forcePlay) {
-            bgMusic.pause();
-            isMusicPlaying = false;
-            musicBtn.classList.remove('music-playing');
-            statusText.innerText = "Tap to play";
+            bgMusic.pause(); isMusicPlaying = false;
+            musicBtn.classList.remove('music-playing'); statusText.innerText = "Tap to play";
         } else {
             bgMusic.play().catch(e => console.log("Blocked by browser", e));
             isMusicPlaying = true;
-            musicBtn.classList.add('music-playing');
-            statusText.innerText = "Playing for you";
+            musicBtn.classList.add('music-playing'); statusText.innerText = "Playing for you";
         }
     }
 
@@ -229,26 +227,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         btnSurprise.addEventListener('click', () => {
-            resetNav();
-            btnSurprise.style.color = '#cc0033';
-            surpriseContainer.classList.remove('hidden');
+            resetNav(); btnSurprise.style.color = '#cc0033'; surpriseContainer.classList.remove('hidden');
         });
 
         btnGallery.addEventListener('click', () => {
-            resetNav();
-            btnGallery.style.color = '#cc0033';
-            galleryContainer.classList.remove('hidden');
+            resetNav(); btnGallery.style.color = '#cc0033'; galleryContainer.classList.remove('hidden');
         });
 
         btnChat.addEventListener('click', () => {
-            resetNav();
-            btnChat.style.color = '#cc0033';
-            chatContainer.classList.remove('hidden');
-            renderChatUI(); 
+            resetNav(); btnChat.style.color = '#cc0033'; chatContainer.classList.remove('hidden'); renderChatUI(); 
         });
     }
 
-    // --- 8. LOVE BOOTH LOGIC (CAMERA & FRAMES) ---
+    // --- 8. LOVE BOOTH LOGIC (CAMERA, FRAMES & THUMBNAILS) ---
     function setupLoveBooth() {
         const video = document.getElementById('video-preview');
         const canvasOutput = document.getElementById('canvas-output');
@@ -256,24 +247,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         let stream = null;
         let userImage = null; 
 
-        document.getElementById('btn-start-cam').addEventListener('click', async () => {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                video.srcObject = stream;
-                video.style.display = 'block';
-                canvasOutput.style.display = 'none';
-                document.getElementById('camera-placeholder').style.display = 'none';
-            } catch (err) { alert("Camera access denied. Please upload a photo instead!"); }
-        });
+        // 🔴 INJECT UPLOADED PHOTOS AS THUMBNAILS
+        const thumbContainer = document.getElementById('booth-thumbnails');
+        thumbContainer.innerHTML = '';
+        for(let i=1; i<=5; i++) {
+            if(memoryData[`image_${i}_url`]) {
+                const imgUrl = memoryData[`image_${i}_url`];
+                const thumb = document.createElement('img');
+                thumb.src = imgUrl;
+                thumb.style = "width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #ccc;";
+                thumb.title = "Click to edit in Love Booth";
+                thumb.onclick = () => loadThumbnailToCanvas(imgUrl);
+                thumbContainer.appendChild(thumb);
+            }
+        }
 
-        document.getElementById('btn-upload').addEventListener('click', () => document.getElementById('upload-photo').click());
-
-        document.getElementById('upload-photo').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if(!file) return;
+        // Load thumbnail into canvas
+        function loadThumbnailToCanvas(url) {
             const img = new Image();
+            img.crossOrigin = "Anonymous"; // Fixes download canvas error
             img.onload = () => {
-                if(stream) { stream.getTracks().forEach(t=>t.stop()); video.style.display='none'; }
+                if(stream) { stream.getTracks().forEach(t=>t.stop()); video.style.display='none'; stream=null; }
                 document.getElementById('camera-placeholder').style.display = 'none';
                 canvasOutput.style.display = 'block';
                 canvasOutput.width = 800; canvasOutput.height = 600; 
@@ -286,16 +280,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 userImage.getContext('2d').drawImage(img, 0, 0, img.width, img.height, cx, cy, img.width * ratio, img.height * ratio);
                 applyFrame();
             };
-            img.src = URL.createObjectURL(file);
+            img.src = url;
+        }
+
+        document.getElementById('btn-start-cam').addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream; video.style.display = 'block';
+                canvasOutput.style.display = 'none'; document.getElementById('camera-placeholder').style.display = 'none';
+            } catch (err) { alert("Camera access denied. Please upload a photo instead!"); }
         });
 
         document.getElementById('btn-snap').addEventListener('click', () => {
-            if(!stream || video.style.display === 'none') return alert("Please start camera or upload a photo first!");
+            if(!stream || video.style.display === 'none') return alert("Please start camera first!");
             canvasOutput.width = 800; canvasOutput.height = 600;
             userImage = document.createElement('canvas'); userImage.width = 800; userImage.height = 600;
             const uCtx = userImage.getContext('2d');
-            uCtx.translate(800, 0); uCtx.scale(-1, 1);
-            uCtx.drawImage(video, 0, 0, 800, 600);
+            uCtx.translate(800, 0); uCtx.scale(-1, 1); uCtx.drawImage(video, 0, 0, 800, 600);
             
             video.style.display = 'none'; canvasOutput.style.display = 'block';
             stream.getTracks().forEach(t => t.stop()); stream = null;
@@ -305,7 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('frame-select').addEventListener('change', () => { if(userImage) applyFrame(); });
 
         document.getElementById('btn-save-photo').addEventListener('click', () => {
-            if(!userImage) return alert("Take or upload a photo first!");
+            if(!userImage) return alert("Take or select a photo first!");
             const link = document.createElement('a'); link.download = 'Our_Memory_Booth.png';
             link.href = canvasOutput.toDataURL("image/png"); link.click();
         });
@@ -317,20 +318,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctxOutput.save();
 
             if(frameStyle === 'valentine') {
-                ctxOutput.lineWidth = 30; ctxOutput.strokeStyle = '#cc0033';
-                ctxOutput.strokeRect(15, 15, canvasOutput.width-30, canvasOutput.height-30);
+                ctxOutput.lineWidth = 30; ctxOutput.strokeStyle = '#cc0033'; ctxOutput.strokeRect(15, 15, canvasOutput.width-30, canvasOutput.height-30);
                 for(let i=0; i<8; i++) { ctxOutput.font = "50px Arial"; ctxOutput.fillText("❤️", 20+i*100, 60); ctxOutput.fillText("❤️", 20+i*100, canvasOutput.height-20); }
             } else if (frameStyle === 'polaroid-love') {
-                ctxOutput.lineWidth = 40; ctxOutput.strokeStyle = '#ffffff';
-                ctxOutput.strokeRect(20, 20, canvasOutput.width-40, canvasOutput.height-100);
+                ctxOutput.lineWidth = 40; ctxOutput.strokeStyle = '#ffffff'; ctxOutput.strokeRect(20, 20, canvasOutput.width-40, canvasOutput.height-100);
                 ctxOutput.fillStyle = '#ffffff'; ctxOutput.fillRect(0, canvasOutput.height-120, canvasOutput.width, 120);
                 ctxOutput.font = "bold 50px 'Dancing Script'"; ctxOutput.fillStyle = '#cc0033';
                 ctxOutput.fillText("Our Beautiful Memory", canvasOutput.width/2 - 200, canvasOutput.height - 40);
             } else if (frameStyle === 'cute') {
-                ctxOutput.lineWidth = 20; ctxOutput.strokeStyle = '#ff4d79'; ctxOutput.setLineDash([30, 30]);
-                ctxOutput.strokeRect(20, 20, canvasOutput.width-40, canvasOutput.height-40);
-                ctxOutput.font = "italic bold 50px 'Playfair Display'"; ctxOutput.fillStyle = 'white';
-                ctxOutput.shadowColor = '#ff4d79'; ctxOutput.shadowBlur = 10;
+                ctxOutput.lineWidth = 20; ctxOutput.strokeStyle = '#ff4d79'; ctxOutput.setLineDash([30, 30]); ctxOutput.strokeRect(20, 20, canvasOutput.width-40, canvasOutput.height-40);
+                ctxOutput.font = "italic bold 50px 'Playfair Display'"; ctxOutput.fillStyle = 'white'; ctxOutput.shadowColor = '#ff4d79'; ctxOutput.shadowBlur = 10;
                 ctxOutput.fillText("Cuties forever ✨", canvasOutput.width - 400, canvasOutput.height - 50);
             }
             ctxOutput.restore();
@@ -339,8 +336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 9. SECRET CHAT SYSTEM ---
     function startChatSystem() {
-        fetchChatData(); 
-        chatInterval = setInterval(fetchChatData, 5000); 
+        fetchChatData(); chatInterval = setInterval(fetchChatData, 5000); 
     }
 
     async function fetchChatData() {
@@ -354,14 +350,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderChatUI() {
         const count = memoryData.message_count || 0;
         document.getElementById('msg-count-display').innerText = `Messages: ${count} / 100`;
-
         const chatArea = document.getElementById('chat-messages-area');
         const chatList = memoryData.chat || [];
         
         chatArea.innerHTML = '';
         if(chatList.length === 0) {
-            chatArea.innerHTML = '<p style="text-align:center; color:#888; font-size:13px; margin-top:50px;">Send a message to start the conversation...</p>';
-            return;
+            chatArea.innerHTML = '<p style="text-align:center; color:#888; font-size:13px; margin-top:50px;">Send a message to start the conversation...</p>'; return;
         }
 
         chatList.forEach(msgObj => {
