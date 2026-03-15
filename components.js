@@ -181,7 +181,7 @@ const AppComponents = {
 
                     <div style="display: flex; gap: 15px; justify-content: center; align-items: center; margin-top: 20px; position: relative; height: 70px;">
                         <button class="btn-no" id="btn-no" style="background: #9ca3af; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; position: absolute; left: 20%; z-index: 10;">No 🥺</button>
-                        <button class="btn-yes" id="btn-yes" style="background: #d81b60; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; box-shadow: 0 8px 20px rgba(216, 27, 96, 0.3); position: absolute; right: 20%; z-index: 5;">Yes! 💖</button>
+                        <button class="btn-yes" id="btn-yes" onclick="acceptProposal(event)" style="background: #d81b60; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-size: 1.2rem; font-weight: 500; cursor: pointer; box-shadow: 0 8px 20px rgba(216, 27, 96, 0.3); position: absolute; right: 20%; z-index: 5;">Yes! 💖</button>
                     </div>
                 </div>
 
@@ -198,7 +198,7 @@ const AppComponents = {
                 <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem; color: #4a1525; margin-bottom: 10px;">One Last Surprise...</h2>
                 <p style="color: #ff4d79; font-family: 'Poppins'; font-size: 1.1rem; margin-bottom: 40px;">Click the box to open</p>
                 
-                <div class="minimal-gift-container" id="final-gift-box-trigger" style="cursor: pointer; perspective: 1000px; margin-bottom: 20px; display:inline-block;">
+                <div class="minimal-gift-container" id="final-gift-box-trigger" onclick="openGift()" style="cursor: pointer; perspective: 1000px; margin-bottom: 20px; display:inline-block;">
                     <div class="minimal-gift-box" id="minimal-gift" style="position: relative; width: 140px; height: 120px; transition: transform 0.3s ease;">
                         <div class="minimal-gift-lid" style="position: absolute; top: 5px; left: -5%; width: 110%; height: 30px; background: linear-gradient(to bottom, #e60000, #b30000); border-radius: 6px; z-index: 2; box-shadow: 0 5px 10px rgba(0,0,0,0.3); transition: all 0.6s ease;"></div>
                         <div class="minimal-gift-body" style="position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(to bottom, #cc0000, #4a0000); border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.2);"></div>
@@ -287,7 +287,7 @@ const AppComponents = {
     // ------------------------------------------
     getFooterHTML: function() {
         return `
-        <div id="music-toggle-btn" class="pill-music-player" style="position: fixed; bottom: 85px; left: 15px; background: white; border-radius: 50px; padding: 6px 15px 6px 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 1000; transition: transform 0.3s;">
+        <div id="music-toggle-btn" class="pill-music-player" style="position: fixed; bottom: 85px; left: 15px; background: white; border-radius: 50px; padding: 6px 15px 6px 6px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 1000; transition: transform 0.3s;">
             <div id="music-icon-bg" style="width: 35px; height: 35px; background: white; border: 2px solid #cc0033; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #cc0033; transition: 0.3s;">
                 <i class="fa-solid fa-music" id="music-icon"></i>
             </div>
