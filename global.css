@@ -210,3 +210,30 @@ body.viewer-theme {
 .airmail-front h3 { font-family: 'Poppins', sans-serif; font-size: 1.4rem; margin-top: 20px; color: #3a0a14; font-weight: 600; }
 .airmail-front i { font-size: 3.5rem; color: #ff4d79; filter: drop-shadow(0 4px 8px rgba(255, 77, 121, 0.4)); }
 .airmail-back { transform: rotateY(180deg); background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 30px; border: 3px solid #ff4d79; font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #3a0a14; line-height: 1.6; text-align: center;}
+
+
+/* =========================================
+   STEP 2: PERFECT 1:1 SQUARE PHOTOS FIX
+   ========================================= */
+.polaroid-flip {
+    height: 420px !important; /* Box ki perfect height */
+}
+
+.polaroid-front img {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important; /* Yeh photo ko ekdam 1:1 Square rakhega */
+    object-fit: cover !important;
+    border-radius: 4px !important;
+}
+
+/* Mobile Screen Ke Liye Adjustments */
+@media (max-width: 768px) {
+    .polaroid-flip {
+        height: 360px !important;
+    }
+    .polaroid-front img {
+        height: auto !important;
+        aspect-ratio: 1 / 1 !important;
+    }
+}
