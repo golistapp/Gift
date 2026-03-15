@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create & Manage Your Memory Gift ❤️</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../global.css">
+</head>
+<body class="form-theme">
+
+    <div class="form-container">
+        
+        <div id="lock-screen" class="editor-section hidden" style="text-align: center; margin-top: 50px;">
+            <i class="fa-solid fa-lock" style="font-size: 50px; color: #D81B60; margin-bottom: 15px;"></i>
+            <h2 class="step-title">Gift is Locked 🔒</h2>
+            <p style="margin-bottom: 20px;">Please enter your 6-digit passcode to view the live status.</p>
+            <div class="input-wrapper">
+                <input type="password" id="check-passcode" class="elegant-input" maxlength="6" placeholder="Enter Passcode" style="text-align: center; font-size: 20px; letter-spacing: 5px;">
+            </div>
+            <button id="verify-passcode-btn" class="primary-btn" style="margin-top: 20px; background: #D81B60;">Unlock Dashboard</button>
+            <p id="passcode-error" style="color: red; margin-top: 10px;" class="hidden">Incorrect Passcode!</p>
+        </div>
+
+        <div id="dashboard-screen" class="editor-section hidden locked-dashboard">
+            <h1 style="font-family: 'Dancing Script'; color: #D81B60; font-size: 40px;">Live Status Tracker</h1>
+            <p>Track your surprise in real-time!</p>
+
+            <div class="live-time-box">
+                <h3><i class="fa-solid fa-qrcode"></i> Gift Opened At:</h3>
+                <p id="track-scanned" style="font-weight: 600; font-size: 16px; color: #cc0033;">Not scanned yet...</p>
+            </div>
+
+            <div class="live-time-box">
+                <h3><i class="fa-solid fa-ring"></i> Proposal Accepted At:</h3>
+                <p id="track-proposal" style="font-weight: 600; font-size: 16px; color: #cc0033;">Waiting for her response...</p>
+            </div>
+
+            <div class="live-messages">
+                <h3 style="color: #D81B60; border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px;">
+                    <i class="fa-solid fa-message"></i> Message from Her:
+                </h3>
+                <p id="track-message" style="font-family: 'Playfair Display'; font-size: 16px; color: #444; white-space: pre-wrap;">No message yet...</p>
+            </div>
+        </div>
+
+        <div id="editor-screen" class="hidden">
+            <header class="editor-header">
+                <h1>Create Your Surprise ❤️</h1>
+                <p>Fill out the details below to lock your gift.</p>
+            </header>
+
+            <form id="memory-form">
+                <div class="editor-section">
+                    <h2 class="step-title">1. Basic Details & Vault Lock</h2>
+                    <div class="input-wrapper" style="margin-bottom: 15px;">
+                        <label>Girlfriend's Name:</label>
+                        <input type="text" id="gf-name" class="elegant-input" placeholder="e.g. Ananya" required>
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Secret Passcode (6 Digits):</label>
+                        <input type="text" id="passcode-input" class="elegant-input" maxlength="6" pattern="\d{6}" placeholder="e.g., 140224" required>
+                    </div>
+                </div>
+
+                <div class="editor-section">
+                    <h2 class="step-title">2. Choose Background Music</h2>
+                    <div class="input-wrapper">
+                        <select id="music-select" class="elegant-input" required>
+                            <option value="" disabled selected>Select a romantic tune...</option>
+                            <option value="romantic-piano">Romantic Piano</option>
+                            <option value="love-theme">Love Theme</option>
+                            <option value="soft-violin">Soft Violin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="editor-section">
+                    <h2 class="step-title">3. The Main Love Letter</h2>
+                    <textarea id="letter-text" class="elegant-input" rows="6" placeholder="My Dearest..." required></textarea>
+                </div>
+
+                <div class="editor-section">
+                    <h2 class="step-title">4. "Open When..." Messages 💌</h2>
+                    <input type="text" id="ow-happy" class="elegant-input" placeholder="Open when you're Happy..." style="margin-bottom: 10px;" required>
+                    <input type="text" id="ow-sad" class="elegant-input" placeholder="Open when you're Sad..." style="margin-bottom: 10px;" required>
+                    <input type="text" id="ow-miss-me" class="elegant-input" placeholder="Open when you miss me..." style="margin-bottom: 10px;" required>
+                    <input type="text" id="ow-cant-sleep" class="elegant-input" placeholder="Open when you can't sleep..." required>
+                </div>
+
+                <div class="editor-section">
+                    <h2 class="step-title">5. Upload 5 Memories</h2>
+                    <div class="polaroid-grid" id="image-upload-container">
+                        </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="preview-btn" class="primary-btn" style="background: #f39c12; color: white;"><i class="fa-solid fa-eye"></i> Preview</button>
+                    <button type="submit" id="lock-gift-btn" class="primary-btn" style="background: #D81B60;"><i class="fa-solid fa-lock"></i> Lock Gift</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <div id="preview-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%); z-index: 9999; overflow-y: auto; padding: 20px;">
+        <button id="close-preview" style="position: fixed; top: 20px; right: 20px; background: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; color: red; font-weight: bold; z-index: 10000;">X Close Preview</button>
+        
+        <div class="viewer-theme" style="max-width: 600px; margin: 40px auto; text-align: center;">
+            <h1 style="font-family: 'Dancing Script'; font-size: 50px; color: #cc0033;" id="preview-name">Name</h1>
+            <div style="background: rgba(255,255,255,0.6); padding: 20px; border-radius: 15px; margin-top: 20px;">
+                <p style="font-family: 'Playfair Display'; font-size: 18px; white-space: pre-wrap;" id="preview-letter">Letter Text...</p>
+            </div>
+            <h3 style="margin-top: 30px; font-family: 'Dancing Script'; color: #cc0033; font-size: 30px;">Photos Preview</h3>
+            <div id="preview-photos" style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script src="../api/firebase.config.js"></script>
+    <script src="../api/imagekit.config.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
+    <script src="form.js"></script>
+</body>
+</html>
