@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 6. ENVELOPE OPEN & LETTER FADE ---
+         // --- 6. ENVELOPE OPEN & LETTER FADE ---
     const envelopeSection = document.getElementById('envelope-section');
     const hiddenSurpriseContent = document.getElementById('hidden-surprise-content');
     
@@ -181,37 +181,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.classList.add('hidden'); 
             hiddenSurpriseContent.classList.remove('hidden'); 
             
-            // Play music smoothly now
-            toggleMusic(true); 
+            // Music Button dikhao aur play karo
+            const musicBtn = document.getElementById('music-toggle-btn');
+            if (musicBtn) musicBtn.style.display = 'flex';
+            window.toggleMusic(true); 
 
+            // Letter Typewriter & Fade Effect
             const letterContainer = document.getElementById('dynamic-letter-container');
             const lines = (memoryData.message_text || "I love you.").split('\n');
             letterContainer.innerHTML = '';
             
             lines.forEach((lineText, index) => {
                 if(lineText.trim() !== "") {
-                    const p = document.createElement('p'); p.className = 'letter-line'; p.innerText = lineText;
+                    const p = document.createElement('p'); 
+                    p.className = 'letter-line'; 
+                    p.innerText = lineText;
                     letterContainer.appendChild(p);
-                    setTimeout(() => { p.classList.add('fade-in-text'); }, 600 + (index * 800)); 
+                    setTimeout(() => { p.classList.add('fade-in-text'); }, 600 + (index * 900)); 
                 }
             });
         });
     }
 
-    // --- 7. NAVIGATION & MUSIC ---
-    function toggleMusic(forcePlay = false) {
+
+
+      // --- 7. NAVIGATION & MUSIC ---
+        window.toggleMusic = function(forcePlay = false) {
+        const bgMusic = document.getElementById('bg-music');
         const musicBtn = document.getElementById('music-toggle-btn');
+        const musicIcon = document.getElementById('music-icon'); // Naya Icon
         const statusText = document.getElementById('music-status-text');
 
+        if (!bgMusic) return;
+
         if (isMusicPlaying && !forcePlay) {
-            bgMusic.pause(); isMusicPlaying = false;
-            musicBtn.classList.remove('music-playing'); statusText.innerText = "Tap to play";
+            bgMusic.pause();
+            isMusicPlaying = false;
+            if(musicIcon) {
+                musicIcon.classList.remove('fa-pause');
+                musicIcon.classList.add('fa-play');
+            }
+            if(statusText) statusText.innerText = "Tap to play";
         } else {
-            bgMusic.play().catch(e => console.log("Blocked by browser", e));
-            isMusicPlaying = true;
-            musicBtn.classList.add('music-playing'); statusText.innerText = "Playing for you";
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                if(musicIcon) {
+                    musicIcon.classList.remove('fa-play');
+                    musicIcon.classList.add('fa-pause');
+                }
+                if(statusText) statusText.innerText = "Playing for you";
+            }).catch(e => {
+                console.log("Audio blocked by browser, waiting for user click.", e);
+            });
         }
-    }
+    };
+
 
     function setupNavigation() {
         const btnSurprise = document.getElementById('nav-surprise');
@@ -219,25 +243,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnChat = document.getElementById('nav-chat');
         const musicBtn = document.getElementById('music-toggle-btn');
 
-        musicBtn.addEventListener('click', () => toggleMusic());
-
-        function resetNav() {
-            [btnSurprise, btnGallery, btnChat].forEach(b => b.style.color = '#888');
-            [surpriseContainer, galleryContainer, chatContainer].forEach(c => c.classList.add('hidden'));
+        if(musicBtn) {
+            musicBtn.addEventListener('click', () => window.toggleMusic());
         }
 
-        btnSurprise.addEventListener('click', () => {
+        function resetNav() {
+            [btnSurprise, btnGallery, btnChat].forEach(b => { if(b) b.style.color = '#888'; });
+            [surpriseContainer, galleryContainer, chatContainer].forEach(c => { if(c) c.classList.add('hidden'); });
+        }
+
+        if(btnSurprise) btnSurprise.addEventListener('click', () => {
             resetNav(); btnSurprise.style.color = '#cc0033'; surpriseContainer.classList.remove('hidden');
         });
 
-        btnGallery.addEventListener('click', () => {
+        if(btnGallery) btnGallery.addEventListener('click', () => {
             resetNav(); btnGallery.style.color = '#cc0033'; galleryContainer.classList.remove('hidden');
         });
 
-        btnChat.addEventListener('click', () => {
+        if(btnChat) btnChat.addEventListener('click', () => {
             resetNav(); btnChat.style.color = '#cc0033'; chatContainer.classList.remove('hidden'); renderChatUI(); 
         });
     }
+
 
     // --- 8. LOVE BOOTH LOGIC (CAMERA, FRAMES & THUMBNAILS) ---
     function setupLoveBooth() {
@@ -415,7 +442,162 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             inputEl.value = ''; await fetchChatData(); 
         } catch(e) { alert(e.message === "Limit" ? "100 Messages Limit Reached!" : "Error sending message."); }
+
+
         
+                // ... (Upar ka chat send karne wala code) ...
+
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; btn.disabled = false;
+    }); // <-- Chat send button ka code yahan khatam hota hai
+
+
+    // --- 10. PROPOSAL & FINAL GIFT LOGIC (Global Functions) ---
+    
+    window.acceptProposal = function(event) {
+        if(event) event.preventDefault();
+        document.getElementById('proposal-state').style.display = 'none';
+        document.getElementById('success-state').style.display = 'block'; 
+        
+        // 🔴 NAYA CODE: Teddy Bear emojis ki barish
+        if(window.fireTeddyBears) window.fireTeddyBears();
+    };
+
+    document.addEventListener('mouseover', (e) => {
+        if(e.target.id === 'btn-no') {
+            const btn = e.target;
+            const container = btn.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            const randomX = Math.floor(Math.random() * (containerRect.width - 100)) - (containerRect.width/2);
+            const randomY = Math.floor(Math.random() * 80) - 40; 
+            btn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+            
+            document.getElementById('question-gif-card').style.display = 'inline-block';
+            document.getElementById('proposal-gif').src = "https://media.giphy.com/media/xT0GqfvuVpNqEf3z2w/giphy.gif";
+        }
     });
+
+    let minimalGiftOpened = false;
+    window.openGift = function() {
+        if (minimalGiftOpened) return;
+        minimalGiftOpened = true;
+        
+        const giftBox = document.getElementById("minimal-gift");
+        if(giftBox) {
+            const lid = giftBox.querySelector('.minimal-gift-lid');
+            if(lid) {
+                lid.style.transform = 'translateY(-80px) rotate(-10deg)';
+                lid.style.opacity = '0';
+            }
+
+            // 🔴 NAYA CODE: Ring (💍) Animation
+            const ring = document.createElement('div');
+            ring.innerHTML = '💍'; 
+            ring.style.position = 'absolute';
+            ring.style.top = '30px';
+            ring.style.left = '50%';
+            ring.style.transform = 'translate(-50%, 0) scale(0.1) rotate(-180deg)';
+            ring.style.fontSize = '4.5rem';
+            ring.style.transition = 'all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            giftBox.appendChild(ring);
+            
+            setTimeout(() => {
+                ring.style.transform = 'translate(-50%, -100px) scale(1) rotate(0deg)';
+            }, 100);
+        }
+        
+        setTimeout(() => {
+            const msg = document.getElementById("surpriseMessage");
+            if(msg) {
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.opacity = '1';
+                    msg.style.transform = 'translateY(0) scale(1)';
+                }, 50);
+            }
+            if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
+        }, 1100); // Ring ka animation pura hone ka wait
+    };
+
+        window.fireConfettiAndHearts = function() {
+        const canvas = document.getElementById('confetti-canvas');
+        if (!canvas) return;
+        
+        canvas.style.display = 'block';
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const colors = ['#ff4d79', '#cc0033', '#ffffff', '#ffdde1', '#ffd700'];
+
+        for (let i = 0; i < 200; i++) {
+            particles.push({
+                x: canvas.width / 2, y: canvas.height / 2 + 100,
+                r: Math.random() * 8 + 4,
+                dx: Math.random() * 16 - 8, dy: Math.random() * -25 - 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.floor(Math.random() * 10) - 10,
+                tiltAngleInc: (Math.random() * 0.07) + 0.05, tiltAngle: 0,
+                isHeart: Math.random() > 0.4 
+            });
+        }
+
+        function drawHeart(ctx, x, y, size, color) {
+            ctx.save(); ctx.translate(x, y); ctx.scale(size/12, size/12);
+            ctx.beginPath(); ctx.fillStyle = color;
+            ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -3, -5, -3, -5, 0); ctx.bezierCurveTo(-5, 3, 0, 5, 0, 8);
+            ctx.bezierCurveTo(0, 5, 5, 3, 5, 0); ctx.bezierCurveTo(5, -3, 0, -3, 0, 0);
+            ctx.fill(); ctx.restore();
+        }
+
+        let animationId;
+        function draw() {
+            animationId = requestAnimationFrame(draw);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach((p, index) => {
+                p.tiltAngle += p.tiltAngleInc;
+                p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2;
+                p.x += Math.sin(p.tiltAngle) * 2;
+                p.dy += 0.4; p.y += p.dy; p.x += p.dx;
+
+                if(p.isHeart) { 
+                    drawHeart(ctx, p.x, p.y, p.r*2, p.color); 
+                } else {
+                    ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r); ctx.stroke();
+                }
+                if (p.y > canvas.height) particles.splice(index, 1);
+            });
+            
+            if (particles.length === 0) {
+                cancelAnimationFrame(animationId);
+                canvas.style.display = 'none';
+            }
+        }
+        draw();
+    };
+
+
+    // 🔴 NAYA CODE: Teddy Bear Animation Function
+    window.fireTeddyBears = function() {
+        for(let i=0; i<35; i++) {
+            const h = document.createElement('div');
+            const emojis = ['🧸', '❤️', '💖', '✨']; // Teddy bear aur hearts ka mix
+            h.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            h.style.position = 'fixed'; 
+            h.style.left = '50%'; h.style.top = '50%';
+            h.style.fontSize = (Math.random() * 25 + 15) + 'px';
+            h.style.pointerEvents = 'none'; h.style.zIndex = '99999';
+            h.style.transition = 'all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            document.body.appendChild(h);
+            setTimeout(() => {
+                h.style.transform = `translate(${(Math.random()-0.5)*600}px, ${(Math.random()-0.5)*600}px) scale(${Math.random() + 0.5})`;
+                h.style.opacity = '0';
+            }, 50);
+            setTimeout(() => h.remove(), 1500);
+        }
+    };
+
 });
