@@ -24,24 +24,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     AppComponents.attachVaultMagic();
 
-    // ID CHACK AB UI LOAD HONE KE BAAD HOGA (Taaki screen blank na rahe)
-    if (!memoryId) {
-        alert("Invalid Link! QR code me memory ID nahi hai.");
-        document.getElementById('unlock-btn').innerText = "INVALID LINK";
-        return; // Process yahan ruk jayega par screen blank nahi hogi
-    }
-
-
     // --- 2. GLOBAL VARIABLES ---
     let memoryData = null;
     let userPasscode = ""; 
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
     let chatInterval = null; 
-
-    const bgMusic = document.getElementById('bg-music');
     let isMusicPlaying = false;
 
+    const bgMusic = document.getElementById('bg-music');
     const keys = document.querySelectorAll('.key[data-number]');
     const clearBtn = document.querySelector('.clear-btn');
     const dots = document.querySelectorAll('.dot');
@@ -65,15 +56,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 3. FETCH DATA ---
+    // --- 3. CHECK ID & FETCH DATA (BLANK SCREEN FIX) ---
+    if (!memoryId) {
+        // Agar link mein ID nahi hai toh blank nahi hoga, button par error dikhayega
+        alert("Invalid Link! Memory ID is missing.");
+        if(unlockBtn) {
+            unlockBtn.innerText = "INVALID LINK";
+            unlockBtn.disabled = true;
+        }
+        return; 
+    }
+
     try {
-        unlockBtn.innerText = "LOADING...";
+        if(unlockBtn) unlockBtn.innerText = "LOADING...";
         const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
         memoryData = await response.json();
 
         if (!memoryData || memoryData.status !== "locked") {
             alert("Surprise is not ready yet!");
-            unlockBtn.innerText = "NOT READY";
+            if(unlockBtn) unlockBtn.innerText = "NOT READY";
             return;
         }
 
@@ -82,10 +83,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        unlockBtn.innerText = "UNLOCK GIFT";
+        if(unlockBtn) unlockBtn.innerText = "UNLOCK GIFT";
         updateUI();
     } catch (error) {
-        console.error(error); alert("Internet connection error."); return;
+        console.error(error); 
+        alert("Internet connection error.");
+        if(unlockBtn) unlockBtn.innerText = "ERROR";
+        return;
     }
 
     // --- 4. PASSCODE & AUDIO UNLOCK LOGIC ---
@@ -97,19 +101,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         unlockBtn.style.background = enteredPasscode.length === MAX_LENGTH ? "linear-gradient(135deg, #cc0033, #ff4d79)" : "#ccc";
     }
 
-    keys.forEach(key => { key.addEventListener('click', () => { if (enteredPasscode.length < MAX_LENGTH) { enteredPasscode += key.getAttribute('data-number'); updateUI(); } }); });
-    clearBtn.addEventListener('click', () => { if (enteredPasscode.length > 0) { enteredPasscode = enteredPasscode.slice(0, -1); updateUI(); } });
+    keys.forEach(key => { 
+        key.addEventListener('click', () => { 
+            if (enteredPasscode.length < MAX_LENGTH) { 
+                enteredPasscode += key.getAttribute('data-number'); 
+                updateUI(); 
+            } 
+        }); 
+    });
+    
+    clearBtn.addEventListener('click', () => { 
+        if (enteredPasscode.length > 0) { 
+            enteredPasscode = enteredPasscode.slice(0, -1); 
+            updateUI(); 
+        } 
+    });
 
     unlockBtn.addEventListener('click', async () => {
         if (enteredPasscode === memoryData.passcode) {
             userPasscode = enteredPasscode;
             
-            // 🔴 MUSIC FIX: Unlock audio context on first user tap
-            bgMusic.src = (memoryData.music_id === 'gift' || !memoryData.music_id) ? 'gift.mp3' : memoryData.music_id;
-            bgMusic.volume = 0.5;
-            bgMusic.play().then(() => { bgMusic.pause(); }).catch(e => console.log("Audio prep", e));
+            if(bgMusic) {
+                bgMusic.src = (memoryData.music_id === 'gift' || !memoryData.music_id) ? 'gift.mp3' : memoryData.music_id;
+                bgMusic.volume = 0.5;
+                bgMusic.play().then(() => { bgMusic.pause(); }).catch(e => console.log("Audio prep error", e));
+            }
 
-            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scanned_at: new Date().toISOString() }) });
+            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, { 
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
+            });
             openMainApp();
         } else {
             dots.forEach(dot => dot.style.background = 'red');
@@ -123,7 +144,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         surpriseContainer.classList.remove('hidden');
         footerContainer.classList.remove('hidden');
 
-        // Background Hearts Init
         if(!document.getElementById('hearts-bg')) {
             const hbg = document.createElement('div'); hbg.id = 'hearts-bg';
             document.body.prepend(hbg);
@@ -175,7 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-         // --- 6. ENVELOPE OPEN & LETTER FADE ---
+    // --- 6. ENVELOPE OPEN & LETTER FADE ---
     const envelopeSection = document.getElementById('envelope-section');
     const hiddenSurpriseContent = document.getElementById('hidden-surprise-content');
     
@@ -184,12 +204,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.classList.add('hidden'); 
             hiddenSurpriseContent.classList.remove('hidden'); 
             
-            // Music Button dikhao aur play karo
             const musicBtn = document.getElementById('music-toggle-btn');
             if (musicBtn) musicBtn.style.display = 'flex';
             window.toggleMusic(true); 
 
-            // Letter Typewriter & Fade Effect
             const letterContainer = document.getElementById('dynamic-letter-container');
             const lines = (memoryData.message_text || "I love you.").split('\n');
             letterContainer.innerHTML = '';
@@ -206,13 +224,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-
-
-      // --- 7. NAVIGATION & MUSIC ---
-        window.toggleMusic = function(forcePlay = false) {
+    // --- 7. NAVIGATION & MUSIC ---
+    window.toggleMusic = function(forcePlay = false) {
         const bgMusic = document.getElementById('bg-music');
         const musicBtn = document.getElementById('music-toggle-btn');
-        const musicIcon = document.getElementById('music-icon'); // Naya Icon
+        const musicIcon = document.getElementById('music-icon'); 
         const statusText = document.getElementById('music-status-text');
 
         if (!bgMusic) return;
@@ -239,16 +255,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-
     function setupNavigation() {
         const btnSurprise = document.getElementById('nav-surprise');
         const btnGallery = document.getElementById('nav-gallery');
         const btnChat = document.getElementById('nav-chat');
-        const musicBtn = document.getElementById('music-toggle-btn');
-
-        if(musicBtn) {
-            musicBtn.addEventListener('click', () => window.toggleMusic());
-        }
 
         function resetNav() {
             [btnSurprise, btnGallery, btnChat].forEach(b => { if(b) b.style.color = '#888'; });
@@ -268,8 +278,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-
-    // --- 8. LOVE BOOTH LOGIC (CAMERA, FRAMES & THUMBNAILS) ---
+    // --- 8. LOVE BOOTH LOGIC ---
     function setupLoveBooth() {
         const video = document.getElementById('video-preview');
         const canvasOutput = document.getElementById('canvas-output');
@@ -277,7 +286,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         let stream = null;
         let userImage = null; 
 
-        // 🔴 INJECT UPLOADED PHOTOS AS THUMBNAILS
         const thumbContainer = document.getElementById('booth-thumbnails');
         thumbContainer.innerHTML = '';
         for(let i=1; i<=5; i++) {
@@ -292,10 +300,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Load thumbnail into canvas
         function loadThumbnailToCanvas(url) {
             const img = new Image();
-            img.crossOrigin = "Anonymous"; // Fixes download canvas error
+            img.crossOrigin = "Anonymous"; 
             img.onload = () => {
                 if(stream) { stream.getTracks().forEach(t=>t.stop()); video.style.display='none'; stream=null; }
                 document.getElementById('camera-placeholder').style.display = 'none';
@@ -379,8 +386,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderChatUI() {
         const count = memoryData.message_count || 0;
-        document.getElementById('msg-count-display').innerText = `Messages: ${count} / 100`;
+        const msgDisplay = document.getElementById('msg-count-display');
+        if(msgDisplay) msgDisplay.innerText = `Messages: ${count} / 100`;
+        
         const chatArea = document.getElementById('chat-messages-area');
+        if(!chatArea) return;
+        
         const chatList = memoryData.chat || [];
         
         chatArea.innerHTML = '';
@@ -446,22 +457,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             inputEl.value = ''; await fetchChatData(); 
         } catch(e) { alert(e.message === "Limit" ? "100 Messages Limit Reached!" : "Error sending message."); }
 
-
-        
-                // ... (Upar ka chat send karne wala code) ...
-
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; btn.disabled = false;
-    }); // <-- Chat send button ka code yahan khatam hota hai
+    }); 
 
-
-    // --- 10. PROPOSAL & FINAL GIFT LOGIC (Global Functions) ---
-    
+    // --- 10. PROPOSAL & FINAL GIFT LOGIC ---
     window.acceptProposal = function(event) {
         if(event) event.preventDefault();
         document.getElementById('proposal-state').style.display = 'none';
         document.getElementById('success-state').style.display = 'block'; 
-        
-        // 🔴 NAYA CODE: Teddy Bear emojis ki barish
         if(window.fireTeddyBears) window.fireTeddyBears();
     };
 
@@ -492,7 +495,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lid.style.opacity = '0';
             }
 
-            // 🔴 NAYA CODE: Ring (💍) Animation
             const ring = document.createElement('div');
             ring.innerHTML = '💍'; 
             ring.style.position = 'absolute';
@@ -518,10 +520,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }, 50);
             }
             if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
-        }, 1100); // Ring ka animation pura hone ka wait
+        }, 1100); 
     };
 
-        window.fireConfettiAndHearts = function() {
+    window.fireConfettiAndHearts = function() {
         const canvas = document.getElementById('confetti-canvas');
         if (!canvas) return;
         
@@ -582,12 +584,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         draw();
     };
 
-
-    // 🔴 NAYA CODE: Teddy Bear Animation Function
     window.fireTeddyBears = function() {
         for(let i=0; i<35; i++) {
             const h = document.createElement('div');
-            const emojis = ['🧸', '❤️', '💖', '✨']; // Teddy bear aur hearts ka mix
+            const emojis = ['🧸', '❤️', '💖', '✨']; 
             h.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
             h.style.position = 'fixed'; 
             h.style.left = '50%'; h.style.top = '50%';
