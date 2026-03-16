@@ -198,29 +198,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-      // --- 7. NAVIGATION & MUSIC ---
-    window.toggleMusic = function(forcePlay = false) {
-        const bgMusic = document.getElementById('bg-music');
+    // --- 7. NAVIGATION & MUSIC ---
+    function toggleMusic(forcePlay = false) {
         const musicBtn = document.getElementById('music-toggle-btn');
         const statusText = document.getElementById('music-status-text');
 
-        if (!bgMusic) return;
-
         if (isMusicPlaying && !forcePlay) {
-            bgMusic.pause();
-            isMusicPlaying = false;
-            if(musicBtn) musicBtn.classList.remove('music-playing');
-            if(statusText) statusText.innerText = "Tap to play";
+            bgMusic.pause(); isMusicPlaying = false;
+            musicBtn.classList.remove('music-playing'); statusText.innerText = "Tap to play";
         } else {
-            bgMusic.play().then(() => {
-                isMusicPlaying = true;
-                if(musicBtn) musicBtn.classList.add('music-playing');
-                if(statusText) statusText.innerText = "Playing for you";
-            }).catch(e => {
-                console.log("Audio blocked by browser, waiting for user click.", e);
-            });
+            bgMusic.play().catch(e => console.log("Blocked by browser", e));
+            isMusicPlaying = true;
+            musicBtn.classList.add('music-playing'); statusText.innerText = "Playing for you";
         }
-    };
+    }
 
     function setupNavigation() {
         const btnSurprise = document.getElementById('nav-surprise');
@@ -228,28 +219,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnChat = document.getElementById('nav-chat');
         const musicBtn = document.getElementById('music-toggle-btn');
 
-        if(musicBtn) {
-            musicBtn.addEventListener('click', () => window.toggleMusic());
-        }
+        musicBtn.addEventListener('click', () => toggleMusic());
 
         function resetNav() {
-            [btnSurprise, btnGallery, btnChat].forEach(b => { if(b) b.style.color = '#888'; });
-            [surpriseContainer, galleryContainer, chatContainer].forEach(c => { if(c) c.classList.add('hidden'); });
+            [btnSurprise, btnGallery, btnChat].forEach(b => b.style.color = '#888');
+            [surpriseContainer, galleryContainer, chatContainer].forEach(c => c.classList.add('hidden'));
         }
 
-        if(btnSurprise) btnSurprise.addEventListener('click', () => {
+        btnSurprise.addEventListener('click', () => {
             resetNav(); btnSurprise.style.color = '#cc0033'; surpriseContainer.classList.remove('hidden');
         });
 
-        if(btnGallery) btnGallery.addEventListener('click', () => {
+        btnGallery.addEventListener('click', () => {
             resetNav(); btnGallery.style.color = '#cc0033'; galleryContainer.classList.remove('hidden');
         });
 
-        if(btnChat) btnChat.addEventListener('click', () => {
+        btnChat.addEventListener('click', () => {
             resetNav(); btnChat.style.color = '#cc0033'; chatContainer.classList.remove('hidden'); renderChatUI(); 
         });
     }
-
 
     // --- 8. LOVE BOOTH LOGIC (CAMERA, FRAMES & THUMBNAILS) ---
     function setupLoveBooth() {
@@ -427,81 +415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             inputEl.value = ''; await fetchChatData(); 
         } catch(e) { alert(e.message === "Limit" ? "100 Messages Limit Reached!" : "Error sending message."); }
-
-
         
-                // ... (Upar ka chat send karne wala code) ...
-
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; btn.disabled = false;
-    }); // <-- Chat send button ka code yahan khatam hota hai
-
-
-    // --- 10. PROPOSAL & FINAL GIFT LOGIC (Global Functions) ---
-    
-    window.acceptProposal = function(event) {
-        if(event) event.preventDefault();
-        document.getElementById('proposal-state').style.display = 'none';
-        document.getElementById('success-state').style.display = 'block'; 
-        if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
-    };
-
-    document.addEventListener('mouseover', (e) => {
-        if(e.target.id === 'btn-no') {
-            const btn = e.target;
-            const container = btn.parentElement;
-            const containerRect = container.getBoundingClientRect();
-            const randomX = Math.floor(Math.random() * (containerRect.width - 100)) - (containerRect.width/2);
-            const randomY = Math.floor(Math.random() * 80) - 40; 
-            btn.style.transform = `translate(${randomX}px, ${randomY}px)`;
-            
-            document.getElementById('question-gif-card').style.display = 'inline-block';
-            document.getElementById('proposal-gif').src = "https://media.giphy.com/media/xT0GqfvuVpNqEf3z2w/giphy.gif";
-        }
     });
-
-    let minimalGiftOpened = false;
-    window.openGift = function() {
-        if (minimalGiftOpened) return;
-        minimalGiftOpened = true;
-        
-        const giftBox = document.getElementById("minimal-gift");
-        if(giftBox) {
-            const lid = giftBox.querySelector('.minimal-gift-lid');
-            if(lid) {
-                lid.style.transform = 'translateY(-80px) rotate(-10deg)';
-                lid.style.opacity = '0';
-            }
-        }
-        
-        setTimeout(() => {
-            const msg = document.getElementById("surpriseMessage");
-            if(msg) {
-                msg.style.display = 'block';
-                setTimeout(() => {
-                    msg.style.opacity = '1';
-                    msg.style.transform = 'translateY(0) scale(1)';
-                }, 50);
-            }
-            if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
-        }, 800); 
-    };
-
-    window.fireConfettiAndHearts = function() {
-        for(let i=0; i<30; i++) {
-            const h = document.createElement('div');
-            h.innerHTML = Math.random() > 0.5 ? '❤️' : '✨';
-            h.style.position = 'fixed'; 
-            h.style.left = '50%'; h.style.top = '50%';
-            h.style.fontSize = (Math.random() * 20 + 10) + 'px';
-            h.style.pointerEvents = 'none'; h.style.zIndex = '99999';
-            h.style.transition = 'all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            document.body.appendChild(h);
-            setTimeout(() => {
-                h.style.transform = `translate(${(Math.random()-0.5)*500}px, ${(Math.random()-0.5)*500}px) scale(${Math.random() + 0.5})`;
-                h.style.opacity = '0';
-            }, 50);
-            setTimeout(() => h.remove(), 1500);
-        }
-    };
-
 });
