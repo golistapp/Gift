@@ -3,7 +3,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const memoryId = urlParams.get('id');
     const mode = urlParams.get('mode'); 
 
-    // --- 1. INITIALIZE COMPONENTS (SABSE PEHLE UI LOAD KARO) ---
+    if (!memoryId) {
+        alert("Invalid Link! QR code me memory ID nahi hai.");
+        return;
+    }
+
+    // --- 1. INITIALIZE COMPONENTS ---
     const appRoot = document.getElementById('app-root');
     const vaultContainer = document.getElementById('vault-container');
     const surpriseContainer = document.getElementById('surprise-container');
@@ -30,9 +35,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
     let chatInterval = null; 
-    let isMusicPlaying = false;
 
     const bgMusic = document.getElementById('bg-music');
+    let isMusicPlaying = false;
+
     const keys = document.querySelectorAll('.key[data-number]');
     const clearBtn = document.querySelector('.clear-btn');
     const dots = document.querySelectorAll('.dot');
@@ -56,25 +62,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 3. CHECK ID & FETCH DATA (BLANK SCREEN FIX) ---
-    if (!memoryId) {
-        // Agar link mein ID nahi hai toh blank nahi hoga, button par error dikhayega
-        alert("Invalid Link! Memory ID is missing.");
-        if(unlockBtn) {
-            unlockBtn.innerText = "INVALID LINK";
-            unlockBtn.disabled = true;
-        }
-        return; 
-    }
-
+    // --- 3. FETCH DATA ---
     try {
-        if(unlockBtn) unlockBtn.innerText = "LOADING...";
+        unlockBtn.innerText = "LOADING...";
         const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
         memoryData = await response.json();
 
         if (!memoryData || memoryData.status !== "locked") {
             alert("Surprise is not ready yet!");
-            if(unlockBtn) unlockBtn.innerText = "NOT READY";
+            unlockBtn.innerText = "NOT READY";
             return;
         }
 
@@ -83,13 +79,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if(unlockBtn) unlockBtn.innerText = "UNLOCK GIFT";
+        unlockBtn.innerText = "UNLOCK GIFT";
         updateUI();
     } catch (error) {
-        console.error(error); 
-        alert("Internet connection error.");
-        if(unlockBtn) unlockBtn.innerText = "ERROR";
-        return;
+        console.error(error); alert("Internet connection error."); return;
     }
 
     // --- 4. PASSCODE & AUDIO UNLOCK LOGIC ---
@@ -101,36 +94,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         unlockBtn.style.background = enteredPasscode.length === MAX_LENGTH ? "linear-gradient(135deg, #cc0033, #ff4d79)" : "#ccc";
     }
 
-    keys.forEach(key => { 
-        key.addEventListener('click', () => { 
-            if (enteredPasscode.length < MAX_LENGTH) { 
-                enteredPasscode += key.getAttribute('data-number'); 
-                updateUI(); 
-            } 
-        }); 
-    });
-    
-    clearBtn.addEventListener('click', () => { 
-        if (enteredPasscode.length > 0) { 
-            enteredPasscode = enteredPasscode.slice(0, -1); 
-            updateUI(); 
-        } 
-    });
+    keys.forEach(key => { key.addEventListener('click', () => { if (enteredPasscode.length < MAX_LENGTH) { enteredPasscode += key.getAttribute('data-number'); updateUI(); } }); });
+    clearBtn.addEventListener('click', () => { if (enteredPasscode.length > 0) { enteredPasscode = enteredPasscode.slice(0, -1); updateUI(); } });
 
     unlockBtn.addEventListener('click', async () => {
         if (enteredPasscode === memoryData.passcode) {
             userPasscode = enteredPasscode;
             
-            if(bgMusic) {
-                bgMusic.src = (memoryData.music_id === 'gift' || !memoryData.music_id) ? 'gift.mp3' : memoryData.music_id;
-                bgMusic.volume = 0.5;
-                bgMusic.play().then(() => { bgMusic.pause(); }).catch(e => console.log("Audio prep error", e));
-            }
+            // 🔴 MUSIC FIX: Unlock audio context on first user tap
+            bgMusic.src = (memoryData.music_id === 'gift' || !memoryData.music_id) ? 'gift.mp3' : memoryData.music_id;
+            bgMusic.volume = 0.5;
+            bgMusic.play().then(() => { bgMusic.pause(); }).catch(e => console.log("Audio prep", e));
 
-            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, { 
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
-            });
+            await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scanned_at: new Date().toISOString() }) });
             openMainApp();
         } else {
             dots.forEach(dot => dot.style.background = 'red');
@@ -144,6 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         surpriseContainer.classList.remove('hidden');
         footerContainer.classList.remove('hidden');
 
+        // Background Hearts Init
         if(!document.getElementById('hearts-bg')) {
             const hbg = document.createElement('div'); hbg.id = 'hearts-bg';
             document.body.prepend(hbg);
@@ -195,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 6. ENVELOPE OPEN & LETTER FADE ---
+         // --- 6. ENVELOPE OPEN & LETTER FADE ---
     const envelopeSection = document.getElementById('envelope-section');
     const hiddenSurpriseContent = document.getElementById('hidden-surprise-content');
     
@@ -204,10 +181,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.classList.add('hidden'); 
             hiddenSurpriseContent.classList.remove('hidden'); 
             
+            // Music Button dikhao aur play karo
             const musicBtn = document.getElementById('music-toggle-btn');
             if (musicBtn) musicBtn.style.display = 'flex';
             window.toggleMusic(true); 
 
+            // Letter Typewriter & Fade Effect
             const letterContainer = document.getElementById('dynamic-letter-container');
             const lines = (memoryData.message_text || "I love you.").split('\n');
             letterContainer.innerHTML = '';
@@ -224,11 +203,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- 7. NAVIGATION & MUSIC ---
-    window.toggleMusic = function(forcePlay = false) {
+
+
+      // --- 7. NAVIGATION & MUSIC ---
+        window.toggleMusic = function(forcePlay = false) {
         const bgMusic = document.getElementById('bg-music');
         const musicBtn = document.getElementById('music-toggle-btn');
-        const musicIcon = document.getElementById('music-icon'); 
+        const musicIcon = document.getElementById('music-icon'); // Naya Icon
         const statusText = document.getElementById('music-status-text');
 
         if (!bgMusic) return;
@@ -255,10 +236,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+
     function setupNavigation() {
         const btnSurprise = document.getElementById('nav-surprise');
         const btnGallery = document.getElementById('nav-gallery');
         const btnChat = document.getElementById('nav-chat');
+        const musicBtn = document.getElementById('music-toggle-btn');
+
+        if(musicBtn) {
+            musicBtn.addEventListener('click', () => window.toggleMusic());
+        }
 
         function resetNav() {
             [btnSurprise, btnGallery, btnChat].forEach(b => { if(b) b.style.color = '#888'; });
@@ -278,7 +265,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- 8. LOVE BOOTH LOGIC ---
+
+    // --- 8. LOVE BOOTH LOGIC (CAMERA, FRAMES & THUMBNAILS) ---
     function setupLoveBooth() {
         const video = document.getElementById('video-preview');
         const canvasOutput = document.getElementById('canvas-output');
@@ -286,6 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let stream = null;
         let userImage = null; 
 
+        // 🔴 INJECT UPLOADED PHOTOS AS THUMBNAILS
         const thumbContainer = document.getElementById('booth-thumbnails');
         thumbContainer.innerHTML = '';
         for(let i=1; i<=5; i++) {
@@ -300,9 +289,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // Load thumbnail into canvas
         function loadThumbnailToCanvas(url) {
             const img = new Image();
-            img.crossOrigin = "Anonymous"; 
+            img.crossOrigin = "Anonymous"; // Fixes download canvas error
             img.onload = () => {
                 if(stream) { stream.getTracks().forEach(t=>t.stop()); video.style.display='none'; stream=null; }
                 document.getElementById('camera-placeholder').style.display = 'none';
@@ -386,12 +376,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderChatUI() {
         const count = memoryData.message_count || 0;
-        const msgDisplay = document.getElementById('msg-count-display');
-        if(msgDisplay) msgDisplay.innerText = `Messages: ${count} / 100`;
-        
+        document.getElementById('msg-count-display').innerText = `Messages: ${count} / 100`;
         const chatArea = document.getElementById('chat-messages-area');
-        if(!chatArea) return;
-        
         const chatList = memoryData.chat || [];
         
         chatArea.innerHTML = '';
@@ -457,14 +443,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             inputEl.value = ''; await fetchChatData(); 
         } catch(e) { alert(e.message === "Limit" ? "100 Messages Limit Reached!" : "Error sending message."); }
 
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; btn.disabled = false;
-    }); 
 
-    // --- 10. PROPOSAL & FINAL GIFT LOGIC ---
+        
+                // ... (Upar ka chat send karne wala code) ...
+
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; btn.disabled = false;
+    }); // <-- Chat send button ka code yahan khatam hota hai
+
+
+    // --- 10. PROPOSAL & FINAL GIFT LOGIC (Global Functions) ---
+    
     window.acceptProposal = function(event) {
         if(event) event.preventDefault();
         document.getElementById('proposal-state').style.display = 'none';
         document.getElementById('success-state').style.display = 'block'; 
+        
+        // 🔴 NAYA CODE: Teddy Bear emojis ki barish
         if(window.fireTeddyBears) window.fireTeddyBears();
     };
 
@@ -495,6 +489,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lid.style.opacity = '0';
             }
 
+            // 🔴 NAYA CODE: Ring (💍) Animation
             const ring = document.createElement('div');
             ring.innerHTML = '💍'; 
             ring.style.position = 'absolute';
@@ -520,10 +515,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }, 50);
             }
             if(window.fireConfettiAndHearts) window.fireConfettiAndHearts();
-        }, 1100); 
+        }, 1100); // Ring ka animation pura hone ka wait
     };
 
-    window.fireConfettiAndHearts = function() {
+        window.fireConfettiAndHearts = function() {
         const canvas = document.getElementById('confetti-canvas');
         if (!canvas) return;
         
@@ -584,10 +579,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         draw();
     };
 
+
+    // 🔴 NAYA CODE: Teddy Bear Animation Function
     window.fireTeddyBears = function() {
         for(let i=0; i<35; i++) {
             const h = document.createElement('div');
-            const emojis = ['🧸', '❤️', '💖', '✨']; 
+            const emojis = ['🧸', '❤️', '💖', '✨']; // Teddy bear aur hearts ka mix
             h.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
             h.style.position = 'fixed'; 
             h.style.left = '50%'; h.style.top = '50%';
