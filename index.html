@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A Special Surprise For You ❤️</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -13,17 +13,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="viewer-theme">
-
-    <audio id="tick-sound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
-
-    <div id="app-root" style="max-width: 600px; margin: 0 auto; padding-bottom: 80px;">
-        
+    
+    <div id="app-root">
         <div id="vault-container" class="active-screen"></div>
-
         <div id="surprise-container" class="hidden"></div>
-
         <div id="chat-container" class="hidden"></div>
-
     </div>
 
     <div id="footer-container" class="hidden"></div>
@@ -31,5 +25,6 @@
     <script src="api/firebase.config.js"></script>
     <script src="components.js"></script> 
     <script src="app.js"></script> 
+
 </body>
 </html>
