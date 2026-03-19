@@ -41,8 +41,19 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // 🔴 1. Online/Offline Status Update function
+    function updateGFStatus(statusStr) {
+        if (state.mode === 'admin_preview' || !state.memoryId) return;
+        fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gf_status: statusStr })
+        }).catch(e => {});
+    }
+
+    // 🔴 2. Background Tab Blue Tick Fix
     function updateGFReadReceipt() {
-        if (state.mode === 'admin_preview') return; 
+        if (state.mode === 'admin_preview' || document.hidden) return; // Hide hone par No Blue Tick!
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH',
@@ -51,6 +62,19 @@
             }).catch(e => {});
         }
     }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updateGFReadReceipt();
+            updateGFStatus('online');
+        } else {
+            updateGFStatus('offline');
+        }
+    });
+
+    window.addEventListener('beforeunload', () => updateGFStatus('offline'));
+    updateGFStatus('online'); // Screen load hote hi online
+    updateGFReadReceipt();
 
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
@@ -73,6 +97,8 @@
                     state.memoryData.message_count = payload.data;
                 } else if (payload.path === "/bf_last_read") {
                     state.memoryData.bf_last_read = payload.data;
+                } else if (payload.path === "/bf_status") {
+                    state.memoryData.bf_status = payload.data; // Catch BF status
                 }
                 renderChatUI();
             } catch(err) {}
@@ -97,6 +123,18 @@
 
         if(countDisplay) countDisplay.innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
 
+        // 🔴 Header me BF ka Live Status dikhana
+        const statusEl = document.querySelector('.header-status');
+        if (statusEl) {
+            if (memoryData.bf_status === 'typing...') {
+                statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; text-transform:lowercase; font-weight:normal;">typing...</span>';
+            } else if (memoryData.bf_status === 'online') {
+                statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; font-weight:normal;">online</span>';
+            } else {
+                statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
+            }
+        }
+
         if(chatList.length === 0) {
             chatArea.innerHTML = '<p class="chat-empty-text">Send a message to start the conversation...</p>'; 
             lastMsgTime = "";
@@ -106,7 +144,6 @@
         const currentLastMsg = chatList[chatList.length - 1];
         const isNewMessage = lastMsgTime !== "" && lastMsgTime !== currentLastMsg.timestamp;
 
-        // 🔴 BULLETPROOF GF READ RECEIPT: Agar last message BF ka hai, toh GF ne padh liya
         if(currentLastMsg.sender === 'bf') {
             const gfReadTime = memoryData.gf_last_read ? new Date(memoryData.gf_last_read).getTime() : 0;
             const msgTime = new Date(currentLastMsg.timestamp).getTime();
@@ -167,8 +204,9 @@
         lastMsgTime = currentLastMsg.timestamp;
     }
 
+    let typingTimer;
+
     if (sendBtn) {
-        // 🔴 KEYBOARD GLITCH FIX: Button dabane par keyboard close na ho uski trick!
         sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
         sendBtn.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
@@ -181,6 +219,7 @@
             if(state.mode === 'admin_preview') return alert("Admin cannot send messages.");
 
             if(soundSend) { soundSend.currentTime = 0; soundSend.play().catch(()=>{}); }
+            if(navigator.vibrate) navigator.vibrate(40); // 🔴 Vibrate on send
 
             sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
             sendBtn.disabled = true;
@@ -205,6 +244,7 @@
 
                 inputEl.value = ''; 
                 inputEl.style.height = 'auto'; 
+                updateGFStatus('online'); // Typing reset
             } catch(err) { 
                 alert("Error sending message."); 
             }
@@ -216,6 +256,11 @@
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
+
+            // 🔴 Send Typing Signal
+            updateGFStatus('typing...');
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => updateGFStatus('online'), 1500);
         });
     }
 

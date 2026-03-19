@@ -23,7 +23,20 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // 🔴 1. Online/Offline Status Bhejne Ka Function
+    function updateBFStatus(statusStr) {
+        if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bf_status: statusStr })
+            }).catch(e => {});
+        }
+    }
+
+    // 🔴 2. MAGIC: Background Tab Fix (Visibility Check)
     function updateBFReadReceipt() {
+        if (document.hidden) return; // Agar screen nahi dekh raha, toh Blue Tick mat lagao!
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH',
@@ -33,12 +46,25 @@
         }
     }
 
+    // App background me jane par offline dikhana
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updateBFReadReceipt();
+            updateBFStatus('online');
+        } else {
+            updateBFStatus('offline');
+        }
+    });
+
+    window.addEventListener('beforeunload', () => updateBFStatus('offline'));
+
     unlockBtn.addEventListener('click', () => {
         if (passInput.value === state.memoryData.passcode) {
             state.userPasscode = passInput.value;
             lockScreen.classList.add('hidden');
             dashMain.classList.remove('hidden');
 
+            updateBFStatus('online'); // Login hote hi Online ho jao
             updateBFReadReceipt(); 
             renderDashboardUI();
             startRealtimeDashboard(); 
@@ -70,6 +96,8 @@
                     state.memoryData.proposal_accepted_at = payload.data;
                 } else if (payload.path === "/gf_last_read") {
                     state.memoryData.gf_last_read = payload.data;
+                } else if (payload.path === "/gf_status") {
+                    state.memoryData.gf_status = payload.data; // Catch GF Status
                 }
                 renderDashboardUI();
             } catch(err) {}
@@ -91,6 +119,16 @@
     function renderDashboardUI() {
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
+
+        // 🔴 Header me GF ka Live Status dikhana
+        const titleEl = document.querySelector('.header-info h2');
+        let statusHtml = "";
+        if (state.memoryData.gf_status === 'typing...') {
+            statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
+        } else if (state.memoryData.gf_status === 'online') {
+            statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
+        }
+        if(titleEl) titleEl.innerHTML = 'Secret Chat Room' + statusHtml;
 
         const chatArea = document.getElementById('bf-chat-area');
         const chatList = state.memoryData.chat || [];
@@ -116,11 +154,10 @@
         const currentLastMsg = chatList[chatList.length - 1];
         const isNewMessage = dashLastMsgTime !== "" && dashLastMsgTime !== currentLastMsg.timestamp;
 
-        // 🔴 BULLETPROOF BF READ RECEIPT: Agar last message GF ka hai, toh BF ne padh liya
         if(currentLastMsg.sender === 'gf') {
             const bfReadTime = state.memoryData.bf_last_read ? new Date(state.memoryData.bf_last_read).getTime() : 0;
             const msgTime = new Date(currentLastMsg.timestamp).getTime();
-            if (msgTime > bfReadTime) updateBFReadReceipt();
+            if (msgTime > bfReadTime) updateBFReadReceipt(); // Screen open hone par hi trigger hoga
         }
 
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
@@ -169,9 +206,9 @@
 
     const sendBtn = document.getElementById('bf-send-btn');
     const inputEl = document.getElementById('bf-chat-input');
+    let typingTimer;
 
     if (sendBtn) {
-        // 🔴 KEYBOARD GLITCH FIX FOR BF
         sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
         sendBtn.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
@@ -205,6 +242,8 @@
 
                 inputEl.value = ''; 
                 inputEl.style.height = 'auto'; 
+                inputEl.focus(); 
+                updateBFStatus('online'); // Reset typing status
             } catch(err) { 
                 alert("Error sending message."); 
             }
@@ -216,10 +255,16 @@
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
+
+            // 🔴 Send Typing Signal
+            updateBFStatus('typing...');
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => updateBFStatus('online'), 1500);
         });
 
         inputEl.addEventListener('focus', () => {
             updateBFReadReceipt(); 
+            updateBFStatus('online');
         });
     }
 })();
