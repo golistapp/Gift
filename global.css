@@ -1,5 +1,5 @@
 /* =========================================
-   0. GLOBAL VARIABLES & RESET
+   1. GLOBAL VARIABLES & RESET
    ========================================= */
 :root {
     /* Form & Viewer Colors */
@@ -9,7 +9,7 @@
     --text-dark: #4a0e1c;
     --glass-bg: rgba(255, 255, 255, 0.45);
     --glass-border: rgba(255, 255, 255, 0.6);
-    
+
     /* Admin Colors */
     --admin-blue: #2563eb;
     --admin-bg: #f1f5f9;
@@ -26,245 +26,38 @@
     padding: 0;
     box-sizing: border-box;
     font-family: var(--font-ui);
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent; /* Mobile click highlight remove karega */
 }
 
-.hidden { display: none !important; }
-
-/* =========================================
-   1. ADMIN PANEL CSS
-   ========================================= */
-body.admin-theme {
-    background-color: var(--admin-bg);
-    color: var(--admin-text);
-}
-
-/* a) Navbar & Layout */
-.top-nav { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
-.nav-logo { font-size: 22px; font-weight: 700; color: #0f172a; }
-.nav-logo span { color: var(--admin-blue); font-weight: 300; }
-.admin-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
-.admin-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px;}
-
-/* b) Stats Grid & Forms */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.stat-card { background: #fff; padding: 20px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border-left: 5px solid var(--admin-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
-.input-group { margin-bottom: 15px; }
-.input-group label { display: block; font-size: 13px; color: #475569; margin-bottom: 6px; font-weight: 500; }
-.input-group input { width: 100%; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; background: #f8fafc; }
-.primary-btn { width: 100%; padding: 12px; background: var(--admin-blue); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-
-/* c) Data Table */
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-.badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-.badge-empty { background: #fef3c7; color: #d97706; }
-.badge-locked { background: #d1fae5; color: #059669; }
-.action-btn { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 4px; }
-
-/* =========================================
-   2. FORM (EDITOR) CSS
-   ========================================= */
-body.form-theme {
-    background-color: #FFF0F5;
+body {
+    background-color: #f8fafc; /* Default background */
     color: #333;
-}
-
-/* a) Form Header & Layout */
-.form-container { max-width: 600px; margin: 0 auto; padding: 20px; }
-.editor-header { text-align: center; margin-bottom: 30px; }
-.editor-header h1 { font-family: var(--font-heading); font-size: 42px; color: #D81B60; }
-.editor-section { background: #ffffff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(216, 27, 96, 0.05); margin-bottom: 25px; }
-.step-title { font-size: 18px; color: #D81B60; margin-bottom: 15px; border-bottom: 1px dashed #fce4ec; padding-bottom: 10px; }
-
-/* b) Form Inputs & Polaroids */
-.elegant-input { width: 100%; padding: 12px 15px; border: 2px solid #fce4ec; border-radius: 10px; font-size: 14px; outline: none; background: #fffafb; transition: 0.3s; }
-.polaroid-grid { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-.form-polaroid { background: white; padding: 10px 10px 15px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 90%; max-width: 300px; border-radius: 4px; }
-.form-polaroid img { width: 100%; height: 250px; object-fit: cover; border-radius: 2px; }
-.polaroid-caption-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; padding: 8px; margin-top: 10px; text-align: center; outline: none; font-family: var(--font-heading); font-size: 20px; }
-
-/* c) Lock Screen & Messaging (New Features) */
-.locked-dashboard { text-align: center; padding: 30px; }
-.live-time-box { background: #fff3f6; border: 1px solid #fce4ec; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 14px; }
-.live-messages { max-height: 200px; overflow-y: auto; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eee; text-align: left; }
-
-/* =========================================
-   3. VIEWER PAGE CSS (THE SURPRISE)
-   ========================================= */
-body.viewer-theme {
-    background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%);
-    color: var(--text-dark);
     overflow-x: hidden;
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23ff4d79" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>') 12 12, auto !important;
 }
 
-/* a) Glassmorphism Utility & Hero */
-.glass-card { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(255, 77, 121, 0.15); }
-.viewer-section { min-height: 100vh; padding: 80px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.hero-title { font-family: var(--font-heading); font-size: 5.5rem; color: var(--deep-red); animation: pulse 2s infinite alternate; }
-.hero-subtitle { font-family: var(--font-romantic); font-size: 1.6rem; margin-bottom: 40px; font-weight: 600; }
-
-/* b) Passcode Vault */
-.vault-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 1000; background: inherit; }
-.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-.key { background: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 24px; font-weight: 500; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
-
-/* c) Envelope Animation */
-.envelope-wrapper { position: relative; width: 320px; height: 220px; margin: 0 auto; transition: transform 0.4s ease; cursor: pointer; perspective: 1000px; }
-.envelope { position: relative; width: 100%; height: 100%; background: #a80026; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-.env-front { position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 160px solid #cc0033; border-right: 160px solid #cc0033; border-bottom: 110px solid #b3002d; border-top: 110px solid transparent; z-index: 3; }
-.env-flap { position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 160px solid transparent; border-right: 160px solid transparent; border-top: 130px solid #e60039; z-index: 4; transform-origin: top; transition: transform 0.6s; }
-.envelope-wrapper.open .env-flap { transform: rotateX(180deg); z-index: 1; }
-
-/* d) Viewer Components (Polaroids, Open When, Messages) */
-.view-polaroid { height: 320px; perspective: 1000px; }
-.airmail-card { height: 220px; perspective: 1000px; position: relative; }
-.live-reaction-box { width: 100%; max-width: 500px; padding: 20px; margin-top: 30px; }
-.reaction-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--primary-pink); outline: none; margin-bottom: 10px; resize: none; }
-
 /* =========================================
-   MOBILE RESPONSIVENESS FIX (ADMIN PANEL)
+   2. GLOBAL UTILITY CLASSES
    ========================================= */
-@media screen and (max-width: 768px) {
-    /* Navbar ko stack karna */
-    .top-nav {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-        padding: 15px;
-    }
-    
-    /* Stats grid ko single column karna */
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    /* Dashboard dono cards ko ek ke niche ek lana */
-    .dashboard-grid {
-        display: flex !important;
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    /* Table ko scrollable banana taaki screen se bahar na jaye */
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .data-table {
-        min-width: 500px; /* Table ko sikudne se rokega */
-    }
-    
-    .admin-card {
-        padding: 15px;
-    }
+.hidden { 
+    display: none !important; 
 }
 
-
-
-/* =========================================
-   🪄 STEP 4: MAGIC ANIMATIONS & NEW VIEWER UI
-   ========================================= */
-
-/* Floating Background Hearts */
-#hearts-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; overflow: hidden; }
-.bg-heart { position: absolute; bottom: -50px; color: rgba(255, 77, 121, 0.4); font-size: 20px; animation: floatUp linear infinite; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
-@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120vh) rotate(360deg) scale(1.5); opacity: 0; } }
-
-/* =========================================
-   ROMANTIC LETTER NOTEBOOK (Sample Style)
-   ========================================= */
-.notebook-page {
-    background: #fffdf5; width: 100%; max-width: 700px; padding: 70px 60px; border-radius: 8px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.15); text-align: left; position: relative;
-    background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(0, 150, 255, 0.15) 31px, rgba(0, 150, 255, 0.15) 32px);
-    line-height: 32px;
-    margin: 0 auto;
+/* Primary Button Design (Used everywhere) */
+.primary-btn { 
+    width: 100%; 
+    padding: 12px; 
     border: none; 
-}
-/* Binder holes (Copy notebook style) */
-.notebook-page::after {
-    content: ''; position: absolute; left: 20px; top: 0; height: 100%; width: 20px;
-    background: radial-gradient(circle, #ddd 30%, transparent 35%) 0 0 / 20px 32px;
-}
-/* Red margin line */
-.notebook-page::before { 
-    content: ''; position: absolute; top: 0; bottom: 0; left: 55px; width: 2px; background: rgba(255, 0, 0, 0.3); 
-}
-.romantic-letter { 
-    font-family: var(--font-heading); font-size: 2.2rem; color: #3a0a14; padding-left: 20px; z-index: 2; position: relative; 
-}
-.letter-line { opacity: 0; transform: translateY(15px); margin-bottom: 25px; }
-.letter-line.signature { text-align: right; margin-top: 50px; font-weight: 700; color: #cc0033; font-size: 2.8rem; }
-.fade-in-text { animation: romanticFade 1.5s ease-out forwards; }
-@keyframes romanticFade { to { opacity: 1; transform: translateY(0); } }
-
-/* Mobile screen ke liye Notebook fix */
-@media (max-width: 768px) {
-    .notebook-page { padding: 40px 25px; background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(0, 150, 255, 0.15) 27px, rgba(0, 150, 255, 0.15) 28px); line-height: 28px; }
-    .notebook-page::after { display: none; } /* Mobile par jagah bachane ke liye binder holes hide */
-    .notebook-page::before { left: 15px; }
-    .romantic-letter { font-size: 1.6rem; padding-left: 10px; }
-    .letter-line.signature { font-size: 2rem; margin-top: 30px; }
-}
-/* Pill Music Player Status Animation */
-@keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(204,0,51,0.4); } 70% { box-shadow: 0 0 0 10px rgba(204,0,51,0); } 100% { box-shadow: 0 0 0 0 rgba(204,0,51,0); } }
-.music-playing #music-icon-bg { background: #cc0033 !important; color: white !important; animation: pulseGlow 2s infinite; }
-
-
-/* POLAROID 1:1 GRID & 3D FLIP */
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 50px; width: 100%; max-width: 1200px; padding: 20px; margin: 0 auto; }
-.polaroid-flip { height: 350px; perspective: 1200px; cursor: pointer; }
-.polaroid-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
-.polaroid-flip:hover .polaroid-inner { transform: translateY(-10px) rotate(2deg); }
-.polaroid-flip.is-flipped .polaroid-inner { transform: rotateY(180deg) scale(1.05); }
-.polaroid-front, .polaroid-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; background: white; padding: 15px 15px 45px 15px; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-.polaroid-front img { width: 100%; height: 240px; object-fit: cover; border-radius: 2px; }
-.polaroid-front p { font-family: 'Dancing Script', cursive; font-size: 2rem; margin-top: 15px; color: #3a0a14; text-align: center; }
-.polaroid-back { transform: rotateY(180deg); background: linear-gradient(135deg, #fff, #ffe6ea); display: flex; align-items: center; justify-content: center; padding: 30px; font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #cc0033; border: 2px dashed #ff4d79; border-radius: 10px; text-align: center;}
-.polaroid-flip:nth-child(even) { transform: rotate(4deg); }
-.polaroid-flip:nth-child(odd) { transform: rotate(-4deg); }
-
-/* OPEN WHEN AIRMAIL CARDS */
-.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; width: 100%; max-width: 1200px; margin: 0 auto;}
-.airmail-card { height: 240px; perspective: 1200px; cursor: pointer; }
-.airmail-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 16px; }
-.airmail-card:hover .airmail-inner { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(255, 77, 121, 0.3); }
-.airmail-card.opened .airmail-inner { transform: rotateY(180deg) scale(1.05); }
-.airmail-front, .airmail-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.airmail-front { background: #fff; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-.airmail-front::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; border: 8px solid transparent; border-image: repeating-linear-gradient(45deg, #cc0033 0, #cc0033 15px, transparent 15px, transparent 30px, #00509e 30px, #00509e 45px, transparent 45px, transparent 60px) 10; pointer-events: none; }
-.airmail-label { position: absolute; top: 20px; left: 20px; font-family: 'Dancing Script', cursive; font-size: 1.5rem; color: #cc0033; font-weight: bold; background: white; padding: 0 10px; }
-.airmail-front h3 { font-family: 'Poppins', sans-serif; font-size: 1.4rem; margin-top: 20px; color: #3a0a14; font-weight: 600; }
-.airmail-front i { font-size: 3.5rem; color: #ff4d79; filter: drop-shadow(0 4px 8px rgba(255, 77, 121, 0.4)); }
-.airmail-back { transform: rotateY(180deg); background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 30px; border: 3px solid #ff4d79; font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #3a0a14; line-height: 1.6; text-align: center;}
-
-
-/* =========================================
-   STEP 2: PERFECT 1:1 SQUARE PHOTOS FIX
-   ========================================= */
-.polaroid-flip {
-    height: 420px !important; /* Box ki perfect height */
+    border-radius: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
 }
 
-.polaroid-front img {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 1 / 1 !important; /* Yeh photo ko ekdam 1:1 Square rakhega */
-    object-fit: cover !important;
-    border-radius: 4px !important;
-}
-
-/* Mobile Screen Ke Liye Adjustments */
-@media (max-width: 768px) {
-    .polaroid-flip {
-        height: 360px !important;
-    }
-    .polaroid-front img {
-        height: auto !important;
-        aspect-ratio: 1 / 1 !important;
-    }
+.primary-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
