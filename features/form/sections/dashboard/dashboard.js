@@ -23,10 +23,13 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // 🔴 1. Online/Offline Status Bhejne Ka Function (Ab Offline ki jagah Time bhejega)
     function updateBFStatus(statusStr) {
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_status: statusStr })
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bf_status: statusStr })
             }).catch(e => {});
         }
     }
@@ -35,51 +38,77 @@
         if (document.hidden) return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_last_read: new Date().toISOString() })
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bf_last_read: new Date().toISOString() })
             }).catch(e => {});
         }
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) { updateBFReadReceipt(); updateBFStatus('online'); } 
-        else { updateBFStatus('offline'); }
+        if (!document.hidden) {
+            updateBFReadReceipt();
+            updateBFStatus('online');
+        } else {
+            // 🔴 NAYA FIX: Offline jate hi exact time save hoga
+            updateBFStatus(new Date().toISOString());
+        }
     });
-    window.addEventListener('beforeunload', () => updateBFStatus('offline'));
+
+    window.addEventListener('beforeunload', () => updateBFStatus(new Date().toISOString()));
 
     unlockBtn.addEventListener('click', () => {
         if (passInput.value === state.memoryData.passcode) {
             state.userPasscode = passInput.value;
             lockScreen.classList.add('hidden');
             dashMain.classList.remove('hidden');
-            updateBFStatus('online'); updateBFReadReceipt(); 
-            renderDashboardUI(); startRealtimeDashboard(); 
+
+            updateBFStatus('online'); 
+            updateBFReadReceipt(); 
+            renderDashboardUI();
+            startRealtimeDashboard(); 
         } else {
             errorMsg.classList.remove('hidden');
         }
     });
 
     function startRealtimeDashboard() {
-        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
+        const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
+        const chatStream = new EventSource(dbUrl);
+
         chatStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
-                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
-                else if (payload.path.startsWith("/chat/")) {
+                if (payload.path === "/") {
+                    if (payload.data) state.memoryData = payload.data;
+                } else if (payload.path === "/chat") {
+                    state.memoryData.chat = payload.data;
+                } else if (payload.path.startsWith("/chat/")) {
                     const index = parseInt(payload.path.split('/')[2]);
                     if (!state.memoryData.chat) state.memoryData.chat = [];
                     state.memoryData.chat[index] = payload.data;
-                } 
-                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
-                else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
-                else if (payload.path === "/gf_status") state.memoryData.gf_status = payload.data; 
+                } else if (payload.path === "/message_count") {
+                    state.memoryData.message_count = payload.data;
+                } else if (payload.path === "/scanned_at") {
+                    state.memoryData.scanned_at = payload.data;
+                } else if (payload.path === "/proposal_accepted_at") {
+                    state.memoryData.proposal_accepted_at = payload.data;
+                } else if (payload.path === "/gf_last_read") {
+                    state.memoryData.gf_last_read = payload.data;
+                } else if (payload.path === "/gf_status") {
+                    state.memoryData.gf_status = payload.data; 
+                }
                 renderDashboardUI();
             } catch(err) {}
         });
+
         chatStream.addEventListener('patch', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") { state.memoryData = { ...state.memoryData, ...payload.data }; renderDashboardUI(); }
+                if (payload.path === "/") {
+                    state.memoryData = { ...state.memoryData, ...payload.data };
+                    renderDashboardUI();
+                }
             } catch(err) {}
         });
     }
@@ -90,10 +119,22 @@
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
 
+        // 🔴 Header me GF ka Live Status / Last Seen dikhana
         const titleEl = document.querySelector('.header-info h2');
         let statusHtml = "";
-        if (state.memoryData.gf_status === 'typing...') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
-        else if (state.memoryData.gf_status === 'online') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
+        const gfStatus = state.memoryData.gf_status;
+
+        if (gfStatus === 'typing...') {
+            statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
+        } else if (gfStatus === 'online') {
+            statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
+        } else if (gfStatus && gfStatus !== 'offline') {
+            // Agar date string hai, toh format karke Last seen dikhao
+            let dateObj = new Date(gfStatus);
+            if(!isNaN(dateObj)) {
+                statusHtml = ` <span style="color:#e2e8f0; font-size:11px; font-weight:normal; margin-left:5px; opacity:0.9;">last seen at ${formatTime(gfStatus)}</span>`;
+            }
+        }
         if(titleEl) titleEl.innerHTML = 'Secret Chat Room' + statusHtml;
 
         const chatArea = document.getElementById('bf-chat-area');
@@ -136,15 +177,14 @@
                 decryptedText = decryptedText.replace(/\n/g, '<br>');
             } catch(e) { decryptedText = "<i>🔒 Encrypted Error</i>"; }
 
-            // 🔴 NAYA: IMAGE DECRYPTION LOGIC
+            // 🔴 NAYA: IMAGE DECRYPTION LOGIC (Proper Path Setup)
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
                 let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
-                let mems = state.memoryData.memories || [];
-                let imgUrl = mems[idx] ? (typeof mems[idx] === 'string' ? mems[idx] : (mems[idx].image || mems[idx].url)) : '';
+                let imgUrl = state.memoryData[`image_${idx}_url`];
                 if(imgUrl) {
                     imageHtml = `<img src="${imgUrl}" class="chat-img-msg">`;
-                    decryptedText = ""; // Hide the code text
+                    decryptedText = ""; 
                 } else {
                     decryptedText = "<i>📷 Image Missing</i>";
                 }
@@ -162,7 +202,6 @@
                             </span>`;
             }
 
-            // Adjust padding if it's an image
             const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
 
             newHtml += `
@@ -183,7 +222,6 @@
         dashLastMsgTime = currentLastMsg.timestamp;
     }
 
-    // 🔴 NAYA: Shared Function to Send Messages (Text or Image Code)
     async function sendMessageToFirebase(msgText) {
         if(!msgText) return;
         const sendBtn = document.getElementById('bf-send-btn');
@@ -208,14 +246,14 @@
 
             const inputEl = document.getElementById('bf-chat-input');
             inputEl.value = ''; inputEl.style.height = 'auto'; 
-            updateBFStatus('online'); // Reset typing status
+            updateBFStatus('online'); 
         } catch(err) { alert("Error sending message."); }
 
         sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
         sendBtn.disabled = false;
     }
 
-    // 🔴 NAYA: Image Popup Logic
+    // 🔴 NAYA: Image Popup Logic with Fix (image_X_url)
     const galleryBtn = document.getElementById('bf-gallery-btn');
     const imgPopup = document.getElementById('bf-img-popup');
     const closePopup = document.getElementById('bf-close-popup');
@@ -225,19 +263,22 @@
         galleryBtn.addEventListener('click', (e) => {
             e.preventDefault();
             imgGrid.innerHTML = '';
-            const memories = state.memoryData.memories || [];
-            if(memories.length === 0) {
+            let found = false;
+
+            // Loop from 1 to 5 to find uploaded images
+            for(let i=1; i<=5; i++) {
+                let imgUrl = state.memoryData[`image_${i}_url`];
+                if(imgUrl) {
+                    found = true;
+                    let imgEl = document.createElement('img');
+                    imgEl.src = imgUrl;
+                    imgEl.onclick = () => { imgPopup.classList.add('hidden'); sendMessageToFirebase(`[IMG_${i}]`); };
+                    imgGrid.appendChild(imgEl);
+                }
+            }
+
+            if(!found) {
                 imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding: 10px;">No memories uploaded.</span>';
-            } else {
-                memories.forEach((mem, index) => {
-                    let imgUrl = mem ? (typeof mem === 'string' ? mem : (mem.image || mem.url)) : '';
-                    if(imgUrl) {
-                        let imgEl = document.createElement('img');
-                        imgEl.src = imgUrl;
-                        imgEl.onclick = () => { imgPopup.classList.add('hidden'); sendMessageToFirebase(`[IMG_${index}]`); };
-                        imgGrid.appendChild(imgEl);
-                    }
-                });
             }
             imgPopup.classList.remove('hidden');
         });
@@ -259,6 +300,10 @@
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => updateBFStatus('online'), 1500);
         });
-        inputEl.addEventListener('focus', () => { updateBFReadReceipt(); updateBFStatus('online'); });
+
+        inputEl.addEventListener('focus', () => {
+            updateBFReadReceipt(); 
+            updateBFStatus('online');
+        });
     }
 })();
