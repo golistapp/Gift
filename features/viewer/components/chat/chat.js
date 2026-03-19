@@ -11,6 +11,7 @@
     const soundSend = document.getElementById('sound-send');
     const soundReceive = document.getElementById('sound-receive');
 
+    // 1. Keyboard Layout Fix
     if (window.visualViewport && gfChatWrapper) {
         window.visualViewport.addEventListener('resize', () => {
             if (window.visualViewport.height < window.innerHeight - 50) {
@@ -33,6 +34,7 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // 2. Online & Last Seen Status Sender
     function updateGFStatus(statusStr) {
         if (state.mode === 'admin_preview' || !state.memoryId) return;
         fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -40,6 +42,7 @@
         }).catch(e => {});
     }
 
+    // 3. Background Tab Fix (Blue Tick)
     function updateGFReadReceipt() {
         if (state.mode === 'admin_preview' || document.hidden) return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
@@ -51,12 +54,15 @@
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) { updateGFReadReceipt(); updateGFStatus('online'); } 
-        else { updateGFStatus(new Date().toISOString()); }
+        else { updateGFStatus(new Date().toISOString()); } // Offline jate hi time save
     });
     window.addEventListener('beforeunload', () => updateGFStatus(new Date().toISOString()));
-    updateGFStatus('online'); updateGFReadReceipt();
+    updateGFStatus('online'); 
+    updateGFReadReceipt();
+
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
+    // 4. Real-time Firebase Connection (Original Working Logic)
     function startRealtimeChat() {
         const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
         chatStream.addEventListener('put', (e) => {
@@ -83,6 +89,7 @@
         });
     }
 
+    // 5. Render Chat
     function renderChatUI() {
         if(!chatArea) return;
         const memoryData = state.memoryData || {};
@@ -91,20 +98,16 @@
 
         if(countDisplay) countDisplay.innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
 
+        // Header: BF Last Seen / Online Status
         const statusEl = document.querySelector('.header-status');
         if (statusEl) {
             const bfStatus = memoryData.bf_status;
-            if (bfStatus === 'typing...') {
-                statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; text-transform:lowercase; font-weight:normal;">typing...</span>';
-            } else if (bfStatus === 'online') {
-                statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; font-weight:normal;">online</span>';
-            } else if (bfStatus && bfStatus !== 'offline') {
+            if (bfStatus === 'typing...') statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; text-transform:lowercase; font-weight:normal;">typing...</span>';
+            else if (bfStatus === 'online') statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; font-weight:normal;">online</span>';
+            else if (bfStatus && bfStatus !== 'offline') {
                 let dateObj = new Date(bfStatus);
-                if(!isNaN(dateObj)) {
-                    statusEl.innerHTML = `<span style="color:#fce4ec; font-size:10px; font-weight:normal; opacity:0.9;">last seen at ${formatTime(bfStatus)}</span>`;
-                } else {
-                    statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
-                }
+                if(!isNaN(dateObj)) statusEl.innerHTML = `<span style="color:#fce4ec; font-size:10px; font-weight:normal; opacity:0.9;">last seen at ${formatTime(bfStatus)}</span>`;
+                else statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
             } else {
                 statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
             }
@@ -144,6 +147,7 @@
                 decryptedText = decryptedText.replace(/\n/g, '<br>'); 
             } catch(e) { decryptedText = ""; }
 
+            // Image Decryption
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
                 let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
@@ -162,6 +166,7 @@
             const msgTime = new Date(msgObj.timestamp).getTime();
             const isGf = msgObj.sender === 'gf';
 
+            // Double Ticks for GF
             let tickHtml = '';
             if (isGf) {
                 const isRead = bfReadTime >= msgTime;
@@ -189,6 +194,7 @@
         lastMsgTime = currentLastMsg.timestamp;
     }
 
+    // 6. Send Message Logic
     async function sendMessageToFirebase(msgText) {
         if(!msgText) return;
         if(state.mode === 'admin_preview') return alert("Admin cannot send messages.");
@@ -209,6 +215,7 @@
 
             const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
             chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
+
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
             await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -219,12 +226,15 @@
 
             if(inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
             updateGFStatus('online'); 
-        } catch(err) { alert("Error sending message."); }
+        } catch(err) { 
+            alert("Error sending message."); 
+        }
 
         sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
         sendBtn.disabled = false;
     }
 
+    // 7. Image Popup Events
     const galleryBtn = document.getElementById('gf-gallery-btn');
     const imgPopup = document.getElementById('gf-img-popup');
     const closePopup = document.getElementById('gf-close-popup');
@@ -235,6 +245,7 @@
             e.preventDefault();
             imgGrid.innerHTML = '';
             let found = false;
+
             for(let i=1; i<=5; i++) {
                 let imgUrl = state.memoryData[`image_${i}_url`];
                 if(imgUrl) {
@@ -245,29 +256,29 @@
                     imgGrid.appendChild(imgEl);
                 }
             }
-            if(!found) imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding:10px;">No memories found.</span>';
+
+            if(!found) {
+                imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding:10px;">No memories found.</span>';
+            }
             imgPopup.classList.remove('hidden');
         });
         closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
     }
 
-    const sendBtn = document.getElementById('send-msg-btn');
     let typingTimer;
-
     if (sendBtn) {
         sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
         sendBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!sendBtn.disabled) sendBtn.click(); });
         sendBtn.addEventListener('click', () => sendMessageToFirebase(inputEl.value.trim()));
 
         inputEl.addEventListener('input', function() {
-            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
             updateGFStatus('typing...');
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => updateGFStatus('online'), 1500);
         });
     }
 
-    // 🔴 MAGIC FIX: Server connection se pehle instantly existing data render karega
-    renderChatUI(); 
     startRealtimeChat(); 
 })();

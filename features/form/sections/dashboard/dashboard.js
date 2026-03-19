@@ -9,9 +9,18 @@
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
 
-    // 🔴 NAYA: Dashboard ke liye Dynamic Sound Effects
-    const dashSoundSend = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
-    const dashSoundReceive = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+    // 🔴 100% Working Sound Engine
+    function playDashSound(type) {
+        let soundId = type === 'send' ? 'dash-sound-send' : 'dash-sound-receive';
+        let soundEl = document.getElementById(soundId);
+        if(!soundEl) {
+            soundEl = new Audio(type === 'send' ? "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+            soundEl.id = soundId;
+            document.body.appendChild(soundEl);
+        }
+        soundEl.currentTime = 0;
+        soundEl.play().catch(e => console.log("Sound blocked by browser"));
+    }
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
@@ -97,6 +106,7 @@
         const titleEl = document.querySelector('.header-info h2');
         let statusHtml = "";
         const gfStatus = state.memoryData.gf_status;
+
         if (gfStatus === 'typing...') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
         else if (gfStatus === 'online') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
         else if (gfStatus && gfStatus !== 'offline') {
@@ -134,9 +144,8 @@
             if (msgTime > bfReadTime) updateBFReadReceipt(); 
         }
 
-        // 🔴 Play sound when new message arrives from GF
         if(isNewMessage && currentLastMsg.sender === 'gf') {
-            dashSoundReceive.currentTime = 0; dashSoundReceive.play().catch(()=>{});
+            playDashSound('receive');
         }
 
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
@@ -197,8 +206,7 @@
     async function sendMessageToFirebase(msgText) {
         if(!msgText) return;
 
-        // 🔴 Play Send Sound and Vibrate instantly
-        dashSoundSend.currentTime = 0; dashSoundSend.play().catch(()=>{});
+        playDashSound('send');
         if(navigator.vibrate) navigator.vibrate(40);
 
         const sendBtn = document.getElementById('bf-send-btn');
@@ -272,9 +280,6 @@
             typingTimer = setTimeout(() => updateBFStatus('online'), 1500);
         });
 
-        inputEl.addEventListener('focus', () => {
-            updateBFReadReceipt(); 
-            updateBFStatus('online');
-        });
+        inputEl.addEventListener('focus', () => { updateBFReadReceipt(); updateBFStatus('online'); });
     }
 })();
