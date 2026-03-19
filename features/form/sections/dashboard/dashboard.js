@@ -29,10 +29,10 @@
         }
     });
 
-    // 2. 🚀 NEW: WhatsApp Style Real-Time WebSockets (SSE)
+    // 2. Real-Time WebSockets (SSE)
     function startRealtimeDashboard() {
         const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
-        const chatStream = new EventSource(dbUrl); // 24/7 Zero-delay listener
+        const chatStream = new EventSource(dbUrl);
 
         chatStream.addEventListener('put', (e) => {
             try {
@@ -51,6 +51,9 @@
                     state.memoryData.scanned_at = payload.data;
                 } else if (payload.path === "/proposal_accepted_at") {
                     state.memoryData.proposal_accepted_at = payload.data;
+                } else if (payload.path === "/gf_last_read") {
+                    // 🔴 GF Read Time Catch Karna
+                    state.memoryData.gf_last_read = payload.data;
                 }
                 renderDashboardUI();
             } catch(err) {}
@@ -67,7 +70,7 @@
         });
     }
 
-    // 3. Render Dashboard UI
+    // 3. Render Dashboard UI (With Blue Ticks!)
     function renderDashboardUI() {
         // Update Stats
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
@@ -77,24 +80,19 @@
         const chatList = state.memoryData.chat || [];
         const count = state.memoryData.message_count || 0;
 
-        document.getElementById('bf-msg-count').innerText = `Messages: ${count} / 300`;
+        // 🔴 Update text to 100 limit
+        document.getElementById('bf-msg-count').innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
 
         const inputEl = document.getElementById('bf-chat-input');
         const sendBtn = document.getElementById('bf-send-btn');
-
-        // Check limits & active status
-        if(chatList.length > 0 && count < 300) {
-            inputEl.disabled = false; sendBtn.disabled = false;
-            inputEl.placeholder = "Type your reply...";
-        } else if (count >= 300) {
-            inputEl.disabled = true; sendBtn.disabled = true;
-            inputEl.placeholder = "300 message limit reached!";
-        }
 
         if(chatList.length === 0) {
             chatArea.innerHTML = '<div class="waiting-msg">Waiting for her to start the conversation...</div>';
             return;
         }
+
+        // 🔴 GF ka Read Time check karna
+        const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
 
         // Render Chat Bubbles
         let newHtml = '';
@@ -107,12 +105,25 @@
 
             const isBf = msgObj.sender === 'bf';
             const timeStr = formatTime(msgObj.timestamp);
+            const msgTime = new Date(msgObj.timestamp).getTime();
+
+            // 🔴 Tick Logic (Sirf Boyfriend ke messages par)
+            let tickHtml = '';
+            if (isBf) {
+                const isRead = gfReadTime >= msgTime; // Agar GF ka last seen message ke time se bada hai
+                tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}">
+                                ${isRead ? '<i class="fa-solid fa-check-double"></i>' : '<i class="fa-solid fa-check"></i>'}
+                            </span>`;
+            }
 
             newHtml += `
                 <div class="msg-wrapper ${isBf ? 'bf' : 'gf'}">
                     <div class="msg-bubble">
                         ${decryptedText}
-                        <span class="msg-time">${timeStr}</span>
+                        <div class="msg-meta">
+                            <span class="msg-time">${timeStr}</span>
+                            ${tickHtml}
+                        </div>
                     </div>
                 </div>`;
         });
@@ -121,7 +132,7 @@
         chatArea.scrollTop = chatArea.scrollHeight; // Auto-scroll to bottom
     }
 
-    // 4. Send Message Logic
+    // 4. Send Message Logic (With 100 Limit)
     const sendBtn = document.getElementById('bf-send-btn');
     const inputEl = document.getElementById('bf-chat-input');
 
@@ -129,9 +140,6 @@
         sendBtn.addEventListener('click', async () => {
             const msgText = inputEl.value.trim();
             if(!msgText) return;
-
-            let currentCount = state.memoryData.message_count || 0;
-            if(currentCount >= 300) return alert("Message limit reached (300/300)."); 
 
             sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
             sendBtn.disabled = true;
@@ -142,12 +150,14 @@
 
                 let chatList = latestData.chat || [];
                 let newCount = (latestData.message_count || 0) + 1;
-                if(newCount > 300) throw new Error("Limit");
 
                 const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
                 chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
-                if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
+                // 🔴 LIMIT LOGIC: Agar 100 se zyada ho gaye, toh purane messages delete kardo (FIFO)
+                if(chatList.length > 100) {
+                    chatList = chatList.slice(chatList.length - 100);
+                }
 
                 await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                     method: 'PATCH', 
@@ -156,9 +166,8 @@
                 });
 
                 inputEl.value = ''; 
-                // SSE will automatically fetch and render the new message!
             } catch(err) { 
-                alert(err.message === "Limit" ? "300 Messages Limit Reached!" : "Error sending message."); 
+                alert("Error sending message."); 
             }
 
             sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
@@ -169,5 +178,4 @@
             if (e.key === 'Enter') sendBtn.click();
         });
     }
-
 })();
