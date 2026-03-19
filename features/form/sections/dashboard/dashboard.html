@@ -1,5 +1,4 @@
 <div class="dashboard-wrapper fade-in" id="dash-wrapper">
-    
     <div id="dash-lock-screen" class="lock-screen-box">
         <i class="fa-solid fa-lock lock-icon"></i>
         <h2 class="dash-title" style="margin-bottom: 5px;">Dashboard Locked</h2>
@@ -12,7 +11,6 @@
     </div>
 
     <div id="dash-main-screen" class="hidden locked-dashboard">
-        
         <header class="chat-app-header">
             <div class="header-left">
                 <div class="avatar"><i class="fa-solid fa-heart"></i></div>
@@ -26,17 +24,21 @@
             </div>
         </header>
 
-        <div id="bf-chat-area" class="chat-area whatsapp-bg">
-             </div>
+        <div id="bf-chat-area" class="chat-area whatsapp-bg"></div>
              
         <div class="chat-input-wrapper">
+            <div id="bf-img-popup" class="img-popup hidden">
+                <div class="img-popup-header">Send a Memory <i class="fa-solid fa-xmark" id="bf-close-popup" style="cursor:pointer; padding:5px; font-size:16px;"></i></div>
+                <div class="img-grid" id="bf-img-grid"></div>
+            </div>
+
             <div class="chat-input-inner">
+                <button id="bf-gallery-btn" class="gallery-btn" disabled><i class="fa-regular fa-image"></i></button>
+                
                 <textarea id="bf-chat-input" placeholder="Waiting for her reply..." disabled rows="1"></textarea>
                 <button id="bf-send-btn" class="send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
             </div>
             <p id="bf-msg-count" class="msg-count">Messages: 0 / 100</p>
         </div>
     </div>
-    
-    <audio id="send-msg-sound" src="assets/audio/tick.mp3" preload="auto"></audio>
 </div>

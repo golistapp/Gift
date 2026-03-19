@@ -1,5 +1,4 @@
 <div class="chat-app-wrapper" id="gf-chat-wrapper">
-    
     <header class="chat-app-header">
         <div class="header-left">
             <div class="avatar"><i class="fa-solid fa-heart"></i></div>
@@ -18,7 +17,14 @@
     </div>
 
     <div class="chat-input-wrapper">
+        <div id="gf-img-popup" class="img-popup hidden">
+            <div class="img-popup-header">Send a Memory <i class="fa-solid fa-xmark" id="gf-close-popup" style="cursor:pointer; padding:5px; font-size:16px;"></i></div>
+            <div class="img-grid" id="gf-img-grid"></div>
+        </div>
+
         <div class="chat-input-inner">
+            <button id="gf-gallery-btn" class="gallery-btn" disabled><i class="fa-regular fa-image"></i></button>
+            
             <textarea id="live-msg-input" placeholder="Type a message..." class="chat-input-box" rows="1"></textarea>
             <button id="send-msg-btn" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
