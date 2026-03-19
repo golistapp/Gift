@@ -11,22 +11,19 @@
     const soundSend = document.getElementById('sound-send');
     const soundReceive = document.getElementById('sound-receive');
 
-    // 🔴 MAGIC API: Mobile Keyboard Gap Fixer (Full Screen Override)
     if (window.visualViewport && gfChatWrapper) {
         window.visualViewport.addEventListener('resize', () => {
             if (window.visualViewport.height < window.innerHeight - 50) {
-                // Keyboard Opened - Go Full Screen Native App Style!
                 gfChatWrapper.style.position = 'fixed';
                 gfChatWrapper.style.top = '0';
                 gfChatWrapper.style.left = '0';
                 gfChatWrapper.style.width = '100%';
                 gfChatWrapper.style.height = window.visualViewport.height + 'px';
-                gfChatWrapper.style.zIndex = '99999'; // Cover everything including bottom menu
+                gfChatWrapper.style.zIndex = '99999'; 
                 gfChatWrapper.style.borderRadius = '0';
                 gfChatWrapper.style.border = 'none';
                 gfChatWrapper.style.marginBottom = '0';
             } else {
-                // Keyboard Closed - Return to normal card shape
                 gfChatWrapper.style.position = 'relative';
                 gfChatWrapper.style.height = 'calc(100dvh - 100px)';
                 gfChatWrapper.style.zIndex = '1';
@@ -55,7 +52,6 @@
         }
     }
 
-    updateGFReadReceipt();
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
     function startRealtimeChat() {
@@ -110,9 +106,15 @@
         const currentLastMsg = chatList[chatList.length - 1];
         const isNewMessage = lastMsgTime !== "" && lastMsgTime !== currentLastMsg.timestamp;
 
+        // 🔴 BULLETPROOF GF READ RECEIPT: Agar last message BF ka hai, toh GF ne padh liya
+        if(currentLastMsg.sender === 'bf') {
+            const gfReadTime = memoryData.gf_last_read ? new Date(memoryData.gf_last_read).getTime() : 0;
+            const msgTime = new Date(currentLastMsg.timestamp).getTime();
+            if (msgTime > gfReadTime) updateGFReadReceipt();
+        }
+
         if(isNewMessage && currentLastMsg.sender === 'bf') {
             if(soundReceive) { soundReceive.currentTime = 0; soundReceive.play().catch(()=>{}); }
-            updateGFReadReceipt();
         }
 
         const bfReadTime = memoryData.bf_last_read ? new Date(memoryData.bf_last_read).getTime() : 0;
@@ -134,7 +136,6 @@
             const msgTime = new Date(msgObj.timestamp).getTime();
             const isGf = msgObj.sender === 'gf';
 
-            // 🔴 NAYA: Hamesha Double Tick Dikhayega GF ke messages par
             let tickHtml = '';
             if (isGf) {
                 const isRead = bfReadTime >= msgTime;
@@ -167,6 +168,13 @@
     }
 
     if (sendBtn) {
+        // 🔴 KEYBOARD GLITCH FIX: Button dabane par keyboard close na ho uski trick!
+        sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
+        sendBtn.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            if(!sendBtn.disabled) sendBtn.click(); 
+        });
+
         sendBtn.addEventListener('click', async () => {
             const msgText = inputEl.value.trim();
             if(!msgText) return;
@@ -197,7 +205,6 @@
 
                 inputEl.value = ''; 
                 inputEl.style.height = 'auto'; 
-                inputEl.focus(); 
             } catch(err) { 
                 alert("Error sending message."); 
             }

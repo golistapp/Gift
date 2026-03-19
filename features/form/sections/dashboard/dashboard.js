@@ -8,9 +8,7 @@
     const passInput = document.getElementById('check-passcode');
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
-    const sendMsgSound = document.getElementById('send-msg-sound'); // Sound Element
 
-    // Viewport adjustment to prevent keyboard gaps
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             dashWrapper.style.height = window.visualViewport.height + 'px';
@@ -25,12 +23,23 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    function updateBFReadReceipt() {
+        if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bf_last_read: new Date().toISOString() })
+            }).catch(e => {});
+        }
+    }
+
     unlockBtn.addEventListener('click', () => {
         if (passInput.value === state.memoryData.passcode) {
             state.userPasscode = passInput.value;
             lockScreen.classList.add('hidden');
             dashMain.classList.remove('hidden');
 
+            updateBFReadReceipt(); 
             renderDashboardUI();
             startRealtimeDashboard(); 
         } else {
@@ -77,6 +86,8 @@
         });
     }
 
+    let dashLastMsgTime = "";
+
     function renderDashboardUI() {
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
@@ -100,6 +111,16 @@
             inputEl.placeholder = "Waiting for her reply...";
             chatArea.innerHTML = '<div style="text-align:center; padding: 20px; color: #666; font-size: 13px; background: rgba(255,255,255,0.7); border-radius: 10px; margin: auto;">Waiting for her to start the conversation...</div>';
             return;
+        }
+
+        const currentLastMsg = chatList[chatList.length - 1];
+        const isNewMessage = dashLastMsgTime !== "" && dashLastMsgTime !== currentLastMsg.timestamp;
+
+        // 🔴 BULLETPROOF BF READ RECEIPT: Agar last message GF ka hai, toh BF ne padh liya
+        if(currentLastMsg.sender === 'gf') {
+            const bfReadTime = state.memoryData.bf_last_read ? new Date(state.memoryData.bf_last_read).getTime() : 0;
+            const msgTime = new Date(currentLastMsg.timestamp).getTime();
+            if (msgTime > bfReadTime) updateBFReadReceipt();
         }
 
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
@@ -138,31 +159,31 @@
         });
 
         chatArea.innerHTML = newHtml;
-        chatArea.scrollTop = chatArea.scrollHeight; 
+
+        if (isNewMessage || dashLastMsgTime === "") {
+            chatArea.scrollTop = chatArea.scrollHeight; 
+        }
+
+        dashLastMsgTime = currentLastMsg.timestamp;
     }
 
-    // --- 🔴 MAGIC FIX: KEYBOARD BLINK, SOUND & BUTTON FIX ---
     const sendBtn = document.getElementById('bf-send-btn');
     const inputEl = document.getElementById('bf-chat-input');
 
-    if (sendBtn && inputEl) {
-        let isSending = false; // Double send rokne ke liye
+    if (sendBtn) {
+        // 🔴 KEYBOARD GLITCH FIX FOR BF
+        sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
+        sendBtn.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            if(!sendBtn.disabled) sendBtn.click(); 
+        });
 
-        // Message bhejne ka asali function (Reusable)
-        const sendMessage = async () => {
+        sendBtn.addEventListener('click', async () => {
             const msgText = inputEl.value.trim();
-            if(!msgText || isSending) return;
+            if(!msgText) return;
 
-            isSending = true;
-
-            // 🎵 SOUND PLAY: Message jate hi tik aawaz aayegi
-            if (sendMsgSound) {
-                sendMsgSound.currentTime = 0;
-                sendMsgSound.play().catch(e => console.log("Sound play error:", e));
-            }
-
-            const originalBtnHtml = sendBtn.innerHTML;
             sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            sendBtn.disabled = true;
 
             try {
                 const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
@@ -174,9 +195,7 @@
                 const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
                 chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
-                if(chatList.length > 100) {
-                    chatList = chatList.slice(chatList.length - 100);
-                }
+                if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
                 await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                     method: 'PATCH', 
@@ -185,36 +204,22 @@
                 });
 
                 inputEl.value = ''; 
-                inputEl.style.height = 'auto'; // Reset box size
-
-                // Keyboard ko band hone se rokne ke liye wapas focus karega
-                inputEl.focus(); 
+                inputEl.style.height = 'auto'; 
             } catch(err) { 
                 alert("Error sending message."); 
             }
 
-            sendBtn.innerHTML = originalBtnHtml; 
-            isSending = false;
-        };
-
-        // 1. Desktop ke liye (focus lose hone se rokega)
-        sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
-
-        // 2. Mobile (Touch screens) ke liye: Touchend keyboard hide nahi karta aur send bhi karega
-        sendBtn.addEventListener('touchend', (e) => {
-            e.preventDefault(); 
-            sendMessage();
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
+            sendBtn.disabled = false;
         });
 
-        // 3. Fallback click event
-        sendBtn.addEventListener('click', (e) => {
-            sendMessage();
-        });
-
-        // Textarea auto-resize
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        inputEl.addEventListener('focus', () => {
+            updateBFReadReceipt(); 
         });
     }
 })();
