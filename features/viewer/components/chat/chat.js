@@ -3,6 +3,7 @@
     if (!state) return;
 
     let lastMsgTime = ""; 
+    const gfChatWrapper = document.getElementById('gf-chat-wrapper');
     const chatArea = document.getElementById('chat-messages-area');
     const inputEl = document.getElementById('live-msg-input');
     const sendBtn = document.getElementById('send-msg-btn');
@@ -10,16 +11,24 @@
     const soundSend = document.getElementById('sound-send');
     const soundReceive = document.getElementById('sound-receive');
 
-    // Helper: Time format
+    // 🔴 MAGIC API: Mobile Keyboard Gap Fixer for GF
+    if (window.visualViewport && gfChatWrapper) {
+        window.visualViewport.addEventListener('resize', () => {
+            // Shrink chat window dynamically avoiding bottom nav
+            gfChatWrapper.style.height = (window.visualViewport.height - 75) + 'px'; 
+            if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+        });
+    }
+
     function formatTime(isoString) {
         if(!isoString) return '';
         const date = new Date(isoString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 🔴 1. MAGIC: GF Read Receipt Update (Yeh Firebase pe signal bhejega)
+    // GF Read Receipt Update
     function updateGFReadReceipt() {
-        if (state.mode === 'admin_preview') return; // Admin check karega tab trigger nahi hoga
+        if (state.mode === 'admin_preview') return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH',
@@ -29,15 +38,10 @@
         }
     }
 
-    // Jaise hi chat load ho, Read Status update kardo
     updateGFReadReceipt();
+    if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
-    // Jab GF text type karne aaye tab bhi read status update kardo
-    if(inputEl) {
-        inputEl.addEventListener('focus', updateGFReadReceipt);
-    }
-
-    // --- 2. Real-Time WebSockets Listener ---
+    // Real-Time WebSockets
     function startRealtimeChat() {
         const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
         const chatStream = new EventSource(dbUrl);
@@ -56,6 +60,7 @@
                 } else if (payload.path === "/message_count") {
                     state.memoryData.message_count = payload.data;
                 } else if (payload.path === "/bf_last_read") {
+                    // 🔴 Get BF's last read time!
                     state.memoryData.bf_last_read = payload.data;
                 }
                 renderChatUI();
@@ -71,10 +76,6 @@
                 }
             } catch(err) {}
         });
-
-        chatStream.onerror = () => {
-            console.log("Reconnecting smoothly...");
-        };
     }
 
     function renderChatUI() {
@@ -94,14 +95,12 @@
         const currentLastMsg = chatList[chatList.length - 1];
         const isNewMessage = lastMsgTime !== "" && lastMsgTime !== currentLastMsg.timestamp;
 
-        // Play Receive Sound ONLY agar naya message BF ki taraf se aaye
         if(isNewMessage && currentLastMsg.sender === 'bf') {
             if(soundReceive) { soundReceive.currentTime = 0; soundReceive.play().catch(()=>{}); }
-            // Jab BF se message aaye tab apne aap GF ka Read Receipt update kar do
             updateGFReadReceipt();
         }
 
-        // BF ka read time check (Future update ke liye pehle se fix kar diya hai)
+        // BF ka read time fetch karo (Ticks logic)
         const bfReadTime = memoryData.bf_last_read ? new Date(memoryData.bf_last_read).getTime() : 0;
 
         let newHtml = '';
@@ -110,7 +109,7 @@
             try {
                 const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                decryptedText = decryptedText.replace(/\n/g, '<br>'); // Handle line breaks
+                decryptedText = decryptedText.replace(/\n/g, '<br>'); 
             } catch(e) { decryptedText = ""; }
 
             if(!decryptedText || state.mode === 'admin_preview') { 
@@ -121,7 +120,6 @@
             const msgTime = new Date(msgObj.timestamp).getTime();
             const isGf = msgObj.sender === 'gf';
 
-            // 🔴 Tick Logic (For GF's messages)
             let tickHtml = '';
             if (isGf) {
                 const isRead = bfReadTime >= msgTime;
@@ -146,7 +144,6 @@
 
         chatArea.innerHTML = newHtml;
 
-        // Auto scroll
         if (isNewMessage || lastMsgTime === "") {
             chatArea.scrollTop = chatArea.scrollHeight;
         }
@@ -154,14 +151,13 @@
         lastMsgTime = currentLastMsg.timestamp;
     }
 
-    // 3. Send Message Logic
+    // Send Message Logic
     if (sendBtn) {
         sendBtn.addEventListener('click', async () => {
             const msgText = inputEl.value.trim();
             if(!msgText) return;
             if(state.mode === 'admin_preview') return alert("Admin cannot send messages.");
 
-            // Play Send Sound instantly
             if(soundSend) { soundSend.currentTime = 0; soundSend.play().catch(()=>{}); }
 
             sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
@@ -177,7 +173,6 @@
                 const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
                 chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
-                // Limit to 100
                 if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
                 await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -187,8 +182,8 @@
                 });
 
                 inputEl.value = ''; 
-                inputEl.style.height = 'auto'; // Reset text box size
-                inputEl.focus(); // Keep keyboard open
+                inputEl.style.height = 'auto'; 
+                inputEl.focus(); 
             } catch(err) { 
                 alert("Error sending message."); 
             }
@@ -197,13 +192,12 @@
             sendBtn.disabled = false;
         });
 
-        // 🔴 NAYA FIX: Textarea auto-resize
+        // Auto-resize textarea
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
     }
 
-    // Start Realtime
     startRealtimeChat(); 
 })();

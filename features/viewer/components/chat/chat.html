@@ -1,16 +1,27 @@
-<h2 class="chat-title">Secret Chat Room <i class="fa-solid fa-lock" style="font-size:18px;"></i></h2>
-<p class="chat-hint">End-to-End Encrypted. Auto-deletes old messages.</p>
+<div class="chat-app-wrapper" id="gf-chat-wrapper">
+    
+    <header class="chat-app-header">
+        <div class="header-left">
+            <div class="avatar"><i class="fa-solid fa-heart"></i></div>
+            <div class="header-info">
+                <h2>Secret Chat Room</h2>
+                <p class="header-status"><i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted</p>
+            </div>
+        </div>
+    </header>
 
-<audio id="sound-send" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
-<audio id="sound-receive" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
+    <audio id="sound-send" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+    <audio id="sound-receive" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
 
-<div id="chat-messages-area" class="glass-card chat-messages-area">
-    <p class="chat-empty-text">Send a message to start the conversation...</p>
+    <div id="chat-messages-area" class="whatsapp-bg">
+        <p class="chat-empty-text">Send a message to start the conversation...</p>
+    </div>
+
+    <div class="chat-input-wrapper">
+        <div class="chat-input-inner">
+            <textarea id="live-msg-input" placeholder="Type a message..." class="chat-input-box" rows="1"></textarea>
+            <button id="send-msg-btn" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+        <p id="msg-count-display" class="msg-count-display">Messages: 0 / 100</p>
+    </div>
 </div>
-
-<div class="glass-card chat-input-wrapper">
-    <textarea id="live-msg-input" placeholder="Type a message..." class="chat-input-box" rows="1"></textarea>
-    <button id="send-msg-btn" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
-</div>
-
-<p id="msg-count-display" class="msg-count-display">Messages: 0 / 100</p>
