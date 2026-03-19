@@ -2,7 +2,7 @@
 window.initVault = function() {
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
-
+    
     // Elements select karna
     const vaultKeypad = document.getElementById('vault-keypad');
     const unlockBtn = document.getElementById('unlock-btn');
@@ -20,10 +20,10 @@ window.initVault = function() {
         unlockBtn.style.background = enteredPasscode.length === MAX_LENGTH ? "linear-gradient(135deg, #cc0033, #ff4d79)" : "#ccc";
     }
 
-    // 🔴 BUG FIX 1: Prevent double event listeners in SPA
+    // Purane events hatane ke liye clone karna (SPA me zaroori hai)
     const newKeypad = vaultKeypad.cloneNode(true);
     vaultKeypad.parentNode.replaceChild(newKeypad, vaultKeypad);
-
+    
     const newUnlockBtn = unlockBtn.cloneNode(true);
     unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
 
@@ -44,7 +44,7 @@ window.initVault = function() {
         }
     });
 
-    // 🔴 BUG FIX 2: Bulletproof Unlock Logic
+    // 🔴 BULLETPROOF UNLOCK LOGIC
     activeUnlockBtn.addEventListener('click', async () => {
         try {
             // 1. Check State
@@ -54,27 +54,27 @@ window.initVault = function() {
                 return;
             }
 
-            // Database aur Input dono ko String banakar trim karna (Safe Check)
+            // Database aur Input dono ko String banakar trim karna
             const dbPasscode = String(state.memoryData.passcode).trim();
             const inputPasscode = enteredPasscode.trim();
 
             if (inputPasscode === dbPasscode) {
-                // UI Feedback
+                // UI Feedback (Button ka text change hoga)
                 activeUnlockBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Unlocking...';
                 activeUnlockBtn.disabled = true;
 
                 state.userPasscode = inputPasscode; 
-
+                
                 // 2. Update Firebase safely
                 if(typeof firebaseConfig !== 'undefined') {
                     fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, { 
                         method: 'PATCH', 
                         headers: { 'Content-Type': 'application/json' }, 
                         body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
-                    }).catch(e => console.log("Status update silent error", e));
+                    }).catch(e => console.log("Firebase status update silent error"));
                 }
 
-                // 3. 🔴 Safe DOM Hiding (Agar vault-mount nahi mila toh class se hide karega)
+                // 3. Safe DOM Hiding
                 const vaultMount = document.getElementById('vault-mount');
                 if(vaultMount) {
                     vaultMount.classList.add('hidden');
@@ -88,10 +88,10 @@ window.initVault = function() {
                     await window.loadViewerComponent('layout', 'footer-mount');
                 }
 
-                // 5. Show Next Components safely
+                // 5. Show Next Components
                 const surpriseMount = document.getElementById('surprise-mount');
                 const footerMount = document.getElementById('footer-mount');
-
+                
                 if(surpriseMount) surpriseMount.classList.remove('hidden');
                 if(footerMount) footerMount.classList.remove('hidden');
 
@@ -100,7 +100,7 @@ window.initVault = function() {
                 dots.forEach(dot => dot.style.background = 'red');
                 activeUnlockBtn.innerText = 'WRONG PASSCODE';
                 activeUnlockBtn.style.background = 'red';
-
+                
                 setTimeout(() => { 
                     enteredPasscode = ""; 
                     activeUnlockBtn.innerText = 'UNLOCK GIFT';
