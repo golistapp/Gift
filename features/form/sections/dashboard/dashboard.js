@@ -2,11 +2,22 @@
     const state = window.formState;
     if (!state || !state.memoryData) return;
 
+    const dashWrapper = document.getElementById('dash-wrapper');
     const lockScreen = document.getElementById('dash-lock-screen');
     const dashMain = document.getElementById('dash-main-screen');
     const passInput = document.getElementById('check-passcode');
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
+
+    // 🔴 MAGIC API: Mobile Keyboard Gap Fixer
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            // Force wrapper height to exact available screen space (minus keyboard)
+            dashWrapper.style.height = window.visualViewport.height + 'px';
+            const chatArea = document.getElementById('bf-chat-area');
+            if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+        });
+    }
 
     function formatTime(isoString) {
         if(!isoString) return '';
@@ -82,12 +93,12 @@
         if(chatList.length > 0) {
             inputEl.disabled = false; 
             sendBtn.disabled = false;
-            if(inputEl.placeholder === "Waiting for her reply...") inputEl.placeholder = "Type your reply...";
+            if(inputEl.placeholder === "Waiting for her reply...") inputEl.placeholder = "Type a message...";
         } else {
             inputEl.disabled = true; 
             sendBtn.disabled = true;
             inputEl.placeholder = "Waiting for her reply...";
-            chatArea.innerHTML = '<div class="waiting-msg">Waiting for her to start the conversation...</div>';
+            chatArea.innerHTML = '<div style="text-align:center; padding: 20px; color: #666; font-size: 13px; background: rgba(255,255,255,0.7); border-radius: 10px; margin: auto;">Waiting for her to start the conversation...</div>';
             return;
         }
 
@@ -99,8 +110,6 @@
             try {
                 const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-
-                // 🔴 NAYA FIX: Line Breaks ko <br> me convert karna taki paragraph sahi dikhe
                 decryptedText = decryptedText.replace(/\n/g, '<br>');
             } catch(e) { decryptedText = "<i>🔒 Encrypted Error</i>"; }
 
@@ -129,6 +138,7 @@
         });
 
         chatArea.innerHTML = newHtml;
+        // Auto scroll handling
         chatArea.scrollTop = chatArea.scrollHeight; 
     }
 
@@ -164,7 +174,7 @@
                 });
 
                 inputEl.value = ''; 
-                inputEl.style.height = 'auto'; // Reset box size after send
+                inputEl.style.height = 'auto'; // Reset box size
                 inputEl.focus(); // Keep keyboard open
             } catch(err) { 
                 alert("Error sending message."); 
@@ -174,19 +184,10 @@
             sendBtn.disabled = false;
         });
 
-        // 🔴 NAYA FIX: Keyboard "Enter" Auto-send hata diya gaya hai
-        // Aur input box type karte waqt apne aap lamba ho jayega (Max 100px tak)
+        // Textarea auto-resize
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
-        });
-
-        // Mobile keyboard open hone par chat auto-scroll hogi
-        inputEl.addEventListener('focus', () => {
-            setTimeout(() => {
-                const chatArea = document.getElementById('bf-chat-area');
-                if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-            }, 300);
         });
     }
 })();
