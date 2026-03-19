@@ -1,77 +1,86 @@
-(function() {
-    let enteredPasscode = "";
-    const MAX_LENGTH = 6;
+(async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const memoryId = urlParams.get('id');
+    const mode = urlParams.get('mode'); 
 
-    const vaultKeypad = document.getElementById('vault-keypad');
-    const unlockBtn = document.getElementById('unlock-btn');
-    const dots = document.querySelectorAll('#dots-container .dot');
+    if (!memoryId) {
+        alert("Invalid Link! QR code mein memory ID nahi hai.");
+        return;
+    }
 
-    // UI Update Function
-    function updateVaultUI() {
-        dots.forEach((dot, index) => {
-            dot.style.background = index < enteredPasscode.length ? '#cc0033' : 'rgba(0,0,0,0.1)';
-        });
+    // Safety check: Agar Firebase file load nahi hui toh batayega
+    if (typeof firebaseConfig === 'undefined') {
+        alert("Error: Firebase config missing! Check api/firebase.config.js");
+        return;
+    }
 
-        if(unlockBtn) {
-            unlockBtn.disabled = enteredPasscode.length !== MAX_LENGTH;
-            unlockBtn.style.background = enteredPasscode.length === MAX_LENGTH ? "linear-gradient(135deg, #cc0033, #ff4d79)" : "#ccc";
+    // 🌐 GLOBAL STATE
+    window.viewerState = {
+        memoryId: memoryId,
+        mode: mode,
+        memoryData: null,
+        userPasscode: "",
+        isMusicPlaying: false
+    };
+
+    // 🧩 COMPONENT LOADER
+    window.loadViewerComponent = async function(componentName, mountNodeId) {
+        const mountNode = document.getElementById(mountNodeId);
+        if (!mountNode) return;
+
+        try {
+            const htmlRes = await fetch(`features/viewer/components/${componentName}/${componentName}.html`);
+            if (htmlRes.ok) mountNode.innerHTML = await htmlRes.text();
+
+            if (!document.getElementById(`css-${componentName}`)) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.id = `css-${componentName}`;
+                link.href = `features/viewer/components/${componentName}/${componentName}.css`;
+                document.head.appendChild(link);
+            }
+
+            if (!document.getElementById(`js-${componentName}`)) {
+                const script = document.createElement('script');
+                script.id = `js-${componentName}`;
+                script.src = `features/viewer/components/${componentName}/${componentName}.js`;
+                document.body.appendChild(script);
+            }
+        } catch (error) {
+            console.error(`Error loading component: ${componentName}`, error);
         }
-    }
+    };
 
-    // Keypad Click Event Delegation
-    if (vaultKeypad) {
-        vaultKeypad.addEventListener('click', (e) => {
-            const keyBtn = e.target.closest('.magic-key:not(.clear-btn)');
-            const clearBtn = e.target.closest('.clear-btn');
+    // 🚀 INITIAL BOOT
+    try {
+        const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
 
-            if (keyBtn && enteredPasscode.length < MAX_LENGTH) {
-                enteredPasscode += keyBtn.getAttribute('data-number');
-                updateVaultUI();
-            } else if (clearBtn && enteredPasscode.length > 0) {
-                enteredPasscode = enteredPasscode.slice(0, -1);
-                updateVaultUI();
-            }
-        });
-    }
+        // Agar response thik nahi hai toh error throw karega
+        if (!response.ok) throw new Error("Firebase returned " + response.status);
 
-    // Unlock Button Event
-    if (unlockBtn) {
-        unlockBtn.addEventListener('click', async () => {
-            const state = window.viewerState; // Yeh data viewer.js ne lakar rakha hai
-            if (!state || !state.memoryData) return;
+        window.viewerState.memoryData = await response.json();
 
-            if (enteredPasscode === state.memoryData.passcode) {
-                // Passcode Save karo aage Chat ko decrypt karne ke liye
-                state.userPasscode = enteredPasscode; 
+        if (!window.viewerState.memoryData || window.viewerState.memoryData.status !== "locked") {
+            document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise is not ready yet! 🎁</h2>';
+            return;
+        }
 
-                // 1. Firebase update karo ki gift open ho gaya
-                try {
-                    fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, { 
-                        method: 'PATCH', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
-                    });
-                } catch(e) { console.log("Firebase status update failed silently."); }
+        // Routing Logic
+        if (mode === 'admin_preview') {
+            await window.loadViewerComponent('surprise', 'surprise-mount');
+            await window.loadViewerComponent('layout', 'footer-mount'); 
 
-                // 2. Vault ko hide kardo
-                document.getElementById('vault-mount').classList.add('hidden');
+            document.getElementById('surprise-mount').classList.remove('hidden');
+            document.getElementById('footer-mount').classList.remove('hidden');
+            const vaultMount = document.getElementById('vault-mount');
+            if(vaultMount) vaultMount.classList.add('hidden');
+        } else {
+            await window.loadViewerComponent('vault', 'vault-mount');
+        }
 
-                // 3. MAGIC ✨: Naye components ko load karo
-                await window.loadViewerComponent('surprise', 'surprise-mount');
-                await window.loadViewerComponent('layout', 'footer-mount');
-
-                // 4. Inko screen par show karo
-                document.getElementById('surprise-mount').classList.remove('hidden');
-                document.getElementById('footer-mount').classList.remove('hidden');
-
-            } else {
-                // Wrong Passcode Feedback
-                dots.forEach(dot => dot.style.background = 'red');
-                setTimeout(() => { 
-                    enteredPasscode = ""; 
-                    updateVaultUI(); 
-                }, 500);
-            }
-        });
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        // Ab agar koi error aayega toh exact reason batayega!
+        alert("System Error: " + error.message);
     }
 })();

@@ -1,51 +1,63 @@
-.vault-screen { 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100vh; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  z-index: 1000; 
+/* =========================================
+   BASE VIEWER SETTINGS & UTILITIES
+   ========================================= */
+.viewer-wrapper { 
+    background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%); 
+    color: var(--text-dark); 
+    min-height: 100vh; 
+    font-family: var(--font-ui); 
+    position: relative;
+    overflow-x: hidden;
 }
 
-.vault-card { 
-  padding: 40px 30px; 
-  text-align: center; 
-  width: 90%; 
-  max-width: 350px; 
+/* Common Glassmorphism Card Style */
+.glass-card { 
+    background: var(--glass-bg); 
+    backdrop-filter: blur(12px); 
+    border: 1px solid var(--glass-border); 
+    border-radius: 20px; 
+    box-shadow: 0 8px 32px 0 rgba(255, 77, 121, 0.15); 
 }
 
-.vault-icon { font-size: 40px; color: var(--deep-red); margin-bottom: 10px; }
-.vault-title { font-family: var(--font-heading); font-size: 35px; color: var(--deep-red); }
-.vault-desc { font-size: 13px; color: #555; margin-bottom: 20px; }
-
-.dots-wrapper { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
-.dot { width: 15px; height: 15px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: 0.3s; }
-
-.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-.key { 
-  background: white; 
-  border: none; 
-  width: 60px; 
-  height: 60px; 
-  border-radius: 50%; 
-  font-size: 24px; 
-  font-weight: 500; 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-  cursor: pointer; 
+/* Common Section Title */
+.section-title { 
+    font-family: var(--font-heading); 
+    font-size: 35px; 
+    color: var(--deep-red); 
+    margin-bottom: 20px; 
+    text-align: center; 
 }
 
-.unlock-btn { 
-  width: 100%; 
-  padding: 15px; 
-  border: none; 
-  border-radius: 25px; 
-  background: #ccc; 
-  color: white; 
-  font-weight: 600; 
-  font-size: 16px; 
-  margin-top: 20px; 
-  transition: 0.3s; 
+/* Padding so content isn't hidden behind the bottom navigation */
+.padding-bottom-large { 
+    padding-bottom: 120px; 
+}
+
+/* =========================================
+   BACKGROUND HEARTS ANIMATION
+   ========================================= */
+#hearts-bg { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    pointer-events: none; 
+    z-index: 0; 
+    overflow: hidden; 
+}
+
+.bg-heart { 
+    position: absolute; 
+    bottom: -50px; 
+    color: rgba(255, 77, 121, 0.4); 
+    font-size: 20px; 
+    animation: floatUp linear infinite; 
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
+}
+
+@keyframes floatUp { 
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; } 
+    20% { opacity: 1; } 
+    100% { transform: translateY(-120vh) rotate(360deg) scale(1.5); opacity: 0; } 
 }
