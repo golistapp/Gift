@@ -14,22 +14,14 @@
     if (window.visualViewport && gfChatWrapper) {
         window.visualViewport.addEventListener('resize', () => {
             if (window.visualViewport.height < window.innerHeight - 50) {
-                gfChatWrapper.style.position = 'fixed';
-                gfChatWrapper.style.top = '0';
-                gfChatWrapper.style.left = '0';
-                gfChatWrapper.style.width = '100%';
-                gfChatWrapper.style.height = window.visualViewport.height + 'px';
-                gfChatWrapper.style.zIndex = '99999'; 
-                gfChatWrapper.style.borderRadius = '0';
-                gfChatWrapper.style.border = 'none';
-                gfChatWrapper.style.marginBottom = '0';
+                gfChatWrapper.style.position = 'fixed'; gfChatWrapper.style.top = '0'; gfChatWrapper.style.left = '0';
+                gfChatWrapper.style.width = '100%'; gfChatWrapper.style.height = window.visualViewport.height + 'px';
+                gfChatWrapper.style.zIndex = '99999'; gfChatWrapper.style.borderRadius = '0';
+                gfChatWrapper.style.border = 'none'; gfChatWrapper.style.marginBottom = '0';
             } else {
-                gfChatWrapper.style.position = 'relative';
-                gfChatWrapper.style.height = 'calc(100dvh - 100px)';
-                gfChatWrapper.style.zIndex = '1';
-                gfChatWrapper.style.borderRadius = '16px';
-                gfChatWrapper.style.border = '1px solid #fce4ec';
-                gfChatWrapper.style.marginBottom = '15px';
+                gfChatWrapper.style.position = 'relative'; gfChatWrapper.style.height = 'calc(100dvh - 100px)';
+                gfChatWrapper.style.zIndex = '1'; gfChatWrapper.style.borderRadius = '16px';
+                gfChatWrapper.style.border = '1px solid #fce4ec'; gfChatWrapper.style.marginBottom = '15px';
             }
             if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
         });
@@ -44,9 +36,7 @@
     function updateGFStatus(statusStr) {
         if (state.mode === 'admin_preview' || !state.memoryId) return;
         fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ gf_status: statusStr })
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_status: statusStr })
         }).catch(e => {});
     }
 
@@ -54,62 +44,41 @@
         if (state.mode === 'admin_preview' || document.hidden) return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ gf_last_read: new Date().toISOString() })
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_last_read: new Date().toISOString() })
             }).catch(e => {});
         }
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            updateGFReadReceipt();
-            updateGFStatus('online');
-        } else {
-            // NAYA FIX: Save exact time when leaving chat
-            updateGFStatus(new Date().toISOString());
-        }
+        if (!document.hidden) { updateGFReadReceipt(); updateGFStatus('online'); } 
+        else { updateGFStatus(new Date().toISOString()); }
     });
-
     window.addEventListener('beforeunload', () => updateGFStatus(new Date().toISOString()));
-    updateGFStatus('online'); 
-    updateGFReadReceipt();
-
+    updateGFStatus('online'); updateGFReadReceipt();
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
     function startRealtimeChat() {
-        const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
-        const chatStream = new EventSource(dbUrl);
-
+        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
         chatStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") {
-                    if (payload.data) state.memoryData = payload.data;
-                } else if (payload.path === "/chat") {
-                    state.memoryData.chat = payload.data;
-                } else if (payload.path.startsWith("/chat/")) {
+                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
+                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
+                else if (payload.path.startsWith("/chat/")) {
                     const index = parseInt(payload.path.split('/')[2]);
                     if (!state.memoryData.chat) state.memoryData.chat = [];
                     state.memoryData.chat[index] = payload.data;
-                } else if (payload.path === "/message_count") {
-                    state.memoryData.message_count = payload.data;
-                } else if (payload.path === "/bf_last_read") {
-                    state.memoryData.bf_last_read = payload.data;
-                } else if (payload.path === "/bf_status") {
-                    state.memoryData.bf_status = payload.data; 
-                }
+                } 
+                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
+                else if (payload.path === "/bf_last_read") state.memoryData.bf_last_read = payload.data;
+                else if (payload.path === "/bf_status") state.memoryData.bf_status = payload.data; 
                 renderChatUI();
             } catch(err) {}
         });
-
         chatStream.addEventListener('patch', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") {
-                    state.memoryData = { ...state.memoryData, ...payload.data };
-                    renderChatUI();
-                }
+                if (payload.path === "/") { state.memoryData = { ...state.memoryData, ...payload.data }; renderChatUI(); }
             } catch(err) {}
         });
     }
@@ -122,7 +91,6 @@
 
         if(countDisplay) countDisplay.innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
 
-        // 🔴 Header me BF ka Live Status / Last Seen dikhana
         const statusEl = document.querySelector('.header-status');
         if (statusEl) {
             const bfStatus = memoryData.bf_status;
@@ -176,7 +144,6 @@
                 decryptedText = decryptedText.replace(/\n/g, '<br>'); 
             } catch(e) { decryptedText = ""; }
 
-            // 🔴 IMAGE DECRYPTION LOGIC
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
                 let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
@@ -218,11 +185,7 @@
         });
 
         chatArea.innerHTML = newHtml;
-
-        if (isNewMessage || lastMsgTime === "") {
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
+        if (isNewMessage || lastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight;
         lastMsgTime = currentLastMsg.timestamp;
     }
 
@@ -246,7 +209,6 @@
 
             const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
             chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
-
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
             await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -257,15 +219,12 @@
 
             if(inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
             updateGFStatus('online'); 
-        } catch(err) { 
-            alert("Error sending message."); 
-        }
+        } catch(err) { alert("Error sending message."); }
 
         sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
         sendBtn.disabled = false;
     }
 
-    // Image Popup Events Fix
     const galleryBtn = document.getElementById('gf-gallery-btn');
     const imgPopup = document.getElementById('gf-img-popup');
     const closePopup = document.getElementById('gf-close-popup');
@@ -276,7 +235,6 @@
             e.preventDefault();
             imgGrid.innerHTML = '';
             let found = false;
-
             for(let i=1; i<=5; i++) {
                 let imgUrl = state.memoryData[`image_${i}_url`];
                 if(imgUrl) {
@@ -287,10 +245,7 @@
                     imgGrid.appendChild(imgEl);
                 }
             }
-
-            if(!found) {
-                imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding:10px;">No memories found.</span>';
-            }
+            if(!found) imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding:10px;">No memories found.</span>';
             imgPopup.classList.remove('hidden');
         });
         closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
@@ -301,22 +256,18 @@
 
     if (sendBtn) {
         sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
-        sendBtn.addEventListener('touchstart', (e) => { 
-            e.preventDefault(); 
-            if(!sendBtn.disabled) sendBtn.click(); 
-        });
-
+        sendBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!sendBtn.disabled) sendBtn.click(); });
         sendBtn.addEventListener('click', () => sendMessageToFirebase(inputEl.value.trim()));
 
         inputEl.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-
+            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
             updateGFStatus('typing...');
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => updateGFStatus('online'), 1500);
         });
     }
 
+    // 🔴 MAGIC FIX: Server connection se pehle instantly existing data render karega
+    renderChatUI(); 
     startRealtimeChat(); 
 })();

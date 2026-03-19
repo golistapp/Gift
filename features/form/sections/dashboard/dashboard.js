@@ -9,6 +9,10 @@
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
 
+    // 🔴 NAYA: Dashboard ke liye Dynamic Sound Effects
+    const dashSoundSend = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+    const dashSoundReceive = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             dashWrapper.style.height = window.visualViewport.height + 'px';
@@ -23,13 +27,10 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 🔴 1. Online/Offline Status Bhejne Ka Function (Ab Offline ki jagah Time bhejega)
     function updateBFStatus(statusStr) {
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bf_status: statusStr })
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_status: statusStr })
             }).catch(e => {});
         }
     }
@@ -38,23 +39,15 @@
         if (document.hidden) return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bf_last_read: new Date().toISOString() })
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_last_read: new Date().toISOString() })
             }).catch(e => {});
         }
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            updateBFReadReceipt();
-            updateBFStatus('online');
-        } else {
-            // 🔴 NAYA FIX: Offline jate hi exact time save hoga
-            updateBFStatus(new Date().toISOString());
-        }
+        if (!document.hidden) { updateBFReadReceipt(); updateBFStatus('online'); } 
+        else { updateBFStatus(new Date().toISOString()); }
     });
-
     window.addEventListener('beforeunload', () => updateBFStatus(new Date().toISOString()));
 
     unlockBtn.addEventListener('click', () => {
@@ -62,53 +55,35 @@
             state.userPasscode = passInput.value;
             lockScreen.classList.add('hidden');
             dashMain.classList.remove('hidden');
-
-            updateBFStatus('online'); 
-            updateBFReadReceipt(); 
-            renderDashboardUI();
-            startRealtimeDashboard(); 
+            updateBFStatus('online'); updateBFReadReceipt(); 
+            renderDashboardUI(); startRealtimeDashboard(); 
         } else {
             errorMsg.classList.remove('hidden');
         }
     });
 
     function startRealtimeDashboard() {
-        const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
-        const chatStream = new EventSource(dbUrl);
-
+        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
         chatStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") {
-                    if (payload.data) state.memoryData = payload.data;
-                } else if (payload.path === "/chat") {
-                    state.memoryData.chat = payload.data;
-                } else if (payload.path.startsWith("/chat/")) {
+                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
+                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
+                else if (payload.path.startsWith("/chat/")) {
                     const index = parseInt(payload.path.split('/')[2]);
                     if (!state.memoryData.chat) state.memoryData.chat = [];
                     state.memoryData.chat[index] = payload.data;
-                } else if (payload.path === "/message_count") {
-                    state.memoryData.message_count = payload.data;
-                } else if (payload.path === "/scanned_at") {
-                    state.memoryData.scanned_at = payload.data;
-                } else if (payload.path === "/proposal_accepted_at") {
-                    state.memoryData.proposal_accepted_at = payload.data;
-                } else if (payload.path === "/gf_last_read") {
-                    state.memoryData.gf_last_read = payload.data;
-                } else if (payload.path === "/gf_status") {
-                    state.memoryData.gf_status = payload.data; 
-                }
+                } 
+                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
+                else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
+                else if (payload.path === "/gf_status") state.memoryData.gf_status = payload.data; 
                 renderDashboardUI();
             } catch(err) {}
         });
-
         chatStream.addEventListener('patch', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") {
-                    state.memoryData = { ...state.memoryData, ...payload.data };
-                    renderDashboardUI();
-                }
+                if (payload.path === "/") { state.memoryData = { ...state.memoryData, ...payload.data }; renderDashboardUI(); }
             } catch(err) {}
         });
     }
@@ -119,21 +94,14 @@
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
 
-        // 🔴 Header me GF ka Live Status / Last Seen dikhana
         const titleEl = document.querySelector('.header-info h2');
         let statusHtml = "";
         const gfStatus = state.memoryData.gf_status;
-
-        if (gfStatus === 'typing...') {
-            statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
-        } else if (gfStatus === 'online') {
-            statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
-        } else if (gfStatus && gfStatus !== 'offline') {
-            // Agar date string hai, toh format karke Last seen dikhao
+        if (gfStatus === 'typing...') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
+        else if (gfStatus === 'online') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
+        else if (gfStatus && gfStatus !== 'offline') {
             let dateObj = new Date(gfStatus);
-            if(!isNaN(dateObj)) {
-                statusHtml = ` <span style="color:#e2e8f0; font-size:11px; font-weight:normal; margin-left:5px; opacity:0.9;">last seen at ${formatTime(gfStatus)}</span>`;
-            }
+            if(!isNaN(dateObj)) statusHtml = ` <span style="color:#e2e8f0; font-size:11px; font-weight:normal; margin-left:5px; opacity:0.9;">last seen at ${formatTime(gfStatus)}</span>`;
         }
         if(titleEl) titleEl.innerHTML = 'Secret Chat Room' + statusHtml;
 
@@ -166,6 +134,11 @@
             if (msgTime > bfReadTime) updateBFReadReceipt(); 
         }
 
+        // 🔴 Play sound when new message arrives from GF
+        if(isNewMessage && currentLastMsg.sender === 'gf') {
+            dashSoundReceive.currentTime = 0; dashSoundReceive.play().catch(()=>{});
+        }
+
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
 
         let newHtml = '';
@@ -177,7 +150,6 @@
                 decryptedText = decryptedText.replace(/\n/g, '<br>');
             } catch(e) { decryptedText = "<i>🔒 Encrypted Error</i>"; }
 
-            // 🔴 NAYA: IMAGE DECRYPTION LOGIC (Proper Path Setup)
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
                 let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
@@ -224,6 +196,11 @@
 
     async function sendMessageToFirebase(msgText) {
         if(!msgText) return;
+
+        // 🔴 Play Send Sound and Vibrate instantly
+        dashSoundSend.currentTime = 0; dashSoundSend.play().catch(()=>{});
+        if(navigator.vibrate) navigator.vibrate(40);
+
         const sendBtn = document.getElementById('bf-send-btn');
         sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
         sendBtn.disabled = true;
@@ -253,7 +230,6 @@
         sendBtn.disabled = false;
     }
 
-    // 🔴 NAYA: Image Popup Logic with Fix (image_X_url)
     const galleryBtn = document.getElementById('bf-gallery-btn');
     const imgPopup = document.getElementById('bf-img-popup');
     const closePopup = document.getElementById('bf-close-popup');
@@ -264,8 +240,6 @@
             e.preventDefault();
             imgGrid.innerHTML = '';
             let found = false;
-
-            // Loop from 1 to 5 to find uploaded images
             for(let i=1; i<=5; i++) {
                 let imgUrl = state.memoryData[`image_${i}_url`];
                 if(imgUrl) {
@@ -276,10 +250,7 @@
                     imgGrid.appendChild(imgEl);
                 }
             }
-
-            if(!found) {
-                imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding: 10px;">No memories uploaded.</span>';
-            }
+            if(!found) imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding: 10px;">No memories uploaded.</span>';
             imgPopup.classList.remove('hidden');
         });
         closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
