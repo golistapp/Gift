@@ -10,6 +10,7 @@
     const errorMsg = document.getElementById('passcode-error');
     const sendMsgSound = document.getElementById('send-msg-sound'); // Sound Element
 
+    // Viewport adjustment to prevent keyboard gaps
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             dashWrapper.style.height = window.visualViewport.height + 'px';
@@ -140,24 +141,21 @@
         chatArea.scrollTop = chatArea.scrollHeight; 
     }
 
+    // --- 🔴 MAGIC FIX: KEYBOARD BLINK, SOUND & BUTTON FIX ---
     const sendBtn = document.getElementById('bf-send-btn');
     const inputEl = document.getElementById('bf-chat-input');
 
-    if (sendBtn) {
+    if (sendBtn && inputEl) {
+        let isSending = false; // Double send rokne ke liye
 
-        // 🔴 MAGIC FIX: Keyboard blink hone se rokne ke liye
-        // Yeh button par click hote hi textbox se focus hatne nahi dega!
-        sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
-        sendBtn.addEventListener('touchstart', (e) => {
-            // Touch screens par thoda wait karna padta hai
-            if(inputEl.value.trim() !== '') e.preventDefault(); 
-        });
-
-        sendBtn.addEventListener('click', async () => {
+        // Message bhejne ka asali function (Reusable)
+        const sendMessage = async () => {
             const msgText = inputEl.value.trim();
-            if(!msgText) return;
+            if(!msgText || isSending) return;
 
-            // 🔴 NAYA: Send dabte hi sound play hoga
+            isSending = true;
+
+            // 🎵 SOUND PLAY: Message jate hi tik aawaz aayegi
             if (sendMsgSound) {
                 sendMsgSound.currentTime = 0;
                 sendMsgSound.play().catch(e => console.log("Sound play error:", e));
@@ -188,14 +186,32 @@
 
                 inputEl.value = ''; 
                 inputEl.style.height = 'auto'; // Reset box size
-                inputEl.focus(); // Force keep keyboard open
+
+                // Keyboard ko band hone se rokne ke liye wapas focus karega
+                inputEl.focus(); 
             } catch(err) { 
                 alert("Error sending message."); 
             }
 
             sendBtn.innerHTML = originalBtnHtml; 
+            isSending = false;
+        };
+
+        // 1. Desktop ke liye (focus lose hone se rokega)
+        sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
+        // 2. Mobile (Touch screens) ke liye: Touchend keyboard hide nahi karta aur send bhi karega
+        sendBtn.addEventListener('touchend', (e) => {
+            e.preventDefault(); 
+            sendMessage();
         });
 
+        // 3. Fallback click event
+        sendBtn.addEventListener('click', (e) => {
+            sendMessage();
+        });
+
+        // Textarea auto-resize
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
