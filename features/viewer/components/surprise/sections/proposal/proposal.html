@@ -1,0 +1,41 @@
+<style>
+  /* Proposal CSS */
+  .proposal-section { min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; }
+  .proposal-card { background: rgba(255, 255, 255, 0.85); padding: 50px 30px; border-radius: 30px; box-shadow: 0 25px 60px rgba(255, 77, 121, 0.2), inset 0 0 0 2px rgba(255, 255, 255, 0.9); display: flex; flex-direction: column; align-items: center; gap: 30px; max-width: 600px; width: 100%; position: relative; backdrop-filter: blur(20px); }
+  .script-heading { font-family: var(--font-heading); font-size: 3.5rem; color: var(--deep-red); font-weight: 700; margin-bottom: 5px; text-shadow: 2px 2px 5px rgba(255, 255, 255, 0.8); }
+  .script-heading.accent-pink { color: #ff1a53; font-size: 4rem; animation: heartBeat 1.5s infinite; }
+  .success-subtext { font-family: var(--font-ui); color: #444; font-size: 1.2rem; margin-bottom: 20px; font-weight: 500; }
+
+  .gif-card { background: #ffffff; border-radius: 20px; padding: 15px; box-shadow: 0 15px 35px rgba(255, 77, 121, 0.15); display: inline-block; transition: transform 0.3s; }
+  .gif-card:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(255, 77, 121, 0.25); }
+  .main-gif { width: 220px; height: 220px; object-fit: cover; border-radius: 12px; }
+
+  .proposal-buttons { display: flex; gap: 30px; justify-content: center; align-items: center; position: relative; height: 70px; width: 100%; }
+  .btn-yes, .btn-no { font-family: var(--font-ui); font-size: 1.2rem; font-weight: 600; padding: 12px 40px; border-radius: 50px; border: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .btn-no { background: #e2e8f0; color: #64748b; position: absolute; left: calc(50% - 140px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+  .btn-yes { background: linear-gradient(135deg, #ff4d79, #cc0033); color: white; box-shadow: 0 12px 30px rgba(204, 0, 51, 0.35); position: absolute; left: calc(50% + 10px); }
+  .btn-yes:hover { transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 40px rgba(204, 0, 51, 0.5); }
+
+  @keyframes heartBeat { 0%, 30%, 60% { transform: scale(1); } 15%, 45% { transform: scale(1.1); } }
+</style>
+
+<div class="proposal-section fade-in">
+  <div id="proposal-state" class="proposal-card">
+      <h2 class="script-heading">Will you be my Valentine? <span>🌹</span></h2>
+      <div class="gif-card" id="question-gif-card">
+          <img src="assets/gif/reaction.gif" alt="Asking Bear" class="main-gif" id="proposal-gif">
+      </div>
+      <div class="proposal-buttons">
+          <button class="btn-no" id="btn-no">No 🥺</button>
+          <button class="btn-yes" id="btn-yes">Yes! 💖</button>
+      </div>
+  </div>
+
+  <div id="success-state" class="proposal-card" style="display: none;">
+      <h2 class="script-heading accent-pink">✨ Yayyyyyy! ✨</h2>
+      <p class="success-subtext">"I knew you'd say yes! I love you! 💖"</p>
+      <div class="gif-card" style="border: 3px solid #ff1a53;">
+          <img src="assets/gif/kiss.gif" alt="Kissing Bears" class="main-gif">
+      </div>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+<style>
+  /* Hero Section Scoped CSS */
+  .hero-card { 
+      padding: 30px; 
+      border-radius: 20px; 
+      transition: transform 0.3s ease;
+  }
+  .hero-title { 
+      font-family: var(--font-heading); 
+      font-size: 3.5rem; 
+      color: var(--deep-red); 
+      margin-bottom: 10px; 
+      animation: pulse 2s infinite alternate; 
+  }
+  .hero-name { 
+      font-family: var(--font-heading); 
+      font-size: 4.5rem; 
+      color: var(--primary-pink); 
+  }
+  .hero-subtitle { 
+      font-family: var(--font-romantic); 
+      font-size: 1.2rem; 
+      margin-top: 15px; 
+      color: var(--text-dark);
+  }
+  .bounce-icon { 
+      font-size: 24px; 
+      color: var(--deep-red); 
+      animation: bounce 2s infinite; 
+      margin-top: 20px; 
+  }
+
+  @keyframes pulse { 
+      0% { transform: scale(1); } 
+      100% { transform: scale(1.05); } 
+  }
+  @keyframes bounce { 
+      0%, 100% { transform: translateY(0); } 
+      50% { transform: translateY(-10px); } 
+  }
+</style>
+
+<div class="viewer-section hero-section fade-in">
+  <div class="glass-card hero-card">
+      <h1 class="hero-title" id="dynamic-occasion">A Special Surprise</h1>
+      <h1 class="hero-name" id="dynamic-gf-name">My Love</h1>
+      <p class="hero-subtitle">Every moment with you is a beautiful dream come true.</p>
+      <i class="fa-solid fa-arrow-down bounce-icon"></i>
+  </div>
+</div>
