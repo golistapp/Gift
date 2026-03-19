@@ -8,14 +8,12 @@
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
 
-    // Helper: Time Formatting
     function formatTime(isoString) {
         if(!isoString) return '';
         const date = new Date(isoString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 1. Passcode Unlock Logic
     unlockBtn.addEventListener('click', () => {
         if (passInput.value === state.memoryData.passcode) {
             state.userPasscode = passInput.value;
@@ -23,13 +21,12 @@
             dashMain.classList.remove('hidden');
 
             renderDashboardUI();
-            startRealtimeDashboard(); // 🚀 Start WebSockets Connection
+            startRealtimeDashboard(); 
         } else {
             errorMsg.classList.remove('hidden');
         }
     });
 
-    // 2. Real-Time WebSockets (SSE)
     function startRealtimeDashboard() {
         const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
         const chatStream = new EventSource(dbUrl);
@@ -52,7 +49,6 @@
                 } else if (payload.path === "/proposal_accepted_at") {
                     state.memoryData.proposal_accepted_at = payload.data;
                 } else if (payload.path === "/gf_last_read") {
-                    // 🔴 GF Read Time Catch Karna
                     state.memoryData.gf_last_read = payload.data;
                 }
                 renderDashboardUI();
@@ -70,9 +66,7 @@
         });
     }
 
-    // 3. Render Dashboard UI (With Blue Ticks!)
     function renderDashboardUI() {
-        // Update Stats
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
 
@@ -80,17 +74,15 @@
         const chatList = state.memoryData.chat || [];
         const count = state.memoryData.message_count || 0;
 
-        // Update text to 100 limit
         document.getElementById('bf-msg-count').innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
 
         const inputEl = document.getElementById('bf-chat-input');
         const sendBtn = document.getElementById('bf-send-btn');
 
-        // 🔴 BUG FIX: Keyboard Open na hone ka Fix (Input Enable Karna)
         if(chatList.length > 0) {
             inputEl.disabled = false; 
             sendBtn.disabled = false;
-            inputEl.placeholder = "Type your reply...";
+            if(inputEl.placeholder === "Waiting for her reply...") inputEl.placeholder = "Type your reply...";
         } else {
             inputEl.disabled = true; 
             sendBtn.disabled = true;
@@ -99,23 +91,23 @@
             return;
         }
 
-        // GF ka Read Time check karna
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
 
-        // Render Chat Bubbles
         let newHtml = '';
         chatList.forEach(msgObj => {
             let decryptedText = "";
             try {
                 const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+
+                // 🔴 NAYA FIX: Line Breaks ko <br> me convert karna taki paragraph sahi dikhe
+                decryptedText = decryptedText.replace(/\n/g, '<br>');
             } catch(e) { decryptedText = "<i>🔒 Encrypted Error</i>"; }
 
             const isBf = msgObj.sender === 'bf';
             const timeStr = formatTime(msgObj.timestamp);
             const msgTime = new Date(msgObj.timestamp).getTime();
 
-            // Tick Logic
             let tickHtml = '';
             if (isBf) {
                 const isRead = gfReadTime >= msgTime;
@@ -137,10 +129,9 @@
         });
 
         chatArea.innerHTML = newHtml;
-        chatArea.scrollTop = chatArea.scrollHeight; // Auto-scroll to bottom
+        chatArea.scrollTop = chatArea.scrollHeight; 
     }
 
-    // 4. Send Message Logic (With 100 Limit)
     const sendBtn = document.getElementById('bf-send-btn');
     const inputEl = document.getElementById('bf-chat-input');
 
@@ -162,7 +153,6 @@
                 const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
                 chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
-                // LIMIT LOGIC: Agar 100 se zyada ho gaye, toh purane messages delete kardo (FIFO)
                 if(chatList.length > 100) {
                     chatList = chatList.slice(chatList.length - 100);
                 }
@@ -174,6 +164,8 @@
                 });
 
                 inputEl.value = ''; 
+                inputEl.style.height = 'auto'; // Reset box size after send
+                inputEl.focus(); // Keep keyboard open
             } catch(err) { 
                 alert("Error sending message."); 
             }
@@ -182,8 +174,19 @@
             sendBtn.disabled = false;
         });
 
-        inputEl.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') sendBtn.click();
+        // 🔴 NAYA FIX: Keyboard "Enter" Auto-send hata diya gaya hai
+        // Aur input box type karte waqt apne aap lamba ho jayega (Max 100px tak)
+        inputEl.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Mobile keyboard open hone par chat auto-scroll hogi
+        inputEl.addEventListener('focus', () => {
+            setTimeout(() => {
+                const chatArea = document.getElementById('bf-chat-area');
+                if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+            }, 300);
         });
     }
 })();
