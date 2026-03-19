@@ -9,18 +9,8 @@
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
 
-    // 🔴 100% Working Sound Engine
-    function playDashSound(type) {
-        let soundId = type === 'send' ? 'dash-sound-send' : 'dash-sound-receive';
-        let soundEl = document.getElementById(soundId);
-        if(!soundEl) {
-            soundEl = new Audio(type === 'send' ? "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
-            soundEl.id = soundId;
-            document.body.appendChild(soundEl);
-        }
-        soundEl.currentTime = 0;
-        soundEl.play().catch(e => console.log("Sound blocked by browser"));
-    }
+    const dashSoundSend = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+    const dashSoundReceive = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
@@ -71,39 +61,10 @@
         }
     });
 
-    function startRealtimeDashboard() {
-        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
-        chatStream.addEventListener('put', (e) => {
-            try {
-                const payload = JSON.parse(e.data);
-                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
-                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
-                else if (payload.path.startsWith("/chat/")) {
-                    const index = parseInt(payload.path.split('/')[2]);
-                    if (!state.memoryData.chat) state.memoryData.chat = [];
-                    state.memoryData.chat[index] = payload.data;
-                } 
-                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
-                else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
-                else if (payload.path === "/gf_status") state.memoryData.gf_status = payload.data; 
-                renderDashboardUI();
-            } catch(err) {}
-        });
-        chatStream.addEventListener('patch', (e) => {
-            try {
-                const payload = JSON.parse(e.data);
-                if (payload.path === "/") { state.memoryData = { ...state.memoryData, ...payload.data }; renderDashboardUI(); }
-            } catch(err) {}
-        });
-    }
-
-    let dashLastMsgTime = "";
-
-    function renderDashboardUI() {
-        document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
-        document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
-
+    // 🔴 NAYA: Sirf Header update karne ka alag function (Taki chat blink na ho)
+    function updateHeaderStatus() {
         const titleEl = document.querySelector('.header-info h2');
+        if (!titleEl) return;
         let statusHtml = "";
         const gfStatus = state.memoryData.gf_status;
 
@@ -113,7 +74,52 @@
             let dateObj = new Date(gfStatus);
             if(!isNaN(dateObj)) statusHtml = ` <span style="color:#e2e8f0; font-size:11px; font-weight:normal; margin-left:5px; opacity:0.9;">last seen at ${formatTime(gfStatus)}</span>`;
         }
-        if(titleEl) titleEl.innerHTML = 'Secret Chat Room' + statusHtml;
+        titleEl.innerHTML = 'Secret Chat Room' + statusHtml;
+
+        document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
+        document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
+    }
+
+    function startRealtimeDashboard() {
+        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
+        chatStream.addEventListener('put', (e) => {
+            try {
+                const payload = JSON.parse(e.data);
+                let needChatRender = true;
+                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
+                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
+                else if (payload.path.startsWith("/chat/")) {
+                    const index = parseInt(payload.path.split('/')[2]);
+                    if (!state.memoryData.chat) state.memoryData.chat = [];
+                    state.memoryData.chat[index] = payload.data;
+                } 
+                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
+                else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
+                else if (payload.path === "/gf_status") { state.memoryData.gf_status = payload.data; needChatRender = false; } 
+                else { needChatRender = false; }
+
+                if (needChatRender) renderDashboardUI();
+                updateHeaderStatus();
+            } catch(err) {}
+        });
+        chatStream.addEventListener('patch', (e) => {
+            try {
+                const payload = JSON.parse(e.data);
+                if (payload.path === "/") { 
+                    state.memoryData = { ...state.memoryData, ...payload.data }; 
+                    const keys = Object.keys(payload.data);
+                    const onlyStatus = keys.every(k => k === 'gf_status' || k === 'bf_status');
+                    if (!onlyStatus) renderDashboardUI();
+                    updateHeaderStatus();
+                }
+            } catch(err) {}
+        });
+    }
+
+    let dashLastMsgTime = "";
+
+    function renderDashboardUI() {
+        updateHeaderStatus(); // Ensure header is synced
 
         const chatArea = document.getElementById('bf-chat-area');
         const chatList = state.memoryData.chat || [];
@@ -145,7 +151,7 @@
         }
 
         if(isNewMessage && currentLastMsg.sender === 'gf') {
-            playDashSound('receive');
+            dashSoundReceive.currentTime = 0; dashSoundReceive.play().catch(()=>{});
         }
 
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
@@ -198,15 +204,19 @@
                 </div>`;
         });
 
-        chatArea.innerHTML = newHtml;
-        if (isNewMessage || dashLastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight; 
+        // 🔴 MAGIC FIX: Agar naya HTML purane wale jaisa hi hai, toh refresh mat karo! (No Blinking)
+        if (chatArea.innerHTML !== newHtml) {
+            chatArea.innerHTML = newHtml;
+            if (isNewMessage || dashLastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight; 
+        }
+
         dashLastMsgTime = currentLastMsg.timestamp;
     }
 
     async function sendMessageToFirebase(msgText) {
         if(!msgText) return;
 
-        playDashSound('send');
+        dashSoundSend.currentTime = 0; dashSoundSend.play().catch(()=>{});
         if(navigator.vibrate) navigator.vibrate(40);
 
         const sendBtn = document.getElementById('bf-send-btn');
