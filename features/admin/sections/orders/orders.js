@@ -1,0 +1,244 @@
+(function() {
+    const tbody = document.getElementById('orders-tbody');
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const dateFilter = document.getElementById('date-filter');
+    const exportBtn = document.getElementById('export-csv-btn');
+    const resetModal = document.getElementById('reset-modal');
+    const baseUrl = window.location.origin + window.location.pathname;
+
+    let allOrders = []; // Filter ke liye saara data yahan store hoga
+
+    // 1. Fetch Orders from Firebase
+    async function loadOrders() {
+        try {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Fetching Latest Data...</td></tr>';
+            const response = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+            const data = await response.json();
+
+            allOrders = [];
+            if (data) {
+                Object.keys(data).forEach(id => {
+                    allOrders.push({ id, ...data[id] });
+                });
+                allOrders.reverse(); // Latest pehle dikhega
+            }
+
+            renderTable(); // Filter karke table draw karega
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Error loading data!</td></tr>';
+        }
+    }
+
+    // 2. Date Filter Logic
+    function isWithinDate(dateString, filterType) {
+        if (filterType === 'all') return true;
+        if (!dateString) return false;
+
+        const date = new Date(dateString);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        if (filterType === 'today') return date >= today;
+        if (filterType === 'yesterday') return date >= yesterday && date < today;
+        if (filterType === 'week') return date >= weekAgo;
+        return true;
+    }
+
+    // 3. Render Table & Apply Filters
+    function renderTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusVal = statusFilter.value;
+        const dateVal = dateFilter.value;
+
+        const filteredOrders = allOrders.filter(order => {
+            const matchSearch = order.id.toLowerCase().includes(searchTerm) || (order.customer_name || '').toLowerCase().includes(searchTerm);
+            const matchStatus = statusVal === 'all' || order.status === statusVal;
+            const matchDate = isWithinDate(order.created_at, dateVal);
+            return matchSearch && matchStatus && matchDate;
+        });
+
+        tbody.innerHTML = '';
+
+        if (filteredOrders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#64748b;">No orders match your filter.</td></tr>';
+            return;
+        }
+
+        filteredOrders.forEach(memory => {
+            const dateObj = memory.created_at ? new Date(memory.created_at) : null;
+            const dateStr = dateObj ? dateObj.toLocaleDateString() : 'N/A';
+
+            const statusBadge = memory.status === 'locked' 
+                ? `<span class="badge badge-locked">Locked (Ready)</span>` 
+                : `<span class="badge badge-empty">Pending</span>`;
+
+            const formLink = `${baseUrl}?mode=form&id=${memory.id}`;
+            const adminEditLink = `${baseUrl}?mode=admin_edit&id=${memory.id}`;
+            const viewAdminLink = `${baseUrl}?mode=admin_preview&id=${memory.id}`;
+            const viewLink = `${baseUrl}?id=${memory.id}`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${memory.id}</strong><br><small style="color:#64748b">${dateStr}</small></td>
+                <td><strong>${memory.customer_name || 'N/A'}</strong><br><small style="color:#64748b">${memory.mobile_number || 'N/A'}</small></td>
+                <td>${statusBadge}</td>
+                <td style="min-width: 250px;"> <button class="action-btn" style="color: #3b82f6;" title="Copy Form Link" onclick="window.copyToClipboard('${formLink}')"><i class="fa-solid fa-link"></i></button>
+                    <button class="action-btn" style="color: #8b5cf6;" title="Admin Edit" onclick="window.open('${adminEditLink}', '_blank')"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="action-btn" style="color: #10b981;" title="Admin Preview" onclick="window.open('${viewAdminLink}', '_blank')"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn" style="color: #ec4899;" title="Download Custom QR" onclick="window.downloadTableQR('${viewLink}', '${memory.id}')"><i class="fa-solid fa-qrcode"></i></button>
+                    <button class="action-btn" style="color: #f59e0b;" title="Advanced Reset" onclick="window.openResetModal('${memory.id}')"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="action-btn" style="color: #ef4444;" title="Delete Forever" onclick="window.deleteMemory('${memory.id}')"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 4. Input Events (Live Search & Filter)
+    searchInput.addEventListener('input', renderTable);
+    statusFilter.addEventListener('change', renderTable);
+    dateFilter.addEventListener('change', renderTable);
+
+    // 5. Export to CSV Logic
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,Order ID,Date,Customer Name,Mobile,Status\n";
+            allOrders.forEach(o => {
+                const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'N/A';
+                csvContent += `${o.id},${dateStr},${o.customer_name || 'N/A'},${o.mobile_number || 'N/A'},${o.status}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `MemoryGift_Orders_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // --- GLOBAL FUNCTIONS (Modals, Delete & QR) ---
+
+    window.openResetModal = (id) => {
+        window.currentResetId = id;
+        document.getElementById('reset-memory-id').innerText = id;
+        resetModal.classList.remove('hidden');
+    };
+
+    document.getElementById('close-reset-modal').addEventListener('click', () => { 
+        resetModal.classList.add('hidden'); 
+    });
+
+    async function resetData(payload) {
+        try {
+            await fetch(`${firebaseConfig.databaseURL}/memories/${window.currentResetId}.json`, { 
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
+            });
+            alert("Reset Successful!");
+            resetModal.classList.add('hidden');
+            loadOrders(); // Table Refresh
+        } catch(e) { alert("Error resetting."); }
+    }
+
+    document.getElementById('btn-reset-full').addEventListener('click', async () => {
+        if(confirm("Full reset? ALL data will be lost.")) {
+            await resetData({ status: "empty", occasion: null, passcode: null, music_id: null, message_text: null, girlfriend_name: null, open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null, open_when_hug: null, open_when_sorry: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null, image_1_url: null, caption_1: null, image_2_url: null, caption_2: null, image_3_url: null, caption_3: null, image_4_url: null, caption_4: null, image_5_url: null, caption_5: null });
+        }
+    });
+
+    document.getElementById('btn-reset-text').addEventListener('click', async () => {
+        if(confirm("Reset Text only? Photos will be safe.")) {
+            await resetData({ status: "empty", occasion: null, passcode: null, message_text: null, girlfriend_name: null, open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null, open_when_hug: null, open_when_sorry: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null });
+        }
+    });
+
+    document.getElementById('btn-reset-images').addEventListener('click', async () => {
+        if(confirm("Reset Images only? Text will be safe.")) {
+            await resetData({ status: "empty", image_1_url: null, caption_1: null, image_2_url: null, caption_2: null, image_3_url: null, caption_3: null, image_4_url: null, caption_4: null, image_5_url: null, caption_5: null });
+        }
+    });
+
+    window.deleteMemory = async (id) => {
+        if(confirm(`DANGER! Delete ID: ${id} forever?`)) {
+            try {
+                await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, { method: 'DELETE' });
+                alert("Deleted successfully.");
+                loadOrders();
+            } catch(e) { alert("Error deleting."); }
+        }
+    };
+
+    // Premium QR Downloader from Table
+    window.downloadTableQR = (url, id) => {
+        const hiddenContainer = document.getElementById('hidden-qr-container');
+        if(!hiddenContainer) return;
+        hiddenContainer.innerHTML = ''; 
+        new QRCode(hiddenContainer, { 
+            text: url, width: 300, height: 300, colorDark : "#cc0033", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H 
+        });
+
+        setTimeout(() => { 
+            const qrCanvas = hiddenContainer.querySelector('canvas');
+            const qrImg = hiddenContainer.querySelector('img');
+            let sourceImageSrc = '';
+
+            if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) { sourceImageSrc = qrImg.src; } 
+            else if (qrCanvas) { sourceImageSrc = qrCanvas.toDataURL("image/png"); } 
+            else { alert("Error generating QR"); return; }
+
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+            const qrSize = 300;
+            const padding = 50; 
+
+            finalCanvas.width = qrSize + (padding * 2);
+            finalCanvas.height = qrSize + (padding * 2) + 60; 
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                ctx.drawImage(img, padding, padding, qrSize, qrSize);
+
+                const centerX = finalCanvas.width / 2;
+                const centerY = padding + (qrSize / 2);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+
+                ctx.font = "40px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("❤️", centerX, centerY + 2);
+
+                ctx.fillStyle = "#cc0033";
+                ctx.font = "bold 26px 'Poppins', sans-serif";
+                ctx.textBaseline = "alphabetic";
+                ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
+
+                const link = document.createElement('a');
+                link.download = `Premium_MemoryGift_QR_${id}.png`;
+                link.href = finalCanvas.toDataURL("image/png");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+            img.src = sourceImageSrc;
+        }, 400); 
+    };
+
+    // Initialize module
+    loadOrders();
+
+})();

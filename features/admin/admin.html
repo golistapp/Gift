@@ -1,0 +1,85 @@
+<div class="admin-wrapper fade-in">
+    <nav class="top-nav">
+        <div class="nav-logo">
+            <i class="fa-solid fa-gift"></i> Memory Gift <span>Admin</span>
+        </div>
+        <div class="nav-actions" style="display: flex; align-items: center;">
+            <span id="session-timer" style="font-size: 13px; color: #64748b; margin-right: 15px; font-weight: 500;">
+                <i class="fa-solid fa-clock-rotate-left"></i> Session: <span>30:00</span>
+            </span>
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-power-off"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <button class="admin-tab active" data-target="overview">
+                <i class="fa-solid fa-chart-pie"></i> Overview
+            </button>
+            <button class="admin-tab" data-target="orders">
+                <i class="fa-solid fa-list-check"></i> Manage Orders
+            </button>
+        </aside>
+
+        <main class="admin-main" id="admin-mount-point">
+            <div style="text-align: center; padding: 50px; color: var(--admin-blue);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 30px;"></i>
+                <p style="margin-top: 15px;">Loading Dashboard...</p>
+            </div>
+        </main>
+    </div>
+
+    <button id="fab-create-btn" class="fab-btn">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <div id="create-order-sheet" class="bottom-sheet-overlay hidden">
+        <div class="bottom-sheet-content">
+            <div class="sheet-header">
+                <h2><i class="fa-solid fa-plus-circle"></i> Create New Order</h2>
+                <button id="close-sheet-btn" class="close-sheet"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="sheet-body">
+                <form id="generate-form">
+                    <div class="input-group">
+                        <label>Customer Name (Boyfriend)</label>
+                        <input type="text" id="customer-name" placeholder="e.g. Rahul Sharma" required autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label>Mobile Number (For records)</label>
+                        <input type="text" id="customer-mobile" placeholder="e.g. 9876543210" required autocomplete="off">
+                    </div>
+                    <button type="submit" id="generate-btn" class="btn-blue">
+                        <i class="fa-solid fa-qrcode"></i> Generate QR & Links
+                    </button>
+                </form>
+
+                <div id="result-section" class="hidden result-box">
+                    <div class="memory-id-box">Memory ID: <strong id="display-id"></strong></div>
+                    <div class="links-box">
+                        <div class="link-item">
+                            <h3>Boyfriend Link (Form)</h3>
+                            <input type="text" id="form-link" readonly>
+                            <button class="copy-btn" data-target="form-link"><i class="fa-regular fa-copy"></i> Copy Link</button>
+                        </div>
+                        <div class="link-item">
+                            <h3>Girlfriend Link (View)</h3>
+                            <input type="text" id="view-link" readonly>
+                            <button class="copy-btn" data-target="view-link"><i class="fa-regular fa-copy"></i> Copy Link</button>
+                        </div>
+                    </div>
+
+                    <div class="qr-display-box">
+                        <div id="qrcode-container"></div>
+                        <button id="download-qr-btn" class="btn-green">
+                            <i class="fa-solid fa-download"></i> Download Premium QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
