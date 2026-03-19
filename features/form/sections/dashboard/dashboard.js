@@ -8,11 +8,10 @@
     const passInput = document.getElementById('check-passcode');
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
+    const sendMsgSound = document.getElementById('send-msg-sound'); // Sound Element
 
-    // 🔴 MAGIC API: Mobile Keyboard Gap Fixer
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
-            // Force wrapper height to exact available screen space (minus keyboard)
             dashWrapper.style.height = window.visualViewport.height + 'px';
             const chatArea = document.getElementById('bf-chat-area');
             if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
@@ -138,7 +137,6 @@
         });
 
         chatArea.innerHTML = newHtml;
-        // Auto scroll handling
         chatArea.scrollTop = chatArea.scrollHeight; 
     }
 
@@ -146,12 +144,27 @@
     const inputEl = document.getElementById('bf-chat-input');
 
     if (sendBtn) {
+
+        // 🔴 MAGIC FIX: Keyboard blink hone se rokne ke liye
+        // Yeh button par click hote hi textbox se focus hatne nahi dega!
+        sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
+        sendBtn.addEventListener('touchstart', (e) => {
+            // Touch screens par thoda wait karna padta hai
+            if(inputEl.value.trim() !== '') e.preventDefault(); 
+        });
+
         sendBtn.addEventListener('click', async () => {
             const msgText = inputEl.value.trim();
             if(!msgText) return;
 
+            // 🔴 NAYA: Send dabte hi sound play hoga
+            if (sendMsgSound) {
+                sendMsgSound.currentTime = 0;
+                sendMsgSound.play().catch(e => console.log("Sound play error:", e));
+            }
+
+            const originalBtnHtml = sendBtn.innerHTML;
             sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
-            sendBtn.disabled = true;
 
             try {
                 const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
@@ -175,16 +188,14 @@
 
                 inputEl.value = ''; 
                 inputEl.style.height = 'auto'; // Reset box size
-                inputEl.focus(); // Keep keyboard open
+                inputEl.focus(); // Force keep keyboard open
             } catch(err) { 
                 alert("Error sending message."); 
             }
 
-            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
-            sendBtn.disabled = false;
+            sendBtn.innerHTML = originalBtnHtml; 
         });
 
-        // Textarea auto-resize
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
