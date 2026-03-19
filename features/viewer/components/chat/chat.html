@@ -1,0 +1,16 @@
+<h2 class="chat-title">Secret Chat Room <i class="fa-solid fa-lock" style="font-size:18px;"></i></h2>
+<p class="chat-hint">End-to-End Encrypted. Auto-deletes old messages.</p>
+
+<audio id="sound-send" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+<audio id="sound-receive" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
+
+<div id="chat-messages-area" class="glass-card chat-messages-area">
+    <p class="chat-empty-text">Send a message to start the conversation...</p>
+</div>
+
+<div class="glass-card chat-input-wrapper">
+    <input type="text" id="live-msg-input" placeholder="Type a message..." class="chat-input-box" autocomplete="off">
+    <button id="send-msg-btn" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+</div>
+
+<p id="msg-count-display" class="msg-count-display">Messages: 0 / 300</p>
