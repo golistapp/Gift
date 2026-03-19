@@ -1,11 +1,12 @@
-/* 🔴 NAYA: App Wrapper for GF Chat */
+/* App Wrapper for GF Chat */
 .chat-app-wrapper {
     display: flex; flex-direction: column;
-    height: 65vh; /* Default height */
+    height: calc(100dvh - 100px); /* Niche bottom menu ki jagah chhodne ke liye */
     border-radius: 16px; overflow: hidden;
     box-shadow: 0 10px 30px rgba(216, 27, 96, 0.15);
     background: #fdf2f5; margin-bottom: 15px;
     border: 1px solid #fce4ec;
+    transition: border-radius 0.2s ease;
 }
 
 /* Premium Header */
@@ -64,7 +65,7 @@
 .msg-wrapper.gf .msg-time { color: rgba(255,255,255,0.8); }
 .msg-wrapper.bf .msg-time { color: rgba(0,0,0,0.45); }
 
-/* Ticks style for GF bubble */
+/* 🔴 Ticks style for GF bubble (Double Check for both states) */
 .msg-tick { font-size: 13px; display: flex; align-items: center; margin-left: 2px;}
 .tick-grey { color: rgba(255,255,255,0.6); } 
 .tick-blue { color: #40c4ff; } /* Bright Cyan (Shines on dark pink) */

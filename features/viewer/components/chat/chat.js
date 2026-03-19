@@ -11,11 +11,29 @@
     const soundSend = document.getElementById('sound-send');
     const soundReceive = document.getElementById('sound-receive');
 
-    // 🔴 MAGIC API: Mobile Keyboard Gap Fixer for GF
+    // 🔴 MAGIC API: Mobile Keyboard Gap Fixer (Full Screen Override)
     if (window.visualViewport && gfChatWrapper) {
         window.visualViewport.addEventListener('resize', () => {
-            // Shrink chat window dynamically avoiding bottom nav
-            gfChatWrapper.style.height = (window.visualViewport.height - 75) + 'px'; 
+            if (window.visualViewport.height < window.innerHeight - 50) {
+                // Keyboard Opened - Go Full Screen Native App Style!
+                gfChatWrapper.style.position = 'fixed';
+                gfChatWrapper.style.top = '0';
+                gfChatWrapper.style.left = '0';
+                gfChatWrapper.style.width = '100%';
+                gfChatWrapper.style.height = window.visualViewport.height + 'px';
+                gfChatWrapper.style.zIndex = '99999'; // Cover everything including bottom menu
+                gfChatWrapper.style.borderRadius = '0';
+                gfChatWrapper.style.border = 'none';
+                gfChatWrapper.style.marginBottom = '0';
+            } else {
+                // Keyboard Closed - Return to normal card shape
+                gfChatWrapper.style.position = 'relative';
+                gfChatWrapper.style.height = 'calc(100dvh - 100px)';
+                gfChatWrapper.style.zIndex = '1';
+                gfChatWrapper.style.borderRadius = '16px';
+                gfChatWrapper.style.border = '1px solid #fce4ec';
+                gfChatWrapper.style.marginBottom = '15px';
+            }
             if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
         });
     }
@@ -26,7 +44,6 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // GF Read Receipt Update
     function updateGFReadReceipt() {
         if (state.mode === 'admin_preview') return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
@@ -34,14 +51,13 @@
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ gf_last_read: new Date().toISOString() })
-            }).catch(e => console.log("Read receipt silently failed."));
+            }).catch(e => {});
         }
     }
 
     updateGFReadReceipt();
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
-    // Real-Time WebSockets
     function startRealtimeChat() {
         const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
         const chatStream = new EventSource(dbUrl);
@@ -60,7 +76,6 @@
                 } else if (payload.path === "/message_count") {
                     state.memoryData.message_count = payload.data;
                 } else if (payload.path === "/bf_last_read") {
-                    // 🔴 Get BF's last read time!
                     state.memoryData.bf_last_read = payload.data;
                 }
                 renderChatUI();
@@ -100,7 +115,6 @@
             updateGFReadReceipt();
         }
 
-        // BF ka read time fetch karo (Ticks logic)
         const bfReadTime = memoryData.bf_last_read ? new Date(memoryData.bf_last_read).getTime() : 0;
 
         let newHtml = '';
@@ -120,11 +134,12 @@
             const msgTime = new Date(msgObj.timestamp).getTime();
             const isGf = msgObj.sender === 'gf';
 
+            // 🔴 NAYA: Hamesha Double Tick Dikhayega GF ke messages par
             let tickHtml = '';
             if (isGf) {
                 const isRead = bfReadTime >= msgTime;
                 tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}">
-                                ${isRead ? '<i class="fa-solid fa-check-double"></i>' : '<i class="fa-solid fa-check"></i>'}
+                                <i class="fa-solid fa-check-double"></i>
                             </span>`;
             }
 
@@ -151,7 +166,6 @@
         lastMsgTime = currentLastMsg.timestamp;
     }
 
-    // Send Message Logic
     if (sendBtn) {
         sendBtn.addEventListener('click', async () => {
             const msgText = inputEl.value.trim();
@@ -192,7 +206,6 @@
             sendBtn.disabled = false;
         });
 
-        // Auto-resize textarea
         inputEl.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
