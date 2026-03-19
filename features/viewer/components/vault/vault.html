@@ -3,7 +3,7 @@
         <i class="fa-solid fa-lock vault-icon"></i>
         <h2 class="vault-title">The Vault</h2>
         <p class="vault-desc">Enter the secret passcode to unlock</p>
-
+        
         <div id="dots-container" class="dots-wrapper">
             <div class="dot"></div><div class="dot"></div><div class="dot"></div>
             <div class="dot"></div><div class="dot"></div><div class="dot"></div>
@@ -21,9 +21,12 @@
             <button class="key magic-key" data-number="9">9</button>
             <button class="key clear-btn magic-key"><i class="fa-solid fa-delete-left"></i></button>
             <button class="key magic-key" data-number="0">0</button>
-            <button class="key" style="visibility:hidden;"></button>
+            
+            <button id="alt-unlock-btn" class="key action-key" style="background: #e2e8f0; color: #cc0033; transition: 0.3s;"><i class="fa-solid fa-arrow-right"></i></button>
         </div>
 
         <button id="unlock-btn" class="unlock-btn" disabled>UNLOCK GIFT</button>
     </div>
+    
+    <audio id="key-press-sound" src="assets/audio/tick.mp3" preload="auto"></audio>
 </div>
