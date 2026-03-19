@@ -1,6 +1,6 @@
 (function() {
     const state = window.viewerState;
-    if (!state || !state.memoryId) return;
+    if (!state) return;
 
     let lastMsgTime = ""; 
     const gfChatWrapper = document.getElementById('gf-chat-wrapper');
@@ -11,11 +11,7 @@
     const soundSend = document.getElementById('sound-send');
     const soundReceive = document.getElementById('sound-receive');
 
-    // 🔴 1. MAGIC FIX: Purane connection ko band karo (Double load roko)
-    if (window.gfChatStream) {
-        window.gfChatStream.close();
-    }
-
+    // 1. Keyboard Layout Fix
     if (window.visualViewport && gfChatWrapper) {
         window.visualViewport.addEventListener('resize', () => {
             if (window.visualViewport.height < window.innerHeight - 50) {
@@ -38,8 +34,9 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // 2. Online & Last Seen Status Sender
     function updateGFStatus(statusStr) {
-        if (state.mode === 'admin_preview') return;
+        if (state.mode === 'admin_preview' || !state.memoryId) return;
         fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_status: statusStr })
         }).catch(e => {});
@@ -47,22 +44,29 @@
 
     function updateGFReadReceipt() {
         if (state.mode === 'admin_preview' || document.hidden) return; 
-        fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_last_read: new Date().toISOString() })
-        }).catch(e => {});
+        if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_last_read: new Date().toISOString() })
+            }).catch(e => {});
+        }
     }
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) { updateGFReadReceipt(); updateGFStatus('online'); } 
         else { updateGFStatus(new Date().toISOString()); }
     });
+
     window.addEventListener('beforeunload', () => updateGFStatus(new Date().toISOString()));
-    
+    updateGFStatus('online'); 
+    updateGFReadReceipt();
+
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
+    // Header Status update function (Blinking rokne ke liye)
     function updateHeaderStatus() {
         const statusEl = document.querySelector('.header-status');
         if (!statusEl) return;
+        
         const bfStatus = state.memoryData.bf_status;
         if (bfStatus === 'typing...') {
             statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; text-transform:lowercase; font-weight:normal;">typing...</span>';
@@ -70,40 +74,57 @@
             statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; font-weight:normal;">online</span>';
         } else if (bfStatus && bfStatus !== 'offline') {
             let dateObj = new Date(bfStatus);
-            if(!isNaN(dateObj)) statusEl.innerHTML = `<span style="color:#fce4ec; font-size:10px; font-weight:normal; opacity:0.9;">last seen at ${formatTime(bfStatus)}</span>`;
-            else statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
+            if(!isNaN(dateObj)) {
+                statusEl.innerHTML = `<span style="color:#fce4ec; font-size:10px; font-weight:normal; opacity:0.9;">last seen at ${formatTime(bfStatus)}</span>`;
+            } else {
+                statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
+            }
         } else {
             statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
         }
     }
 
+    // 🔴 3. AAPKA ORIGINAL WORKING LOGIC (Data Load yahan se ekdum perfect hoga)
     function startRealtimeChat() {
-        window.gfChatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
+        if (window.gfChatStream) window.gfChatStream.close();
+
+        const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
+        window.gfChatStream = new EventSource(dbUrl);
+
         window.gfChatStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
                 let needChatRender = true;
-                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
-                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
-                else if (payload.path.startsWith("/chat/")) {
+
+                if (payload.path === "/") {
+                    if (payload.data) state.memoryData = payload.data;
+                } else if (payload.path === "/chat") {
+                    state.memoryData.chat = payload.data;
+                } else if (payload.path.startsWith("/chat/")) {
                     const index = parseInt(payload.path.split('/')[2]);
                     if (!state.memoryData.chat) state.memoryData.chat = [];
                     state.memoryData.chat[index] = payload.data;
-                } 
-                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
-                else if (payload.path === "/bf_last_read") state.memoryData.bf_last_read = payload.data;
-                else if (payload.path === "/bf_status") { state.memoryData.bf_status = payload.data; needChatRender = false; } 
-                else { needChatRender = false; }
-                
-                if (needChatRender) renderChatUI();
+                } else if (payload.path === "/message_count") {
+                    state.memoryData.message_count = payload.data;
+                } else if (payload.path === "/bf_last_read") {
+                    state.memoryData.bf_last_read = payload.data;
+                } else if (payload.path === "/bf_status") {
+                    state.memoryData.bf_status = payload.data; 
+                    needChatRender = false;
+                } else {
+                    needChatRender = false;
+                }
+
+                if(needChatRender) renderChatUI();
                 updateHeaderStatus();
             } catch(err) {}
         });
+
         window.gfChatStream.addEventListener('patch', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") { 
-                    state.memoryData = { ...state.memoryData, ...payload.data }; 
+                if (payload.path === "/") {
+                    state.memoryData = { ...state.memoryData, ...payload.data };
                     const keys = Object.keys(payload.data);
                     const onlyStatus = keys.every(k => k === 'gf_status' || k === 'bf_status');
                     if (!onlyStatus) renderChatUI();
@@ -113,6 +134,7 @@
         });
     }
 
+    // 4. Render Chat with Image & Ticks
     function renderChatUI() {
         if(!chatArea) return;
         updateHeaderStatus(); 
@@ -120,7 +142,6 @@
         const memoryData = state.memoryData || {};
         const count = memoryData.message_count || 0;
         
-        // 🔴 2. MAGIC FIX: Firebase Object Conversion Issue Solved
         let rawChat = memoryData.chat || [];
         let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
         chatList = chatList.filter(msg => msg !== null && msg.sender);
@@ -161,6 +182,7 @@
                 decryptedText = decryptedText.replace(/\n/g, '<br>'); 
             } catch(e) { decryptedText = ""; }
             
+            // Image Decryption Logic
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
                 let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
@@ -182,7 +204,9 @@
             let tickHtml = '';
             if (isGf) {
                 const isRead = bfReadTime >= msgTime;
-                tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}"><i class="fa-solid fa-check-double"></i></span>`;
+                tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}">
+                                <i class="fa-solid fa-check-double"></i>
+                            </span>`;
             }
 
             const animStyle = ((index === chatList.length - 1) && isNewMessage) ? '' : 'style="animation: none;"';
@@ -201,8 +225,14 @@
                 </div>`;
         });
         
-        chatArea.innerHTML = newHtml;
-        if (isNewMessage || lastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight;
+        // Smart Render Guard (Blink Fix)
+        if (chatArea.innerHTML !== newHtml) {
+            chatArea.innerHTML = newHtml;
+            if (isNewMessage || lastMsgTime === "") {
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+        }
+
         lastMsgTime = currentLastMsg.timestamp;
     }
 
@@ -248,6 +278,7 @@
         sendBtn.disabled = false;
     }
 
+    // Image Popup Events
     const galleryBtn = document.getElementById('gf-gallery-btn');
     const imgPopup = document.getElementById('gf-img-popup');
     const closePopup = document.getElementById('gf-close-popup');
@@ -278,9 +309,7 @@
         closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
     }
 
-    const sendBtn = document.getElementById('send-msg-btn');
     let typingTimer;
-
     if (sendBtn) {
         sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
         sendBtn.addEventListener('touchstart', (e) => { 
@@ -299,22 +328,5 @@
         });
     }
 
-    // 🔴 3. MAGIC FIX: Tab khulte hi ekdum fresh data fetch karega
-    async function forceFetchLatestData() {
-        try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
-            const data = await res.json();
-            if(data) { 
-                state.memoryData = data; 
-                renderChatUI(); 
-            }
-        } catch(e) {}
-    }
-
-    updateGFStatus('online'); 
-    updateGFReadReceipt();
-    forceFetchLatestData().then(() => {
-        startRealtimeChat(); 
-    });
-
+    startRealtimeChat(); 
 })();
