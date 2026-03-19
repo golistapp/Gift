@@ -1,0 +1,13 @@
+/* Editor Section Styles */
+.editor-header { text-align: center; margin-bottom: 30px; }
+.editor-header h1 { font-family: var(--font-heading); font-size: 42px; color: #D81B60; margin-bottom: 5px;}
+.editor-header p { color: #666; font-size: 14px; }
+.editor-section { background: #ffffff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(216, 27, 96, 0.05); margin-bottom: 25px; }
+.step-title { font-size: 18px; color: #D81B60; margin-bottom: 15px; border-bottom: 1px dashed #fce4ec; padding-bottom: 10px; }
+
+/* Polaroids Upload Grid */
+.polaroid-grid { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+.form-polaroid { background: white; padding: 10px 10px 15px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 90%; max-width: 300px; border-radius: 4px; transition: 0.3s; }
+.form-polaroid:hover { box-shadow: 0 8px 25px rgba(216, 27, 96, 0.2); }
+.form-polaroid img { width: 100%; height: 250px; object-fit: cover; border-radius: 2px; border: 1px solid #fce4ec; }
+.polaroid-caption-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; padding: 8px; margin-top: 10px; text-align: center; outline: none; font-family: var(--font-heading); font-size: 20px; color: #D81B60;}

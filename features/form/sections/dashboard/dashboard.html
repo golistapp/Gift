@@ -1,0 +1,38 @@
+<div class="dashboard-wrapper fade-in">
+    <div id="dash-lock-screen" class="editor-section lock-screen-box">
+        <i class="fa-solid fa-lock lock-icon"></i>
+        <h2 class="step-title" style="border: none;">Dashboard Locked</h2>
+        <p class="lock-desc">Please enter your 6-digit passcode to enter the Secret Chat.</p>
+        <div class="input-wrapper" style="max-width: 250px; margin: 0 auto;">
+            <input type="password" id="check-passcode" class="elegant-input text-center tracking-widest" maxlength="6" placeholder="******">
+        </div>
+        <button id="verify-passcode-btn" class="btn-pink mt-20" style="padding: 12px 30px; font-size: 16px;">Unlock Dashboard</button>
+        <p id="passcode-error" class="error-text hidden mt-10">Incorrect Passcode!</p>
+    </div>
+
+    <div id="dash-main-screen" class="hidden locked-dashboard">
+        <h2 class="dash-title">Secret Chat Room</h2>
+
+        <div class="dash-stats">
+            <div class="stat-box">
+                <b><i class="fa-solid fa-qrcode"></i> Gift Opened:</b><br>
+                <span id="track-scanned" class="stat-highlight">Waiting...</span>
+            </div>
+            <div class="stat-box">
+                <b><i class="fa-solid fa-ring"></i> Proposal:</b><br>
+                <span id="track-proposal" class="stat-highlight">Waiting...</span>
+            </div>
+        </div>
+
+        <div id="dashboard-chat-container" class="chat-container">
+             <div id="bf-chat-area" class="chat-area">
+                 </div>
+
+             <div class="chat-input-area">
+                 <input type="text" id="bf-chat-input" class="elegant-input" placeholder="Waiting for her reply..." disabled autocomplete="off">
+                 <button id="bf-send-btn" class="send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
+             </div>
+             <p id="bf-msg-count" class="msg-count">Messages: 0 / 300</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+<div id="editor-screen" class="pb-40 fade-in">
+    <header class="editor-header">
+        <h1>Create Your Surprise ❤️</h1>
+        <p>Fill out the details below to lock your gift.</p>
+    </header>
+
+    <form id="memory-form">
+        <div class="editor-section">
+            <h2 class="step-title">1. Basic Details & Vault Lock</h2>
+
+            <div class="input-wrapper mb-15">
+                <label>Occasion / Headline:</label>
+                <select id="occasion-select" class="elegant-input" required>
+                    <option value="Happy Birthday">Happy Birthday</option>
+                    <option value="Happy Anniversary">Happy Anniversary</option>
+                    <option value="Happy Valentine's Day">Happy Valentine's Day</option>
+                    <option value="A Special Surprise">A Special Surprise</option>
+                    <option value="Just For You">Just For You</option>
+                </select>
+            </div>
+
+            <div class="input-wrapper mb-15">
+                <label>Girlfriend's Name:</label>
+                <input type="text" id="gf-name" class="elegant-input" placeholder="e.g. Ananya" required>
+            </div>
+            <div class="input-wrapper">
+                <label>Secret Passcode (6 Digits):</label>
+                <input type="text" id="passcode-input" class="elegant-input" maxlength="6" pattern="\d{6}" placeholder="e.g., 140224" required>
+            </div>
+        </div>
+
+        <div class="editor-section">
+            <h2 class="step-title">2. Choose Background Music</h2>
+            <div class="input-wrapper">
+                <select id="music-select" class="elegant-input" required>
+                    <option value="gift" selected>Romantic Love Song (Default)</option>
+                    <option value="romantic-piano">Romantic Piano</option>
+                    <option value="soft-violin">Soft Violin</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="editor-section">
+            <h2 class="step-title">3. The Main Love Letter</h2>
+            <textarea id="letter-text" class="elegant-input" rows="6" placeholder="My Dearest..." required></textarea>
+        </div>
+
+        <div class="editor-section">
+            <h2 class="step-title">4. "Open When..." Messages 💌</h2>
+            <input type="text" id="ow-happy" class="elegant-input mb-10" placeholder="Open when you're Happy..." required>
+            <input type="text" id="ow-sad" class="elegant-input mb-10" placeholder="Open when you're Sad..." required>
+            <input type="text" id="ow-miss-me" class="elegant-input mb-10" placeholder="Open when you miss me..." required>
+            <input type="text" id="ow-hug" class="elegant-input mb-10" placeholder="Open when you need a hug..." required>
+            <input type="text" id="ow-sorry" class="elegant-input" placeholder="Open when I am sorry..." required>
+        </div>
+
+        <div class="editor-section">
+            <h2 class="step-title">5. Upload 5 Memories</h2>
+            <div class="polaroid-grid" id="image-upload-container">
+                </div>
+        </div>
+
+        <button type="submit" id="lock-gift-btn" class="btn-pink lock-btn-style" style="width: 100%; padding: 15px; font-size: 18px;">
+            <i class="fa-solid fa-lock"></i> Lock Gift & Generate
+        </button>
+    </form>
+</div>
