@@ -80,18 +80,26 @@
         const chatList = state.memoryData.chat || [];
         const count = state.memoryData.message_count || 0;
 
-        // 🔴 Update text to 100 limit
+        // Update text to 100 limit
         document.getElementById('bf-msg-count').innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
 
         const inputEl = document.getElementById('bf-chat-input');
         const sendBtn = document.getElementById('bf-send-btn');
 
-        if(chatList.length === 0) {
+        // 🔴 BUG FIX: Keyboard Open na hone ka Fix (Input Enable Karna)
+        if(chatList.length > 0) {
+            inputEl.disabled = false; 
+            sendBtn.disabled = false;
+            inputEl.placeholder = "Type your reply...";
+        } else {
+            inputEl.disabled = true; 
+            sendBtn.disabled = true;
+            inputEl.placeholder = "Waiting for her reply...";
             chatArea.innerHTML = '<div class="waiting-msg">Waiting for her to start the conversation...</div>';
             return;
         }
 
-        // 🔴 GF ka Read Time check karna
+        // GF ka Read Time check karna
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
 
         // Render Chat Bubbles
@@ -107,10 +115,10 @@
             const timeStr = formatTime(msgObj.timestamp);
             const msgTime = new Date(msgObj.timestamp).getTime();
 
-            // 🔴 Tick Logic (Sirf Boyfriend ke messages par)
+            // Tick Logic
             let tickHtml = '';
             if (isBf) {
-                const isRead = gfReadTime >= msgTime; // Agar GF ka last seen message ke time se bada hai
+                const isRead = gfReadTime >= msgTime;
                 tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}">
                                 ${isRead ? '<i class="fa-solid fa-check-double"></i>' : '<i class="fa-solid fa-check"></i>'}
                             </span>`;
@@ -154,7 +162,7 @@
                 const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
                 chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
-                // 🔴 LIMIT LOGIC: Agar 100 se zyada ho gaye, toh purane messages delete kardo (FIFO)
+                // LIMIT LOGIC: Agar 100 se zyada ho gaye, toh purane messages delete kardo (FIFO)
                 if(chatList.length > 100) {
                     chatList = chatList.slice(chatList.length - 100);
                 }
