@@ -11,10 +11,13 @@
     // Premium Camera Shutter Sound
     const snapSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
-    // 1. Camera Start Karne ka logic
+    // 1. Camera Start Karne ka logic (High Quality Mode Added)
     state.startCamera = async function() {
         try {
-            state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            // 🔴 HD Quality aur perfect aspect ratio ke liye camera constraint update kiya
+            state.stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
             video.srcObject = state.stream;
             video.style.display = 'block';
             canvas.style.display = 'none';
@@ -24,7 +27,7 @@
         }
     };
 
-    // 2. Camera Stop karne ka logic (Battery aur memory bachane ke liye)
+    // 2. Camera Stop karne ka logic
     state.stopCamera = function() {
         if (state.stream) {
             state.stream.getTracks().forEach(t => t.stop());
@@ -57,33 +60,33 @@
                 // Countdown khatam -> Photo click karo
                 clearInterval(timer);
                 countdownEl.style.display = 'none';
-
+                
                 // Sound aur Flash chalayenge
                 snapSound.currentTime = 0;
                 snapSound.play().catch(e => console.log(e));
-
+                
                 flash.classList.add('flash-anim');
                 setTimeout(() => flash.classList.remove('flash-anim'), 600);
 
-                // Video ko canvas (photo) mein capture karenge
-                canvas.width = 800;
-                canvas.height = 600;
-
+                // 🔴 MAIN FIX: Zabardasti 800x600 karne ke bajaye, mobile camera ka ASLI size nikalenge!
+                const vw = video.videoWidth || 800;
+                const vh = video.videoHeight || 600;
+                
                 state.userImage = document.createElement('canvas');
-                state.userImage.width = 800;
-                state.userImage.height = 600;
-
+                state.userImage.width = vw;
+                state.userImage.height = vh;
+                
                 const uCtx = state.userImage.getContext('2d');
-                // Selfie camera (mirror) theek karne ke liye
-                uCtx.translate(800, 0);
+                // Selfie camera (mirror) theek karne ke liye (Asli width use karke)
+                uCtx.translate(vw, 0);
                 uCtx.scale(-1, 1);
-                uCtx.drawImage(video, 0, 0, 800, 600);
+                uCtx.drawImage(video, 0, 0, vw, vh);
 
                 // Video band karke photo dikhayenge
                 state.stopCamera();
                 canvas.style.display = 'block';
 
-                // Controls ko batayenge ki photo click ho gayi, ab beauty filter/frame lagao!
+                // Controls ko batayenge ki photo click ho gayi, ab filter/frame lagao!
                 if (onSnapComplete) onSnapComplete();
             }
         }, 1000);
