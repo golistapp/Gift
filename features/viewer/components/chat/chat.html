@@ -3,8 +3,10 @@
         <div class="header-left">
             <div class="avatar"><i class="fa-solid fa-heart"></i></div>
             <div class="header-info">
-                <h2>Secret Chat Room</h2>
-                <p class="header-status"><i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted</p>
+                <div class="title-row">
+                    <h2>Secret Chat Room</h2>
+                </div>
+                <p id="live-status" class="header-status">Connecting...</p>
             </div>
         </div>
     </header>
@@ -24,10 +26,9 @@
 
         <div class="chat-input-inner">
             <button id="gf-gallery-btn" class="gallery-btn" disabled><i class="fa-regular fa-image"></i></button>
-            
             <textarea id="live-msg-input" placeholder="Type a message..." class="chat-input-box" rows="1"></textarea>
             <button id="send-msg-btn" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
-        <p id="msg-count-display" class="msg-count-display">Messages: 0 / 100</p>
+        <p id="msg-count-display" class="msg-count-display">🔒 End-to-End Encrypted | Msg: 0/100</p>
     </div>
 </div>

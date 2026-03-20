@@ -11,18 +11,50 @@
     const soundSend = document.getElementById('sound-send');
     const soundReceive = document.getElementById('sound-receive');
 
-    // 1. Keyboard Layout Fix
+    // 🔴 1. THE GAP FIX: Ultimate Keyboard & Viewport Fix
     if (window.visualViewport && gfChatWrapper) {
         window.visualViewport.addEventListener('resize', () => {
             if (window.visualViewport.height < window.innerHeight - 50) {
-                gfChatWrapper.style.position = 'fixed'; gfChatWrapper.style.top = '0'; gfChatWrapper.style.left = '0';
-                gfChatWrapper.style.width = '100%'; gfChatWrapper.style.height = window.visualViewport.height + 'px';
-                gfChatWrapper.style.zIndex = '99999'; gfChatWrapper.style.borderRadius = '0';
-                gfChatWrapper.style.border = 'none'; gfChatWrapper.style.marginBottom = '0';
+                // Keyboard OPEN - Force Full Screen & Hide other elements
+                gfChatWrapper.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    height: ${window.visualViewport.height}px !important;
+                    z-index: 999999 !important;
+                    border-radius: 0 !important;
+                    border: none !important;
+                    margin: 0 !important;
+                    background: #fdf2f5 !important;
+                `;
+
+                // Niche ka Menu (Footer) aur Music button hide kardo taaki Gap na aaye
+                const footer = document.getElementById('footer-mount');
+                if (footer) footer.style.display = 'none';
+
+                // Music button ko hide karne ka try karega
+                const floatBtns = document.querySelectorAll('.music-float-btn, .floating-btn, [id*="music"]');
+                floatBtns.forEach(btn => { if(btn.style) btn.style.display = 'none'; });
+
+                window.scrollTo(0, 0); // Scroll lock fix
             } else {
-                gfChatWrapper.style.position = 'relative'; gfChatWrapper.style.height = 'calc(100dvh - 100px)';
-                gfChatWrapper.style.zIndex = '1'; gfChatWrapper.style.borderRadius = '16px';
-                gfChatWrapper.style.border = '1px solid #fce4ec'; gfChatWrapper.style.marginBottom = '15px';
+                // Keyboard CLOSED - Wapas Normal UI
+                gfChatWrapper.style.cssText = `
+                    position: relative;
+                    height: calc(100dvh - 100px);
+                    z-index: 1;
+                    border-radius: 16px;
+                    border: 1px solid #fce4ec;
+                    margin-bottom: 15px;
+                `;
+
+                // Wapas Menu aur Music le aao
+                const footer = document.getElementById('footer-mount');
+                if (footer) footer.style.display = '';
+
+                const floatBtns = document.querySelectorAll('.music-float-btn, .floating-btn, [id*="music"]');
+                floatBtns.forEach(btn => { if(btn.style) btn.style.display = ''; });
             }
             if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
         });
@@ -34,7 +66,6 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 2. Online & Last Seen Status Sender
     function updateGFStatus(statusStr) {
         if (state.mode === 'admin_preview' || !state.memoryId) return;
         fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -55,39 +86,52 @@
         if (!document.hidden) { updateGFReadReceipt(); updateGFStatus('online'); } 
         else { updateGFStatus(new Date().toISOString()); }
     });
-
     window.addEventListener('beforeunload', () => updateGFStatus(new Date().toISOString()));
-    updateGFStatus('online'); 
-    updateGFReadReceipt();
 
     if(inputEl) inputEl.addEventListener('focus', updateGFReadReceipt);
 
-    // Header Status update function (Blinking rokne ke liye)
     function updateHeaderStatus() {
-        const statusEl = document.querySelector('.header-status');
+        const statusEl = document.getElementById('live-status');
         if (!statusEl) return;
-        
-        const bfStatus = state.memoryData.bf_status;
+
+        const memoryData = state.memoryData || {}; 
+        const bfStatus = memoryData.bf_status;
+
         if (bfStatus === 'typing...') {
-            statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; text-transform:lowercase; font-weight:normal;">typing...</span>';
+            statusEl.innerHTML = '<span style="color:#40c4ff;">typing...</span>';
         } else if (bfStatus === 'online') {
-            statusEl.innerHTML = '<span style="color:#40c4ff; font-size:12px; font-weight:normal;">online</span>';
+            statusEl.innerHTML = '<span style="color:#40c4ff;">online</span>';
         } else if (bfStatus && bfStatus !== 'offline') {
             let dateObj = new Date(bfStatus);
-            if(!isNaN(dateObj)) {
-                statusEl.innerHTML = `<span style="color:#fce4ec; font-size:10px; font-weight:normal; opacity:0.9;">last seen at ${formatTime(bfStatus)}</span>`;
-            } else {
-                statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
-            }
+            if(!isNaN(dateObj)) statusEl.innerHTML = `<span style="color:#fce4ec; opacity:0.9;">last seen at ${formatTime(bfStatus)}</span>`;
+            else statusEl.innerHTML = '';
         } else {
-            statusEl.innerHTML = '<i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted';
+            statusEl.innerHTML = '';
         }
     }
 
-    // 🔴 3. AAPKA ORIGINAL WORKING LOGIC (Data Load yahan se ekdum perfect hoga)
+    function syncWithLocalStorage(firebaseChat) {
+        if (!firebaseChat || !Array.isArray(firebaseChat)) return [];
+        const localKey = 'secret_chat_' + state.memoryId;
+        let localChat = [];
+        try {
+            const stored = localStorage.getItem(localKey);
+            if (stored) localChat = JSON.parse(stored);
+        } catch(e) {}
+
+        const chatMap = new Map();
+        localChat.forEach(msg => chatMap.set(msg.timestamp, msg));
+        firebaseChat.forEach(msg => chatMap.set(msg.timestamp, msg)); 
+
+        let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
+        try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
+
+        return combinedChat;
+    }
+
     function startRealtimeChat() {
         if (window.gfChatStream) window.gfChatStream.close();
-
         const dbUrl = `${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`;
         window.gfChatStream = new EventSource(dbUrl);
 
@@ -96,24 +140,16 @@
                 const payload = JSON.parse(e.data);
                 let needChatRender = true;
 
-                if (payload.path === "/") {
-                    if (payload.data) state.memoryData = payload.data;
-                } else if (payload.path === "/chat") {
-                    state.memoryData.chat = payload.data;
-                } else if (payload.path.startsWith("/chat/")) {
+                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
+                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
+                else if (payload.path.startsWith("/chat/")) {
                     const index = parseInt(payload.path.split('/')[2]);
                     if (!state.memoryData.chat) state.memoryData.chat = [];
                     state.memoryData.chat[index] = payload.data;
-                } else if (payload.path === "/message_count") {
-                    state.memoryData.message_count = payload.data;
-                } else if (payload.path === "/bf_last_read") {
-                    state.memoryData.bf_last_read = payload.data;
-                } else if (payload.path === "/bf_status") {
-                    state.memoryData.bf_status = payload.data; 
-                    needChatRender = false;
-                } else {
-                    needChatRender = false;
-                }
+                } else if (payload.path === "/message_count") { state.memoryData.message_count = payload.data; }
+                else if (payload.path === "/bf_last_read") { state.memoryData.bf_last_read = payload.data; }
+                else if (payload.path === "/bf_status") { state.memoryData.bf_status = payload.data; needChatRender = false; } 
+                else { needChatRender = false; }
 
                 if(needChatRender) renderChatUI();
                 updateHeaderStatus();
@@ -134,19 +170,20 @@
         });
     }
 
-    // 4. Render Chat with Image & Ticks
     function renderChatUI() {
         if(!chatArea) return;
         updateHeaderStatus(); 
 
         const memoryData = state.memoryData || {};
         const count = memoryData.message_count || 0;
-        
+
         let rawChat = memoryData.chat || [];
-        let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
-        chatList = chatList.filter(msg => msg !== null && msg.sender);
-        
-        if(countDisplay) countDisplay.innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
+        let firebaseChat = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
+        firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
+
+        const chatList = syncWithLocalStorage(firebaseChat);
+
+        if(countDisplay) countDisplay.innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted SMS: ${firebaseChat.length}/100 (Total: ${count})`;
 
         const galleryBtn = document.getElementById('gf-gallery-btn');
         if(chatList.length === 0) {
@@ -181,8 +218,7 @@
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 decryptedText = decryptedText.replace(/\n/g, '<br>'); 
             } catch(e) { decryptedText = ""; }
-            
-            // Image Decryption Logic
+
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
                 let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
@@ -224,13 +260,10 @@
                     </div>
                 </div>`;
         });
-        
-        // Smart Render Guard (Blink Fix)
+
         if (chatArea.innerHTML !== newHtml) {
             chatArea.innerHTML = newHtml;
-            if (isNewMessage || lastMsgTime === "") {
-                chatArea.scrollTop = chatArea.scrollHeight;
-            }
+            if (isNewMessage || lastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight;
         }
 
         lastMsgTime = currentLastMsg.timestamp;
@@ -244,22 +277,24 @@
         if(navigator.vibrate) navigator.vibrate(40); 
 
         const sendBtn = document.getElementById('send-msg-btn');
-        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
-        sendBtn.disabled = true;
+        if(sendBtn) {
+            sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            sendBtn.disabled = true;
+        }
 
         try {
             const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
             const latestData = await res.json();
-            
+
             let rawChat = latestData.chat || [];
             let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
             chatList = chatList.filter(msg => msg !== null && msg.sender);
-            
+
             let newCount = (latestData.message_count || 0) + 1;
-            
+
             const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
             chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
-            
+
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
             await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -273,12 +308,13 @@
         } catch(err) { 
             alert("Error sending message."); 
         }
-        
-        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
-        sendBtn.disabled = false;
+
+        if(sendBtn) {
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
+            sendBtn.disabled = false;
+        }
     }
 
-    // Image Popup Events
     const galleryBtn = document.getElementById('gf-gallery-btn');
     const imgPopup = document.getElementById('gf-img-popup');
     const closePopup = document.getElementById('gf-close-popup');
@@ -289,9 +325,10 @@
             e.preventDefault();
             imgGrid.innerHTML = '';
             let found = false;
-            
+
+            const memoryData = state.memoryData || {};
             for(let i=1; i<=5; i++) {
-                let imgUrl = state.memoryData[`image_${i}_url`];
+                let imgUrl = memoryData[`image_${i}_url`];
                 if(imgUrl) {
                     found = true;
                     let imgEl = document.createElement('img');
@@ -300,13 +337,13 @@
                     imgGrid.appendChild(imgEl);
                 }
             }
-            
+
             if(!found) {
                 imgGrid.innerHTML = '<span style="font-size:12px; color:#888; padding:10px;">No memories found.</span>';
             }
             imgPopup.classList.remove('hidden');
         });
-        closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
+        if(closePopup) closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
     }
 
     let typingTimer;
@@ -328,5 +365,8 @@
         });
     }
 
+    updateGFStatus('online');
+    updateGFReadReceipt();
     startRealtimeChat(); 
+
 })();
