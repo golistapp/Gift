@@ -73,7 +73,6 @@
         }
     });
 
-    // 🔴 NAYA: Status update ka layout logic
     function updateHeaderStatus() {
         const statusEl = document.getElementById('live-status');
         if (!statusEl) return;
@@ -90,6 +89,29 @@
 
         document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Wait...";
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Wait...";
+    }
+
+    // 🔴 MAGIC FEATURE: LocalStorage Sync (Infinite Chat)
+    function syncWithLocalStorage(firebaseChat) {
+        if (!firebaseChat || !Array.isArray(firebaseChat)) return [];
+        const localKey = 'secret_chat_' + state.memoryId;
+        let localChat = [];
+        try {
+            const stored = localStorage.getItem(localKey);
+            if (stored) localChat = JSON.parse(stored);
+        } catch(e) {}
+
+        const chatMap = new Map();
+        localChat.forEach(msg => chatMap.set(msg.timestamp, msg));
+        firebaseChat.forEach(msg => chatMap.set(msg.timestamp, msg)); 
+
+        let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        // Max 2000 messages local save rahenge (Browser crash rokne ke liye)
+        if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
+        try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
+
+        return combinedChat;
     }
 
     function startRealtimeDashboard() {
@@ -132,12 +154,18 @@
 
     function renderDashboardUI() {
         updateHeaderStatus(); 
-
         const chatArea = document.getElementById('bf-chat-area');
-        const chatList = state.memoryData.chat || [];
+
+        let rawChat = state.memoryData.chat || [];
+        let firebaseChat = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
+        firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
+
+        // LocalStorage Logic Use kiya ja raha hai
+        const chatList = syncWithLocalStorage(firebaseChat); 
         const count = state.memoryData.message_count || 0;
 
-        document.getElementById('bf-msg-count').innerText = `Messages: ${chatList.length} / 100 (Total Sent: ${count})`;
+        // 🔴 NAYA: Compact Encrypted Message Count
+        document.getElementById('bf-msg-count').innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted &bull; Cloud: ${firebaseChat.length}/100 (Total: ${count})`;
 
         const inputEl = document.getElementById('bf-chat-input');
         const sendBtn = document.getElementById('bf-send-btn');
@@ -193,7 +221,6 @@
             const timeStr = formatTime(msgObj.timestamp);
             const msgTime = new Date(msgObj.timestamp).getTime();
 
-            // 🔴 NAYA FIX: Hamesha Double Tick lagega (Grey for Unread, Blue for Read)
             let tickHtml = '';
             if (isBf) {
                 const isRead = gfReadTime >= msgTime;
@@ -239,11 +266,15 @@
             const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
             const latestData = await res.json();
 
-            let chatList = latestData.chat || [];
+            let rawChat = latestData.chat || [];
+            let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
+            chatList = chatList.filter(msg => msg !== null && msg.sender);
+
             let newCount = (latestData.message_count || 0) + 1;
 
             const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
             chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
+
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
             await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {

@@ -11,16 +11,12 @@
     </div>
 
     <div id="dash-main-screen" class="hidden locked-dashboard">
-        
         <header class="chat-app-header">
             <div class="header-left">
                 <div class="avatar"><i class="fa-solid fa-heart"></i></div>
                 <div class="header-info">
-                    <div class="title-row">
-                        <h2>Secret Chat Room</h2>
-                        <span id="live-status" class="live-status-text"></span>
-                    </div>
-                    <p class="header-status"><i class="fa-solid fa-lock" style="font-size:10px;"></i> End-to-End Encrypted</p>
+                    <h2>Secret Chat Room</h2>
+                    <p id="live-status" class="header-status">Connecting...</p>
                 </div>
             </div>
             
@@ -40,10 +36,10 @@
 
             <div class="chat-input-inner">
                 <button id="bf-gallery-btn" class="gallery-btn" disabled><i class="fa-regular fa-image"></i></button>
-                <textarea id="bf-chat-input" placeholder="Waiting for her reply..." disabled rows="1"></textarea>
+                <textarea id="bf-chat-input" placeholder="Type a message..." disabled rows="1"></textarea>
                 <button id="bf-send-btn" class="send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
             </div>
-            <p id="bf-msg-count" class="msg-count">Messages: 0 / 100</p>
+            <p id="bf-msg-count" class="msg-count">🔒 End-to-End Encrypted | Msg: 0/100</p>
         </div>
     </div>
 </div>
