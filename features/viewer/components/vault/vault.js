@@ -5,27 +5,53 @@
     const vaultKeypad = document.getElementById('vault-keypad');
     const unlockBtn = document.getElementById('unlock-btn');
     const dots = document.querySelectorAll('#dots-container .dot');
-    const keySound = document.getElementById('keypad-sound'); // Sound Element
 
-    // 🔴 Helper: Play Sound & Vibrate
+    // 🔴 NAYA: Premium Sweet Pop Sound
+    const premiumClickSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3");
+
+    // Helper: Play Sound & Vibrate
     function playKeyFeedback() {
-        if(keySound) {
-            keySound.currentTime = 0; // Rewind to start
-            keySound.play().catch(e => console.log("Sound locked by browser"));
-        }
-        // Haptic Feedback for Android devices
-        if(navigator.vibrate) navigator.vibrate(40); 
+        premiumClickSound.currentTime = 0; 
+        premiumClickSound.play().catch(e => console.log("Sound blocked"));
+        if(navigator.vibrate) navigator.vibrate(30); 
+    }
+
+    // 🔴 NAYA: Button dabane par Dil (Heart) hawa mein udne ka logic
+    function spawnHeart(buttonEl) {
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.className = 'floating-heart';
+
+        // Jis button par click hua hai, uski exact position nikalo
+        const rect = buttonEl.getBoundingClientRect();
+        heart.style.left = (rect.left + rect.width / 2 - 14) + 'px'; // Center X
+        heart.style.top = (rect.top - 10) + 'px'; // Button ke theek upar (Center Y)
+
+        document.body.appendChild(heart);
+
+        // Animation 0.8s ki hai, toh 800ms baad div ko delete kar do
+        setTimeout(() => heart.remove(), 800);
     }
 
     // UI Update Function
     function updateVaultUI() {
         dots.forEach((dot, index) => {
-            dot.style.background = index < enteredPasscode.length ? '#cc0033' : 'rgba(0,0,0,0.1)';
+            if (index < enteredPasscode.length) {
+                // 🔴 NAYA: Type karte hi dot gayab aur Dil aa jayega
+                dot.style.background = 'transparent';
+                dot.innerHTML = '❤️';
+                dot.style.transform = 'scale(1.4)';
+            } else {
+                dot.style.background = 'rgba(0,0,0,0.1)';
+                dot.innerHTML = '';
+                dot.style.transform = 'scale(1)';
+            }
         });
 
         if(unlockBtn) {
             unlockBtn.disabled = enteredPasscode.length !== MAX_LENGTH;
             unlockBtn.style.background = enteredPasscode.length === MAX_LENGTH ? "linear-gradient(135deg, #cc0033, #ff4d79)" : "#ccc";
+            unlockBtn.style.transform = enteredPasscode.length === MAX_LENGTH ? "scale(1.05)" : "scale(1)";
         }
     }
 
@@ -37,11 +63,12 @@
 
             if (keyBtn && enteredPasscode.length < MAX_LENGTH) {
                 enteredPasscode += keyBtn.getAttribute('data-number');
-                playKeyFeedback(); // Play sound here
+                playKeyFeedback(); 
+                spawnHeart(keyBtn); // 💖 Dil udao!
                 updateVaultUI();
             } else if (clearBtn && enteredPasscode.length > 0) {
                 enteredPasscode = enteredPasscode.slice(0, -1);
-                playKeyFeedback(); // Play sound here
+                playKeyFeedback(); 
                 updateVaultUI();
             }
         });
@@ -73,12 +100,17 @@
                 document.getElementById('footer-mount').classList.remove('hidden');
 
             } else {
-                if(navigator.vibrate) navigator.vibrate([100, 50, 100]); // Error vibration
-                dots.forEach(dot => dot.style.background = 'red');
+                // Wrong Password effect
+                if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+                dots.forEach(dot => {
+                    dot.style.background = 'transparent';
+                    dot.innerHTML = '❌';
+                    dot.style.transform = 'scale(1.2)';
+                });
                 setTimeout(() => { 
                     enteredPasscode = ""; 
                     updateVaultUI(); 
-                }, 500);
+                }, 600);
             }
         });
     }
