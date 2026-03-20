@@ -1,36 +1,38 @@
 (function() {
-    const yesBtn = document.querySelector('.btn-yes'); // Aapka yes button class/id
-    const noBtn = document.querySelector('.btn-no');   // Aapka no button class/id
-    const pandaImg = document.querySelector('.proposal-img'); // Panda image class/id
+    const yesBtn = document.getElementById('btn-yes'); // ID se select kiya
+    const noBtn = document.getElementById('btn-no');   // ID se select kiya
+    // 🔴 FIX: HTML mein id 'proposal-gif' hai, usko match kiya
+    const pandaImg = document.getElementById('proposal-gif'); 
 
-    // "No" Button bhagane wala logic (Agar aapne lagaya hua hai)
+    // "No" Button bhagane wala logic
     if (noBtn) {
-        noBtn.addEventListener('mouseover', function() {
-            const x = Math.random() * (window.innerWidth - this.clientWidth);
-            const y = Math.random() * (window.innerHeight - this.clientHeight);
-            this.style.position = 'absolute';
-            this.style.left = `${x}px`;
-            this.style.top = `${y}px`;
-        });
+        const moveButton = function(e) {
+            if (e && e.cancelable) e.preventDefault(); // Touch device scrolling issue rokne ke liye
 
-        // Touch screen ke liye bhi
-        noBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            const x = Math.random() * (window.innerWidth - this.clientWidth);
-            const y = Math.random() * (window.innerHeight - this.clientHeight);
-            this.style.position = 'absolute';
-            this.style.left = `${x}px`;
-            this.style.top = `${y}px`;
-        });
+            // 🔴 NAYA: Jab bhi NO par click/touch/hover karein, Angry GIF lag jaye
+            if (pandaImg) pandaImg.src = "assets/gif/angry.gif";
+
+            // Button ko random jagah move karna
+            const x = Math.random() * (window.innerWidth - this.clientWidth - 20);
+            const y = Math.random() * (window.innerHeight - this.clientHeight - 20);
+
+            this.style.position = 'fixed'; // fixed taaki pure screen par bhage aur card ke andar na phase
+            this.style.left = `${Math.max(10, x)}px`;
+            this.style.top = `${Math.max(10, y)}px`;
+            this.style.zIndex = '9999';
+        };
+
+        noBtn.addEventListener('mouseover', moveButton);
+        noBtn.addEventListener('touchstart', moveButton, {passive: false});
     }
 
-    // 🔴 THE FIX: "Yes" Button Click Logic
+    // "Yes" Button Click Logic
     if (yesBtn) {
         yesBtn.addEventListener('click', async function() {
-            // 1. Change Image (Agar aap animation dikhana chahte hain)
-            if(pandaImg) pandaImg.src = "assets/gif/kiss.gif"; 
+            // 🔴 NAYA: Yes par click karne par Kiss GIF lag jaye
+            if (pandaImg) pandaImg.src = "assets/gif/kiss.gif"; 
 
-            // 2. Firebase me Time Save Karein!
+            // Firebase me Time Save Karein!
             const state = window.viewerState;
             if (state && state.memoryId && typeof firebaseConfig !== 'undefined') {
                 try {
@@ -38,7 +40,7 @@
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
-                            proposal_accepted_at: new Date().toISOString() // 👈 Naya Time!
+                            proposal_accepted_at: new Date().toISOString() 
                         })
                     });
                     console.log("Proposal Time Saved!");
@@ -47,10 +49,13 @@
                 }
             }
 
-            // Optional: Confetti ya Success message yahan add kar sakte hain
+            // Confetti ya Success message
             yesBtn.innerHTML = "I Love You Too! ❤️";
             yesBtn.style.transform = "scale(1.1)";
-            if(noBtn) noBtn.style.display = "none";
+            yesBtn.style.position = "static";
+
+            // No button ko humesha ke liye hide kar do
+            if (noBtn) noBtn.style.display = "none";
         });
     }
 })();

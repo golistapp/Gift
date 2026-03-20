@@ -23,6 +23,40 @@
         isMusicPlaying: false
     };
 
+    // 🔴 NAYA: Background Particle Engine (Dil udane wala system)
+    function startBackgroundParticles() {
+        const bgContainer = document.getElementById('hearts-bg');
+        if (!bgContainer) return;
+
+        const symbols = ['❤️', '💖', '✨','❣️', '💕'];
+
+        setInterval(() => {
+            if (document.hidden) return; // Tab inactive ho toh performance bachayega
+
+            const particle = document.createElement('div');
+            particle.className = 'bg-heart';
+            particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+
+            // Random horizontal position (0 to 100vw)
+            particle.style.left = Math.random() * 100 + 'vw';
+
+            // Random duration (4 seconds se 9 seconds ke beech)
+            const duration = Math.random() * 5 + 4;
+            particle.style.animationDuration = duration + 's';
+
+            // Random size 
+            particle.style.fontSize = (Math.random() * 15 + 12) + 'px';
+
+            bgContainer.appendChild(particle);
+
+            // Animation khatam hone ke baad memory se hatana zaruri hai
+            setTimeout(() => {
+                if (particle.parentNode) particle.remove();
+            }, duration * 1000);
+
+        }, 600); // Har 600ms mein ek naya symbol nikalega
+    }
+
     // 🧩 COMPONENT LOADER
     window.loadViewerComponent = async function(componentName, mountNodeId) {
         const mountNode = document.getElementById(mountNodeId);
@@ -61,9 +95,12 @@
         window.viewerState.memoryData = await response.json();
 
         if (!window.viewerState.memoryData || window.viewerState.memoryData.status !== "locked") {
-            document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise is not ready yet! 🎁</h2>';
+            document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise is not ready yet! 💔</h2>';
             return;
         }
+
+        // Particle System chalu karo
+        startBackgroundParticles();
 
         // Routing Logic
         if (mode === 'admin_preview') {
@@ -80,7 +117,6 @@
 
     } catch (error) {
         console.error("Fetch Error:", error);
-        // Ab agar koi error aayega toh exact reason batayega!
         alert("System Error: " + error.message);
     }
 })();

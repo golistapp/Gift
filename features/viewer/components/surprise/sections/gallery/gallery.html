@@ -1,125 +1,125 @@
 <style>
-  /* Gallery Section CSS */
-  .memories-wrapper, .open-when-wrapper, .spotify-card-wrapper { padding: 40px 20px; text-align: center; }
-  .section-title { font-family: var(--font-heading); font-size: 3.5rem; color: var(--deep-red); margin-bottom: 20px; text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.8); }
+    /* Gallery Section CSS */
+    .memories-wrapper, .open-when-wrapper, .spotify-card-wrapper { padding: 40px 20px; text-align: center; }
+    .section-title { font-family: var(--font-heading); font-size: 3.5rem; color: var(--deep-red); margin-bottom: 20px; text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.8); }
+    
+    /* Polaroids */
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; width: 100%; max-width: 1000px; margin: 0 auto; padding: 20px 0; }
+    .polaroid-flip { height: auto; perspective: 1200px; cursor: pointer; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .polaroid-flip:nth-child(odd) { transform: rotate(-4deg); }
+    .polaroid-flip:nth-child(even) { transform: rotate(4deg); }
+    .polaroid-flip:hover { transform: scale(1.05) rotate(0deg) !important; z-index: 10; }
+    .polaroid-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
+    .polaroid-flip.is-flipped .polaroid-inner { transform: rotateY(180deg) scale(1.05); }
+    .polaroid-front { position: relative; width: 100%; backface-visibility: hidden; background: white; padding: 15px 15px 25px 15px; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); z-index: 2; }
+    .polaroid-back { position: absolute; top: 0; left: 0; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #fff, #ffe6ea); display: flex; align-items: center; justify-content: center; padding: 30px; font-family: var(--font-romantic); font-size: 1.5rem; color: var(--deep-red); border: 2px dashed var(--primary-pink); border-radius: 10px; text-align: center; transform: rotateY(180deg); z-index: 1;}
+    .polaroid-front img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 2px; display: block; }
+    .polaroid-front p { font-family: var(--font-heading); font-size: 2.2rem; margin-top: 15px; color: #3a0a14; text-align: center; }
 
-  /* Polaroids */
-  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; width: 100%; max-width: 1000px; margin: 0 auto; padding: 20px 0; }
-  .polaroid-flip { height: auto; perspective: 1200px; cursor: pointer; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  .polaroid-flip:nth-child(odd) { transform: rotate(-4deg); }
-  .polaroid-flip:nth-child(even) { transform: rotate(4deg); }
-  .polaroid-flip:hover { transform: scale(1.05) rotate(0deg) !important; z-index: 10; }
-  .polaroid-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
-  .polaroid-flip.is-flipped .polaroid-inner { transform: rotateY(180deg) scale(1.05); }
-  .polaroid-front { position: relative; width: 100%; backface-visibility: hidden; background: white; padding: 15px 15px 25px 15px; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); z-index: 2; }
-  .polaroid-back { position: absolute; top: 0; left: 0; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #fff, #ffe6ea); display: flex; align-items: center; justify-content: center; padding: 30px; font-family: var(--font-romantic); font-size: 1.5rem; color: var(--deep-red); border: 2px dashed var(--primary-pink); border-radius: 10px; text-align: center; transform: rotateY(180deg); z-index: 1;}
-  .polaroid-front img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 2px; display: block; }
-  .polaroid-front p { font-family: var(--font-heading); font-size: 2.2rem; margin-top: 15px; color: #3a0a14; text-align: center; }
+    /* Open When Cards (Now with Scratch Lock) */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 100%; max-width: 1000px; margin: 0 auto;}
+    .airmail-card { aspect-ratio: 16 / 9; perspective: 1200px; cursor: pointer; position: relative; }
+    .airmail-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 16px; }
+    .airmail-card.opened .airmail-inner { transform: rotateY(180deg) scale(1.05); }
+    
+    .airmail-front, .airmail-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .airmail-front { background: transparent; border: 1px solid rgba(255,255,255,0.8); }
+    .airmail-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .airmail-back { transform: rotateY(180deg); background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); padding: 25px; border: 3px solid var(--primary-pink); font-family: var(--font-romantic); font-size: 1.2rem; color: #3a0a14; line-height: 1.6; text-align: center;}
 
-  /* Open When Cards (Now with Scratch Lock) */
-  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 100%; max-width: 1000px; margin: 0 auto;}
-  .airmail-card { aspect-ratio: 16 / 9; perspective: 1200px; cursor: pointer; position: relative; }
-  .airmail-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 16px; }
-  .airmail-card.opened .airmail-inner { transform: rotateY(180deg) scale(1.05); }
+    /* 🔴 NAYA: Scratch Canvas Overlay CSS */
+    .scratch-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; border-radius: 16px; transition: opacity 0.5s ease; touch-action: none; }
+    .scratch-overlay.cleared { opacity: 0; pointer-events: none; }
 
-  .airmail-front, .airmail-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-  .airmail-front { background: transparent; border: 1px solid rgba(255,255,255,0.8); }
-  .airmail-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .airmail-back { transform: rotateY(180deg); background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); padding: 25px; border: 3px solid var(--primary-pink); font-family: var(--font-romantic); font-size: 1.2rem; color: #3a0a14; line-height: 1.6; text-align: center;}
-
-  /* 🔴 NAYA: Scratch Canvas Overlay CSS */
-  .scratch-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; border-radius: 16px; transition: opacity 0.5s ease; touch-action: none; }
-  .scratch-overlay.cleared { opacity: 0; pointer-events: none; }
-
-  /* 🟢 Spotify Music Player Card CSS */
-  .spotify-container { width: 100%; max-width: 320px; background: linear-gradient(145deg, #2a2d34, #18191c); margin: 0 auto; border-radius: 20px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); color: white; text-align: left; font-family: var(--font-ui); }
-  .spotify-album-art { width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-  .spotify-album-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .spotify-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .spotify-text h4 { margin: 0; font-size: 1.2rem; font-weight: 700; color: #fff; }
-  .spotify-text p { margin: 5px 0 0 0; font-size: 0.9rem; color: #b3b3b3; }
-  .spotify-progress { margin-bottom: 15px; }
-  .spotify-time { display: flex; justify-content: space-between; font-size: 0.75rem; color: #b3b3b3; margin-bottom: 5px; }
-  .spotify-bar { width: 100%; height: 4px; background: #4d4d4d; border-radius: 2px; position: relative; }
-  .spotify-bar-fill { width: 0%; height: 100%; background: #fff; border-radius: 2px; transition: width 0.1s linear;}
-  .spotify-controls { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 1.2rem; }
-  .spotify-controls .play-btn { font-size: 3.5rem; color: #1ed760; transition: transform 0.2s; cursor: pointer; filter: drop-shadow(0 4px 10px rgba(30,215,96,0.4)); }
-  .spotify-controls .play-btn:hover { transform: scale(1.1); }
-  .ctrl-btn { cursor: pointer; transition: 0.2s; }
-  .ctrl-btn:active { transform: scale(0.8); color: #1ed760; }
+    /* 🟢 Spotify Music Player Card CSS */
+    .spotify-container { width: 100%; max-width: 320px; background: linear-gradient(145deg, #2a2d34, #18191c); margin: 0 auto; border-radius: 20px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); color: white; text-align: left; font-family: var(--font-ui); }
+    .spotify-album-art { width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+    .spotify-album-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .spotify-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .spotify-text h4 { margin: 0; font-size: 1.2rem; font-weight: 700; color: #fff; }
+    .spotify-text p { margin: 5px 0 0 0; font-size: 0.9rem; color: #b3b3b3; }
+    .spotify-progress { margin-bottom: 15px; }
+    .spotify-time { display: flex; justify-content: space-between; font-size: 0.75rem; color: #b3b3b3; margin-bottom: 5px; }
+    .spotify-bar { width: 100%; height: 4px; background: #4d4d4d; border-radius: 2px; position: relative; }
+    .spotify-bar-fill { width: 0%; height: 100%; background: #fff; border-radius: 2px; transition: width 0.1s linear;}
+    .spotify-controls { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 1.2rem; }
+    .spotify-controls .play-btn { font-size: 3.5rem; color: #1ed760; transition: transform 0.2s; cursor: pointer; filter: drop-shadow(0 4px 10px rgba(30,215,96,0.4)); }
+    .spotify-controls .play-btn:hover { transform: scale(1.1); }
+    .ctrl-btn { cursor: pointer; transition: 0.2s; }
+    .ctrl-btn:active { transform: scale(0.8); color: #1ed760; }
 </style>
 
 <div class="memories-wrapper fade-in">
-  <h3 class="section-title">Our Memories</h3>
-  <div class="gallery-grid" id="dynamic-polaroids"></div>
+    <h3 class="section-title">Our Memories</h3>
+    <div class="gallery-grid" id="dynamic-polaroids"></div>
 </div>
 
 <div class="open-when-wrapper fade-in">
-  <h3 class="section-title">Open When...</h3>
-  <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Scratch the card to unlock the message!</p>
-
-  <div class="cards-grid">
-      <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
-          <div class="airmail-inner">
-              <canvas class="scratch-overlay"></canvas>
-              <div class="airmail-front"><img src="assets/image/I m sorry.jpg" alt="I m sorry"></div>
-              <div class="airmail-back airmail-letter" id="ow-sorry"></div>
-          </div>
-      </div>
-      <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
-          <div class="airmail-inner">
-              <canvas class="scratch-overlay"></canvas>
-              <div class="airmail-front"><img src="assets/image/you are sad.jpg" alt="You are sad"></div>
-              <div class="airmail-back airmail-letter" id="ow-sad"></div>
-          </div>
-      </div>
-      <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
-          <div class="airmail-inner">
-              <canvas class="scratch-overlay"></canvas>
-              <div class="airmail-front"><img src="assets/image/you miss me.jpg" alt="You miss me"></div>
-              <div class="airmail-back airmail-letter" id="ow-miss"></div>
-          </div>
-      </div>
-      <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
-          <div class="airmail-inner">
-              <canvas class="scratch-overlay"></canvas>
-              <div class="airmail-front"><img src="assets/image/you need a hug.jpg" alt="You need a hug"></div>
-              <div class="airmail-back airmail-letter" id="ow-hug"></div>
-          </div>
-      </div>
-      <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
-          <div class="airmail-inner">
-              <canvas class="scratch-overlay"></canvas>
-              <div class="airmail-front"><img src="assets/image/I love you.jpg" alt="I love you"></div>
-              <div class="airmail-back airmail-letter" id="ow-love"></div>
-          </div>
-      </div>
-  </div>
+    <h3 class="section-title">Open When...</h3>
+    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Scratch the card to unlock the message!</p>
+    
+    <div class="cards-grid">
+        <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
+            <div class="airmail-inner">
+                <canvas class="scratch-overlay"></canvas>
+                <div class="airmail-front"><img src="assets/image/I m sorry.jpg" alt="I m sorry"></div>
+                <div class="airmail-back airmail-letter" id="ow-sorry"></div>
+            </div>
+        </div>
+        <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
+            <div class="airmail-inner">
+                <canvas class="scratch-overlay"></canvas>
+                <div class="airmail-front"><img src="assets/image/you are sad.jpg" alt="You are sad"></div>
+                <div class="airmail-back airmail-letter" id="ow-sad"></div>
+            </div>
+        </div>
+        <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
+            <div class="airmail-inner">
+                <canvas class="scratch-overlay"></canvas>
+                <div class="airmail-front"><img src="assets/image/you miss me.jpg" alt="You miss me"></div>
+                <div class="airmail-back airmail-letter" id="ow-miss"></div>
+            </div>
+        </div>
+        <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
+            <div class="airmail-inner">
+                <canvas class="scratch-overlay"></canvas>
+                <div class="airmail-front"><img src="assets/image/you need a hug.jpg" alt="You need a hug"></div>
+                <div class="airmail-back airmail-letter" id="ow-hug"></div>
+            </div>
+        </div>
+        <div class="airmail-card" onclick="if(this.classList.contains('unlocked')) this.classList.toggle('opened');">
+            <div class="airmail-inner">
+                <canvas class="scratch-overlay"></canvas>
+                <div class="airmail-front"><img src="assets/image/I love you.jpg" alt="I love you"></div>
+                <div class="airmail-back airmail-letter" id="ow-love"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="spotify-card-wrapper fade-in">
-  <h3 class="section-title">Our Soundtrack 🎵</h3>
-  <div class="spotify-container">
-      <div class="spotify-album-art">
-          <img src="assets/image/album1.jpg" id="spotify-cover" alt="Album Art">
-      </div>
-      <div class="spotify-info">
-          <div class="spotify-text">
-              <h4 id="spotify-title">Our Memory</h4>
-              <p id="spotify-sub">Forever Yours ❤️</p>
-          </div>
-          <i class="fa-solid fa-heart" style="color: #1ed760; font-size: 22px;"></i>
-      </div>
-      <div class="spotify-progress">
-          <div class="spotify-time"><span id="spotify-current-time">0:00</span><span id="spotify-total-time">0:00</span></div>
-          <div class="spotify-bar"><div class="spotify-bar-fill" id="spotify-progress-fill"></div></div>
-      </div>
-      <div class="spotify-controls">
-          <i class="fa-solid fa-shuffle ctrl-btn"></i>
-          <i class="fa-solid fa-backward-step ctrl-btn" id="spotify-prev-btn"></i>
-          <i class="fa-solid fa-circle-play play-btn" id="spotify-play-btn"></i>
-          <i class="fa-solid fa-forward-step ctrl-btn" id="spotify-next-btn"></i>
-          <i class="fa-solid fa-repeat ctrl-btn"></i>
-      </div>
-  </div>
+    <h3 class="section-title">Our Soundtrack 🎵</h3>
+    <div class="spotify-container">
+        <div class="spotify-album-art">
+            <img src="assets/image/album1.jpg" id="spotify-cover" alt="Album Art">
+        </div>
+        <div class="spotify-info">
+            <div class="spotify-text">
+                <h4 id="spotify-title">Our Memory</h4>
+                <p id="spotify-sub">Forever Yours ❤️</p>
+            </div>
+            <i class="fa-solid fa-heart" style="color: #1ed760; font-size: 22px;"></i>
+        </div>
+        <div class="spotify-progress">
+            <div class="spotify-time"><span id="spotify-current-time">0:00</span><span id="spotify-total-time">0:00</span></div>
+            <div class="spotify-bar"><div class="spotify-bar-fill" id="spotify-progress-fill"></div></div>
+        </div>
+        <div class="spotify-controls">
+            <i class="fa-solid fa-shuffle ctrl-btn"></i>
+            <i class="fa-solid fa-backward-step ctrl-btn" id="spotify-prev-btn"></i>
+            <i class="fa-solid fa-circle-play play-btn" id="spotify-play-btn"></i>
+            <i class="fa-solid fa-forward-step ctrl-btn" id="spotify-next-btn"></i>
+            <i class="fa-solid fa-repeat ctrl-btn"></i>
+        </div>
+    </div>
 </div>

@@ -60,22 +60,22 @@
                 // Countdown khatam -> Photo click karo
                 clearInterval(timer);
                 countdownEl.style.display = 'none';
-                
+
                 // Sound aur Flash chalayenge
                 snapSound.currentTime = 0;
                 snapSound.play().catch(e => console.log(e));
-                
+
                 flash.classList.add('flash-anim');
                 setTimeout(() => flash.classList.remove('flash-anim'), 600);
 
                 // 🔴 MAIN FIX: Zabardasti 800x600 karne ke bajaye, mobile camera ka ASLI size nikalenge!
                 const vw = video.videoWidth || 800;
                 const vh = video.videoHeight || 600;
-                
+
                 state.userImage = document.createElement('canvas');
                 state.userImage.width = vw;
                 state.userImage.height = vh;
-                
+
                 const uCtx = state.userImage.getContext('2d');
                 // Selfie camera (mirror) theek karne ke liye (Asli width use karke)
                 uCtx.translate(vw, 0);

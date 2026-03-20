@@ -1,32 +1,32 @@
 <style>
-  /* Controls Section CSS */
-  .booth-controls-wrapper { display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; margin-top: 15px;}
-  .frame-selector { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--primary-pink); background: rgba(255,255,255,0.8); font-family: var(--font-ui); color: var(--text-dark); outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-  .action-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
-  .action-btn { padding: 10px 18px; border: none; border-radius: 50px; cursor: pointer; font-family: var(--font-ui); font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; color: white; }
-  .action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
-
-  .btn-cam { background: #334155; }
-  .btn-upload { background: #3b82f6; }
-  .btn-snap { background: linear-gradient(135deg, #ff4d79, #cc0033); font-size: 1.1rem; padding: 10px 25px; box-shadow: 0 5px 15px rgba(204,0,51,0.3); }
-  .btn-save { background: #10b981; }
-  #file-upload { display: none; } /* Hidden default input */
+    /* Controls Section CSS */
+    .booth-controls-wrapper { display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; margin-top: 15px;}
+    .frame-selector { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--primary-pink); background: rgba(255,255,255,0.8); font-family: var(--font-ui); color: var(--text-dark); outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .action-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+    .action-btn { padding: 10px 18px; border: none; border-radius: 50px; cursor: pointer; font-family: var(--font-ui); font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; color: white; }
+    .action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+    
+    .btn-cam { background: #334155; }
+    .btn-upload { background: #3b82f6; }
+    .btn-snap { background: linear-gradient(135deg, #ff4d79, #cc0033); font-size: 1.1rem; padding: 10px 25px; box-shadow: 0 5px 15px rgba(204,0,51,0.3); }
+    .btn-save { background: #10b981; }
+    #file-upload { display: none; } /* Hidden default input */
 </style>
 
 <div class="booth-controls-wrapper fade-in">
-  <select id="frame-select" class="frame-selector">
-      <option value="none">No Frame (Clean)</option>
-      <option value="valentine" selected>Valentine Special ❤️</option>
-      <option value="polaroid-love">Polaroid Love 📸</option>
-      <option value="cute">Cute Frame ✨</option>
-  </select>
-
-  <div class="action-buttons">
-      <button id="btn-start-cam" class="action-btn btn-cam"><i class="fa-solid fa-video"></i> Camera</button>
-      <label for="file-upload" class="action-btn btn-upload"><i class="fa-solid fa-upload"></i> Upload</label>
-      <input type="file" id="file-upload" accept="image/*">
-
-      <button id="btn-snap" class="action-btn btn-snap"><i class="fa-solid fa-camera"></i> Snap</button>
-      <button id="btn-save" class="action-btn btn-save"><i class="fa-solid fa-download"></i> Save</button>
-  </div>
+    <select id="frame-select" class="frame-selector">
+        <option value="none">No Frame (Clean)</option>
+        <option value="valentine" selected>Valentine Special ❤️</option>
+        <option value="polaroid-love">Polaroid Love 📸</option>
+        <option value="cute">Cute Frame ✨</option>
+    </select>
+    
+    <div class="action-buttons">
+        <button id="btn-start-cam" class="action-btn btn-cam"><i class="fa-solid fa-video"></i> Camera</button>
+        <label for="file-upload" class="action-btn btn-upload"><i class="fa-solid fa-upload"></i> Upload</label>
+        <input type="file" id="file-upload" accept="image/*">
+        
+        <button id="btn-snap" class="action-btn btn-snap"><i class="fa-solid fa-camera"></i> Snap</button>
+        <button id="btn-save" class="action-btn btn-save"><i class="fa-solid fa-download"></i> Save</button>
+    </div>
 </div>
