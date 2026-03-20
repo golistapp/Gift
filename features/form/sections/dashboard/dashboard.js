@@ -9,8 +9,20 @@
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
 
-    const dashSoundSend = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
-    const dashSoundReceive = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+    function playDashSound(type) {
+        try {
+            let soundId = type === 'send' ? 'dash-sound-send' : 'dash-sound-receive';
+            let soundEl = document.getElementById(soundId);
+            if(!soundEl) {
+                soundEl = document.createElement('audio');
+                soundEl.id = soundId;
+                soundEl.src = type === 'send' ? "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3";
+                document.body.appendChild(soundEl);
+            }
+            soundEl.currentTime = 0;
+            soundEl.play();
+        } catch(e) { }
+    }
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
@@ -61,23 +73,23 @@
         }
     });
 
-    // 🔴 NAYA: Sirf Header update karne ka alag function (Taki chat blink na ho)
+    // 🔴 NAYA: Status update ka layout logic
     function updateHeaderStatus() {
-        const titleEl = document.querySelector('.header-info h2');
-        if (!titleEl) return;
+        const statusEl = document.getElementById('live-status');
+        if (!statusEl) return;
         let statusHtml = "";
         const gfStatus = state.memoryData.gf_status;
 
-        if (gfStatus === 'typing...') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; text-transform:lowercase; margin-left:5px;">typing...</span>';
-        else if (gfStatus === 'online') statusHtml = ' <span style="color:#a7f3d0; font-size:13px; font-weight:normal; margin-left:5px;">online</span>';
+        if (gfStatus === 'typing...') statusHtml = '<span style="color:#a7f3d0;">typing...</span>';
+        else if (gfStatus === 'online') statusHtml = '<span style="color:#a7f3d0;">online</span>';
         else if (gfStatus && gfStatus !== 'offline') {
             let dateObj = new Date(gfStatus);
-            if(!isNaN(dateObj)) statusHtml = ` <span style="color:#e2e8f0; font-size:11px; font-weight:normal; margin-left:5px; opacity:0.9;">last seen at ${formatTime(gfStatus)}</span>`;
+            if(!isNaN(dateObj)) statusHtml = `<span style="color:#e2e8f0; opacity:0.9;">last seen at ${formatTime(gfStatus)}</span>`;
         }
-        titleEl.innerHTML = 'Secret Chat Room' + statusHtml;
+        statusEl.innerHTML = statusHtml;
 
-        document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Waiting...";
-        document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Waiting...";
+        document.getElementById('track-scanned').innerText = state.memoryData.scanned_at ? formatTime(state.memoryData.scanned_at) : "Wait...";
+        document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Wait...";
     }
 
     function startRealtimeDashboard() {
@@ -119,7 +131,7 @@
     let dashLastMsgTime = "";
 
     function renderDashboardUI() {
-        updateHeaderStatus(); // Ensure header is synced
+        updateHeaderStatus(); 
 
         const chatArea = document.getElementById('bf-chat-area');
         const chatList = state.memoryData.chat || [];
@@ -151,7 +163,7 @@
         }
 
         if(isNewMessage && currentLastMsg.sender === 'gf') {
-            dashSoundReceive.currentTime = 0; dashSoundReceive.play().catch(()=>{});
+            playDashSound('receive');
         }
 
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
@@ -181,11 +193,12 @@
             const timeStr = formatTime(msgObj.timestamp);
             const msgTime = new Date(msgObj.timestamp).getTime();
 
+            // 🔴 NAYA FIX: Hamesha Double Tick lagega (Grey for Unread, Blue for Read)
             let tickHtml = '';
             if (isBf) {
                 const isRead = gfReadTime >= msgTime;
                 tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}">
-                                ${isRead ? '<i class="fa-solid fa-check-double"></i>' : '<i class="fa-solid fa-check"></i>'}
+                                <i class="fa-solid fa-check-double"></i>
                             </span>`;
             }
 
@@ -204,7 +217,6 @@
                 </div>`;
         });
 
-        // 🔴 MAGIC FIX: Agar naya HTML purane wale jaisa hi hai, toh refresh mat karo! (No Blinking)
         if (chatArea.innerHTML !== newHtml) {
             chatArea.innerHTML = newHtml;
             if (isNewMessage || dashLastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight; 
@@ -216,7 +228,7 @@
     async function sendMessageToFirebase(msgText) {
         if(!msgText) return;
 
-        dashSoundSend.currentTime = 0; dashSoundSend.play().catch(()=>{});
+        playDashSound('send');
         if(navigator.vibrate) navigator.vibrate(40);
 
         const sendBtn = document.getElementById('bf-send-btn');
