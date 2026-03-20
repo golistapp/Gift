@@ -14,6 +14,11 @@
     <audio id="sound-send" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
     <audio id="sound-receive" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
 
+    <div id="scroll-arrows" class="scroll-arrows hidden">
+        <button id="scroll-top-btn"><i class="fa-solid fa-angle-up"></i></button>
+        <button id="scroll-bottom-btn"><i class="fa-solid fa-angle-down"></i></button>
+    </div>
+
     <div id="chat-messages-area" class="whatsapp-bg">
         <p class="chat-empty-text">Send a message to start the conversation...</p>
     </div>
@@ -24,11 +29,19 @@
             <div class="img-grid" id="gf-img-grid"></div>
         </div>
 
+        <div id="reply-preview-box" class="reply-preview-box hidden">
+            <div class="reply-content">
+                <span id="reply-text-preview"></span>
+            </div>
+            <i class="fa-solid fa-xmark cancel-reply" id="cancel-reply-btn"></i>
+        </div>
+
         <div class="chat-input-inner">
-            <button id="gf-gallery-btn" class="gallery-btn" disabled><i class="fa-regular fa-image"></i></button>
+            <button id="gf-gallery-btn" class="gallery-btn action-btn" disabled><i class="fa-regular fa-image"></i></button>
             <textarea id="live-msg-input" placeholder="Type a message..." class="chat-input-box" rows="1"></textarea>
             <button id="send-msg-btn" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
-        <p id="msg-count-display" class="msg-count-display">🔒 End-to-End Encrypted | Msg: 0/100</p>
+        
+        <p id="msg-count-display" class="msg-count-display"><i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted SMS: 0/100 (Total: 0)</p>
     </div>
 </div>

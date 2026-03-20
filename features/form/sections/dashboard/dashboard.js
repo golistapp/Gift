@@ -2,12 +2,28 @@
     const state = window.formState;
     if (!state || !state.memoryData) return;
 
+    // 🔴 Global variables for logic
+    let currentReplyQuote = ""; 
+    let dashLastMsgTime = "";
+
     const dashWrapper = document.getElementById('dash-wrapper');
     const lockScreen = document.getElementById('dash-lock-screen');
     const dashMain = document.getElementById('dash-main-screen');
     const passInput = document.getElementById('check-passcode');
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
+
+    // Naye DOM Elements
+    const chatArea = document.getElementById('bf-chat-area');
+    const inputEl = document.getElementById('bf-chat-input');
+    const sendBtn = document.getElementById('bf-send-btn');
+    const galleryBtn = document.getElementById('bf-gallery-btn');
+    const replyPreviewBox = document.getElementById('reply-preview-box');
+    const replyTextPreview = document.getElementById('reply-text-preview');
+    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+    const scrollArrows = document.getElementById('scroll-arrows');
+    const scrollTopBtn = document.getElementById('scroll-top-btn');
+    const scrollBottomBtn = document.getElementById('scroll-bottom-btn');
 
     function playDashSound(type) {
         try {
@@ -27,7 +43,6 @@
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             dashWrapper.style.height = window.visualViewport.height + 'px';
-            const chatArea = document.getElementById('bf-chat-area');
             if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
         });
     }
@@ -91,7 +106,6 @@
         document.getElementById('track-proposal').innerText = state.memoryData.proposal_accepted_at ? formatTime(state.memoryData.proposal_accepted_at) : "Wait...";
     }
 
-    // 🔴 MAGIC FEATURE: LocalStorage Sync (Infinite Chat)
     function syncWithLocalStorage(firebaseChat) {
         if (!firebaseChat || !Array.isArray(firebaseChat)) return [];
         const localKey = 'secret_chat_' + state.memoryId;
@@ -106,8 +120,6 @@
         firebaseChat.forEach(msg => chatMap.set(msg.timestamp, msg)); 
 
         let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-        // Max 2000 messages local save rahenge (Browser crash rokne ke liye)
         if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
         try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
 
@@ -150,26 +162,17 @@
         });
     }
 
-    let dashLastMsgTime = "";
-
     function renderDashboardUI() {
         updateHeaderStatus(); 
-        const chatArea = document.getElementById('bf-chat-area');
 
         let rawChat = state.memoryData.chat || [];
         let firebaseChat = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
         firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
 
-        // LocalStorage Logic Use kiya ja raha hai
         const chatList = syncWithLocalStorage(firebaseChat); 
         const count = state.memoryData.message_count || 0;
 
-        // 🔴 NAYA: Compact Encrypted Message Count
         document.getElementById('bf-msg-count').innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted &bull; Cloud: ${firebaseChat.length}/100 (Total: ${count})`;
-
-        const inputEl = document.getElementById('bf-chat-input');
-        const sendBtn = document.getElementById('bf-send-btn');
-        const galleryBtn = document.getElementById('bf-gallery-btn');
 
         if(chatList.length > 0) {
             inputEl.disabled = false; sendBtn.disabled = false; if(galleryBtn) galleryBtn.disabled = false;
@@ -190,9 +193,7 @@
             if (msgTime > bfReadTime) updateBFReadReceipt(); 
         }
 
-        if(isNewMessage && currentLastMsg.sender === 'gf') {
-            playDashSound('receive');
-        }
+        if(isNewMessage && currentLastMsg.sender === 'gf') playDashSound('receive');
 
         const gfReadTime = state.memoryData.gf_last_read ? new Date(state.memoryData.gf_last_read).getTime() : 0;
 
@@ -202,8 +203,17 @@
             try {
                 const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                decryptedText = decryptedText.replace(/\n/g, '<br>');
-            } catch(e) { decryptedText = "<i>🔒 Encrypted Error</i>"; }
+            } catch(e) { decryptedText = ""; }
+
+            // 🔴 NAYA: Parse Quote Text
+            let quoteHtml = "";
+            const quoteRegex = /\[QUOTE\](.*?)\[\/QUOTE\]/s;
+            const match = decryptedText.match(quoteRegex);
+            if (match) {
+                quoteHtml = `<div class="quote-box">${match[1]}</div>`;
+                decryptedText = decryptedText.replace(quoteRegex, '').trim();
+            }
+            decryptedText = decryptedText.replace(/\n/g, '<br>');
 
             let imageHtml = "";
             if (decryptedText.startsWith("[IMG_") && decryptedText.endsWith("]")) {
@@ -215,6 +225,8 @@
                 } else {
                     decryptedText = "<i>📷 Image Missing</i>";
                 }
+            } else if(!decryptedText && !quoteHtml) { 
+                decryptedText = "<i>🔒 Encrypted Message</i>"; 
             }
 
             const isBf = msgObj.sender === 'bf';
@@ -224,9 +236,7 @@
             let tickHtml = '';
             if (isBf) {
                 const isRead = gfReadTime >= msgTime;
-                tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}">
-                                <i class="fa-solid fa-check-double"></i>
-                            </span>`;
+                tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}"><i class="fa-solid fa-check-double"></i></span>`;
             }
 
             const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
@@ -234,8 +244,9 @@
             newHtml += `
                 <div class="msg-wrapper ${isBf ? 'bf' : 'gf'}">
                     <div class="msg-bubble" style="${bubblePadding}">
+                        ${quoteHtml}
                         ${imageHtml}
-                        ${decryptedText}
+                        <span class="msg-raw-text">${decryptedText}</span>
                         <div class="msg-meta">
                             <span class="msg-time">${timeStr}</span>
                             ${tickHtml}
@@ -248,17 +259,21 @@
             chatArea.innerHTML = newHtml;
             if (isNewMessage || dashLastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight; 
         }
-
         dashLastMsgTime = currentLastMsg.timestamp;
     }
 
-    async function sendMessageToFirebase(msgText) {
-        if(!msgText) return;
+    async function sendMessageToFirebase(rawText) {
+        if(!rawText && !currentReplyQuote) return;
+
+        // 🔴 NAYA: Add quote wrapper if reply is active
+        let finalMsgText = rawText;
+        if(currentReplyQuote) {
+            finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
+        }
 
         playDashSound('send');
         if(navigator.vibrate) navigator.vibrate(40);
 
-        const sendBtn = document.getElementById('bf-send-btn');
         sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
         sendBtn.disabled = true;
 
@@ -272,7 +287,7 @@
 
             let newCount = (latestData.message_count || 0) + 1;
 
-            const encryptedMsg = CryptoJS.AES.encrypt(msgText, state.userPasscode).toString();
+            const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
             chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
@@ -282,8 +297,12 @@
                 body: JSON.stringify({ chat: chatList, message_count: newCount })
             });
 
-            const inputEl = document.getElementById('bf-chat-input');
             inputEl.value = ''; inputEl.style.height = 'auto'; 
+
+            // Clear Reply state
+            currentReplyQuote = "";
+            if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
+
             updateBFStatus('online'); 
         } catch(err) { alert("Error sending message."); }
 
@@ -291,7 +310,7 @@
         sendBtn.disabled = false;
     }
 
-    const galleryBtn = document.getElementById('bf-gallery-btn');
+    // Gallery Popup Logic
     const imgPopup = document.getElementById('bf-img-popup');
     const closePopup = document.getElementById('bf-close-popup');
     const imgGrid = document.getElementById('bf-img-grid');
@@ -317,10 +336,7 @@
         closePopup.addEventListener('click', () => imgPopup.classList.add('hidden'));
     }
 
-    const sendBtn = document.getElementById('bf-send-btn');
-    const inputEl = document.getElementById('bf-chat-input');
     let typingTimer;
-
     if (sendBtn) {
         sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
         sendBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!sendBtn.disabled) sendBtn.click(); });
@@ -332,7 +348,68 @@
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => updateBFStatus('online'), 1500);
         });
-
         inputEl.addEventListener('focus', () => { updateBFReadReceipt(); updateBFStatus('online'); });
+    }
+
+    // 🔴 NAYA: Scroll Arrows Logic
+    let scrollTimeout;
+    if(chatArea && scrollArrows) {
+        chatArea.addEventListener('scroll', () => {
+            scrollArrows.classList.remove('hidden');
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => scrollArrows.classList.add('hidden'), 1500);
+        });
+        if(scrollTopBtn) scrollTopBtn.addEventListener('click', () => chatArea.scrollTo({top: 0, behavior: 'smooth'}));
+        if(scrollBottomBtn) scrollBottomBtn.addEventListener('click', () => chatArea.scrollTo({top: chatArea.scrollHeight, behavior: 'smooth'}));
+    }
+
+    // 🔴 NAYA: Swipe To Reply Logic
+    let touchStartX = 0, touchStartY = 0, swipedMsg = null;
+    if(chatArea) {
+        chatArea.addEventListener('touchstart', e => {
+            const msg = e.target.closest('.msg-wrapper');
+            if(!msg) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            swipedMsg = msg;
+        }, {passive: true});
+
+        chatArea.addEventListener('touchmove', e => {
+            if(!swipedMsg) return;
+            let diffX = e.touches[0].clientX - touchStartX;
+            let diffY = e.touches[0].clientY - touchStartY;
+            if(Math.abs(diffX) > Math.abs(diffY) && diffX > 15) { 
+                swipedMsg.style.transform = `translateX(${Math.min(diffX, 50)}px)`;
+            }
+        }, {passive: true});
+
+        chatArea.addEventListener('touchend', e => {
+            if(!swipedMsg) return;
+            let diffX = e.changedTouches[0].clientX - touchStartX;
+            if(diffX > 40) {
+                let rawTextEl = swipedMsg.querySelector('.msg-raw-text');
+                let imgEl = swipedMsg.querySelector('.chat-img-msg');
+
+                let quoteText = rawTextEl ? rawTextEl.innerText : "";
+                if(imgEl) quoteText = "📷 Photo";
+
+                if(quoteText) {
+                    currentReplyQuote = quoteText.substring(0, 40) + (quoteText.length > 40 ? "..." : "");
+                    if(replyTextPreview) replyTextPreview.innerText = currentReplyQuote;
+                    if(replyPreviewBox) replyPreviewBox.classList.remove('hidden');
+                    if(inputEl) inputEl.focus();
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }
+            }
+            swipedMsg.style.transform = 'translateX(0)';
+            swipedMsg = null;
+        });
+
+        if(cancelReplyBtn) {
+            cancelReplyBtn.addEventListener('click', () => {
+                currentReplyQuote = "";
+                replyPreviewBox.classList.add('hidden');
+            });
+        }
     }
 })();
