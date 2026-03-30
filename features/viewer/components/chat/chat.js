@@ -12,6 +12,7 @@
         soundSend: document.getElementById('sound-send'),
         soundReceive: document.getElementById('sound-receive'),
         statusEl: document.getElementById('live-status'),
+        userNameEl: document.getElementById('chat-user-name'), // 🔴 New Element
         galleryBtn: document.getElementById('gf-gallery-btn'),
         imgPopup: document.getElementById('gf-img-popup'),
         imgGrid: document.getElementById('gf-img-grid'),
@@ -24,12 +25,9 @@
         scrollBottomBtn: document.getElementById('scroll-bottom-btn')
     };
 
-
-    // --- 2. Global Variables ---
-    let currentReplyQuote = ""; // Store active reply
+    let currentReplyQuote = ""; 
     let lastMsgTime = "";
 
-    // --- 3. Storage Manager (Infinite Chat) ---
     const ChatStorage = {
         sync: function(firebaseChat) {
             if (!firebaseChat || !Array.isArray(firebaseChat)) return [];
@@ -47,12 +45,11 @@
             let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
             try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
-
+            
             return combinedChat;
         }
     };
 
-    // --- 4. UI Renderer & Formatters ---
     const ChatUI = {
         formatTime: function(isoString) {
             if(!isoString) return '';
@@ -62,35 +59,34 @@
         initViewportFix: function() {
             if (window.visualViewport && DOM.wrapper) {
                 window.visualViewport.addEventListener('resize', () => {
+                    // Mobile keyboard adjustment
                     if (window.visualViewport.height < window.innerHeight - 50) {
-                        DOM.wrapper.style.cssText = `position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: ${window.visualViewport.height}px !important; z-index: 999999 !important; border-radius: 0 !important; border: none !important; margin: 0 !important; background: #fdf2f5 !important;`;
-                        const footer = document.getElementById('footer-mount');
-                        if (footer) footer.style.display = 'none';
-                        const floatBtns = document.querySelectorAll('.music-float-btn, .floating-btn, [id*="music"]');
-                        floatBtns.forEach(btn => { if(btn.style) btn.style.display = 'none'; });
-                        window.scrollTo(0, 0); 
+                        DOM.wrapper.style.height = `${window.visualViewport.height}px`;
                     } else {
-                        DOM.wrapper.style.cssText = `position: relative; height: calc(100dvh - 100px); z-index: 1; border-radius: 16px; border: 1px solid #fce4ec; margin-bottom: 15px;`;
-                        const footer = document.getElementById('footer-mount');
-                        if (footer) footer.style.display = '';
-                        const floatBtns = document.querySelectorAll('.music-float-btn, .floating-btn, [id*="music"]');
-                        floatBtns.forEach(btn => { if(btn.style) btn.style.display = ''; });
+                        DOM.wrapper.style.height = `calc(100dvh - 70px)`; // Nav bar space
                     }
                     if(DOM.chatArea) DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
                 });
             }
         },
 
+        // 🔴 Status Update for Native Layout
         updateHeader: function() {
             if (!DOM.statusEl) return;
             const bfStatus = (state.memoryData || {}).bf_status;
-            if (bfStatus === 'typing...') DOM.statusEl.innerHTML = '<span style="color:#40c4ff;">typing...</span>';
-            else if (bfStatus === 'online') DOM.statusEl.innerHTML = '<span style="color:#40c4ff;">online</span>';
+            
+            // Set dynamic Name if available
+            if(DOM.userNameEl && state.memoryData && state.memoryData.girlfriend_name) {
+                DOM.userNameEl.innerText = state.memoryData.girlfriend_name;
+            }
+
+            if (bfStatus === 'typing...') DOM.statusEl.innerHTML = '<span style="color:#D81B60; font-style: italic;">typing...</span>';
+            else if (bfStatus === 'online') DOM.statusEl.innerHTML = '<span style="color:#10b981; font-weight: 600;">online</span>'; // Green online indicator
             else if (bfStatus && bfStatus !== 'offline') {
                 let dateObj = new Date(bfStatus);
-                if(!isNaN(dateObj)) DOM.statusEl.innerHTML = `<span style="color:#fce4ec; opacity:0.9;">last seen at ${this.formatTime(bfStatus)}</span>`;
-                else DOM.statusEl.innerHTML = '';
-            } else DOM.statusEl.innerHTML = '';
+                if(!isNaN(dateObj)) DOM.statusEl.innerHTML = `last seen at ${this.formatTime(bfStatus)}`;
+                else DOM.statusEl.innerHTML = 'offline';
+            } else DOM.statusEl.innerHTML = 'offline';
         },
 
         renderMessages: function() {
@@ -99,12 +95,12 @@
 
             const memoryData = state.memoryData || {};
             const count = memoryData.message_count || 0;
-
+            
             let firebaseChat = Array.isArray(memoryData.chat) ? memoryData.chat : Object.values(memoryData.chat || []);
             firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
-
+            
             const chatList = ChatStorage.sync(firebaseChat);
-
+            
             if(DOM.countDisplay) DOM.countDisplay.innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted SMS: ${firebaseChat.length}/100 (Total: ${count})`;
 
             if(chatList.length === 0) {
@@ -136,8 +132,7 @@
                     const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                     decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 } catch(e) { decryptedText = ""; }
-
-                // Parse Custom Quote Format: [QUOTE]text[/QUOTE] Msg
+                
                 let quoteHtml = "";
                 const quoteRegex = /\[QUOTE\](.*?)\[\/QUOTE\]/s;
                 const match = decryptedText.match(quoteRegex);
@@ -152,7 +147,7 @@
                     let idx = parseInt(decryptedText.substring(5, decryptedText.length - 1));
                     let imgUrl = state.memoryData[`image_${idx}_url`];
                     if(imgUrl) { imageHtml = `<img src="${imgUrl}" class="chat-img-msg">`; decryptedText = ""; } 
-                    else { decryptedText = "<i>📷 Image Missing</i>"; }
+                    else { decryptedText = "<i>📸 Image Missing</i>"; }
                 } else if(!decryptedText && !quoteHtml) { 
                     decryptedText = "<i>🔒 Encrypted Message</i>"; 
                 }
@@ -181,7 +176,7 @@
                         </div>
                     </div>`;
             });
-
+            
             if (DOM.chatArea.innerHTML !== newHtml) {
                 DOM.chatArea.innerHTML = newHtml;
                 if (isNewMessage || lastMsgTime === "") DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
@@ -190,7 +185,6 @@
         }
     };
 
-    // --- 5. Network & Firebase ---
     const ChatNetwork = {
         updateStatus: function(statusStr) {
             if (state.mode === 'admin_preview' || !state.memoryId || typeof firebaseConfig === 'undefined') return;
@@ -245,8 +239,7 @@
 
         sendMessage: async function(rawText) {
             if(!rawText && !currentReplyQuote) return false;
-
-            // Format Quote if exists
+            
             let finalMsgText = rawText;
             if(currentReplyQuote) {
                 finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
@@ -259,11 +252,11 @@
             try {
                 const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
                 const latestData = await res.json();
-
+                
                 let chatList = Array.isArray(latestData.chat) ? latestData.chat : Object.values(latestData.chat || []);
                 chatList = chatList.filter(msg => msg !== null && msg.sender);
                 let newCount = (latestData.message_count || 0) + 1;
-
+                
                 const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
                 chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
                 if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
@@ -274,8 +267,7 @@
                 });
 
                 if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
-
-                // Reset Reply Box
+                
                 currentReplyQuote = "";
                 DOM.replyPreviewBox.classList.add('hidden');
 
@@ -289,7 +281,6 @@
         }
     };
 
-    // --- 6. Swipe To Reply Logic ---
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
     if(DOM.chatArea) {
         DOM.chatArea.addEventListener('touchstart', e => {
@@ -304,7 +295,6 @@
             if(!swipedMsg) return;
             let diffX = e.touches[0].clientX - touchStartX;
             let diffY = e.touches[0].clientY - touchStartY;
-            // Only swipe right if horizontal movement is greater than vertical
             if(Math.abs(diffX) > Math.abs(diffY) && diffX > 15) { 
                 swipedMsg.style.transform = `translateX(${Math.min(diffX, 50)}px)`;
             }
@@ -314,13 +304,12 @@
             if(!swipedMsg) return;
             let diffX = e.changedTouches[0].clientX - touchStartX;
             if(diffX > 40) {
-                // Trigger Reply
                 let rawTextEl = swipedMsg.querySelector('.msg-raw-text');
                 let imgEl = swipedMsg.querySelector('.chat-img-msg');
-
+                
                 let quoteText = rawTextEl ? rawTextEl.innerText : "";
-                if(imgEl) quoteText = "📷 Photo";
-
+                if(imgEl) quoteText = "📸 Photo";
+                
                 if(quoteText) {
                     currentReplyQuote = quoteText.substring(0, 40) + (quoteText.length > 40 ? "..." : "");
                     DOM.replyTextPreview.innerText = currentReplyQuote;
@@ -339,7 +328,6 @@
         });
     }
 
-     // --- 7. Scroll Arrows Logic ---
     let scrollTimeout;
     if(DOM.chatArea && DOM.scrollArrows) {
         DOM.chatArea.addEventListener('scroll', () => {
@@ -351,12 +339,7 @@
         DOM.scrollBottomBtn.addEventListener('click', () => DOM.chatArea.scrollTo({top: DOM.chatArea.scrollHeight, behavior: 'smooth'}));
     }
 
-
-          // ==========================================
-    // MAIN CONTROLLER (Section 8: Main Init & Events)
-    // ==========================================
     function initApp() {
-        // 🔴 NAYA FIX: Admin Mode Security Block (Strict Lock)
         if (state.mode === 'admin_preview') {
             if(DOM.inputEl) { 
                 DOM.inputEl.disabled = true; 
@@ -368,7 +351,6 @@
 
         ChatUI.initViewportFix();
 
-        // Visibility & Focus Events
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) { 
                 ChatNetwork.updateReadReceipt(); 
@@ -380,17 +362,15 @@
         window.addEventListener('beforeunload', () => ChatNetwork.updateStatus(new Date().toISOString()));
         if(DOM.inputEl) DOM.inputEl.addEventListener('focus', () => ChatNetwork.updateReadReceipt());
 
-        // Gallery Events
         if(DOM.galleryBtn) {
             DOM.galleryBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                // 🔴 Extra Security: Agar Admin hai toh gallery popup nahi khulega
                 if(state.mode === 'admin_preview') return; 
 
                 DOM.imgGrid.innerHTML = '';
                 let found = false;
                 const memoryData = state.memoryData || {};
-
+                
                 for(let i=1; i<=5; i++) {
                     let imgUrl = memoryData[`image_${i}_url`];
                     if(imgUrl) {
@@ -407,7 +387,6 @@
             if(DOM.closePopup) DOM.closePopup.addEventListener('click', () => DOM.imgPopup.classList.add('hidden'));
         }
 
-        // Typing & Sending Events
         let typingTimer;
         if (DOM.sendBtn) {
             DOM.sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
@@ -415,7 +394,7 @@
                 e.preventDefault(); 
                 if(!DOM.sendBtn.disabled && state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim()); 
             });
-
+            
             DOM.sendBtn.addEventListener('click', () => {
                 if(state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim());
             });
@@ -430,7 +409,6 @@
             });
         }
 
-        // Startup Network Call
         ChatNetwork.updateStatus('online');
         ChatNetwork.updateReadReceipt();
         ChatNetwork.startRealtime(); 
@@ -439,5 +417,3 @@
     initApp();
 
 })();
-
-

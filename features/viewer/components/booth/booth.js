@@ -36,5 +36,5 @@
     await loadBoothSection('display', 'booth-display-mount');
     await loadBoothSection('controls', 'booth-controls-mount');
     await loadBoothSection('thumbnails', 'booth-thumbnails-mount');
-
+    
 })();

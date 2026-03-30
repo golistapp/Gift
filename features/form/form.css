@@ -19,7 +19,6 @@
 .error-text { color: red; font-size: 13px; }
 .hidden { display: none !important; }
 
-
 /* Update this class in form.css */
 .chat-area { 
     height: 400px; /* 🔴 YEH NAYA HAI: Isse box fixed rahega aur page lamba nahi hoga */

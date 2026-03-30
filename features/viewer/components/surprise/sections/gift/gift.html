@@ -1,53 +1,136 @@
 <style>
-    /* Gift Section CSS */
-    .final-gift-section { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px;}
-    .script-heading.dark { color: #4a1525; font-family: var(--font-heading); font-size: 3.5rem; margin-bottom: 10px;}
-    .click-instruction { color: var(--primary-pink); font-family: var(--font-ui); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500; animation: bounce 2s infinite; }
+    /* Premium Gift Section CSS */
+    .final-gift-section { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; overflow: hidden; }
+    
+    /* 🔴 UPDATED: Playfair Display, Bold (700), 1px spacing, Soft Pink Glow */
+    .script-heading.dark { 
+        background: linear-gradient(to right, #cc0033, #ff1a53);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-family: 'Playfair Display', serif; 
+        font-size: clamp(2.2rem, 5vw, 3.8rem); 
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+        filter: drop-shadow(0px 4px 15px rgba(255, 77, 121, 0.4)); /* Very soft pink glow */
+    }
+
+
+    
+    .click-instruction { color: var(--primary-pink); font-family: var(--font-ui); font-size: 1.1rem; margin-bottom: 50px; font-weight: 500; animation: bounce 2s infinite; }
+
+    /* Magical Aura around the box */
+    .gift-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
+    .magical-aura {
+        position: absolute;
+        width: 180px; height: 180px;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(255, 77, 121, 0.2) 40%, transparent 70%);
+        border-radius: 50%;
+        z-index: 0;
+        animation: pulseAura 3s infinite alternate;
+        pointer-events: none;
+    }
+    @keyframes pulseAura { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 1; } }
 
     /* Minimal Gift Box */
-    .minimal-gift-container { cursor: pointer; perspective: 1200px; margin-bottom: 30px; animation: giftSway 4s infinite alternate ease-in-out; }
+    .minimal-gift-container { cursor: pointer; perspective: 1200px; margin-bottom: 30px; animation: giftSway 4s infinite alternate ease-in-out; z-index: 2; position: relative;}
+    .minimal-gift-container:hover .magical-aura { transform: scale(1.5); background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, rgba(255, 77, 121, 0.4) 40%, transparent 70%); }
     .minimal-gift-container.opened-container { animation: none; }
-    @keyframes giftSway { 0% { transform: rotate(-2deg); } 100% { transform: rotate(2deg); } }
+    @keyframes giftSway { 0% { transform: rotate(-3deg); } 100% { transform: rotate(3deg); } }
 
     .minimal-gift-box { position: relative; width: 140px; height: 120px; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
     .minimal-gift-box:hover { transform: scale(1.08) translateY(-5px); }
-    .minimal-gift-body { position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(135deg, #e60039, #990026); border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); overflow: hidden; }
-    .gift-ribbon-v-body { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 100%; background: linear-gradient(to right, #ffd700, #ffea75, #ffd700); }
+    
+    .minimal-gift-body { position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(135deg, #e60039, #990026); border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; z-index: 2;}
+    .gift-ribbon-v-body { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 100%; background: linear-gradient(to right, #ffd700, #ffea75, #ffd700); box-shadow: 0 0 10px rgba(0,0,0,0.2);}
 
-    .minimal-gift-lid { position: absolute; top: 0; left: -5%; width: 110%; height: 35px; background: linear-gradient(to bottom, #ff1a53, #cc0033); border-radius: 6px; z-index: 3; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; justify-content: center; }
-    .gift-ribbon-h { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100%; height: 20px; background: linear-gradient(to bottom, #ffd700, #ffea75, #ffd700); }
-    .gift-ribbon-v { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 100%; background: linear-gradient(to right, #ffd700, #ffea75, #ffd700); }
+    .minimal-gift-lid { position: absolute; top: 0; left: -5%; width: 110%; height: 35px; background: linear-gradient(to bottom, #ff1a53, #cc0033); border-radius: 6px; z-index: 4; box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; justify-content: center; }
+    .gift-ribbon-h { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100%; height: 22px; background: linear-gradient(to bottom, #ffd700, #ffea75, #ffd700); }
+    .gift-ribbon-v { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 100%; background: linear-gradient(to right, #ffd700, #ffea75, #ffd700); box-shadow: 0 0 5px rgba(0,0,0,0.2);}
 
-    /* Box Open State */
-    .minimal-gift-box.opened .minimal-gift-lid { transform: translateY(-100px) translateX(30px) rotate(20deg); opacity: 0; }
+    /* Burst of Light Inside Box */
+    .light-burst {
+        position: absolute; bottom: 40px; left: 50%; transform: translate(-50%, 0) scale(0);
+        width: 100px; height: 100px; background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,215,0,0.8) 30%, transparent 70%);
+        border-radius: 50%; z-index: 1; opacity: 0; transition: all 1s ease-out; pointer-events: none;
+    }
+
+    /* Box Open Animations */
+    .minimal-gift-box.opened .minimal-gift-lid { transform: translateY(-110px) translateX(40px) rotate(25deg); opacity: 0; }
     .minimal-gift-box.opened { animation: giftPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes giftPop { 0% { transform: scale(1); } 40% { transform: scale(0.9) translateY(10px); } 100% { transform: scale(1) translateY(0); } }
+    .minimal-gift-box.opened .light-burst { transform: translate(-50%, -50px) scale(3); opacity: 0.8; animation: fadeLight 2s forwards; }
+    
+    @keyframes giftPop { 0% { transform: scale(1); } 40% { transform: scale(0.85) translateY(15px); } 100% { transform: scale(1) translateY(0); } }
+    @keyframes fadeLight { 0% { opacity: 0.8; } 100% { opacity: 0; transform: translate(-50%, -80px) scale(4); } }
 
-    /* Surprise Message */
-    .surprise-message { margin-top: 40px; padding: 30px; background: white; border-radius: 20px; box-shadow: 0 20px 50px rgba(255, 77, 121, 0.2); border: 2px solid var(--soft-pink); opacity: 0; transform: translateY(40px) scale(0.9); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-width: 500px; }
+    /* Premium Glassmorphism Message */
+    .surprise-message { 
+        margin-top: 50px; padding: 40px 30px; 
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.7));
+        border-radius: 24px; 
+        box-shadow: 0 25px 50px rgba(255, 77, 121, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.8); 
+        border: 2px solid rgba(212, 175, 55, 0.4); 
+        backdrop-filter: blur(20px);
+        opacity: 0; transform: translateY(40px) scale(0.9); transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        max-width: 500px; position: relative; z-index: 10;
+    }
     .surprise-message.show { opacity: 1; transform: translateY(0) scale(1); }
-    .surprise-message h3 { font-family: var(--font-heading); font-size: 3rem; color: var(--deep-red); margin-bottom: 10px; }
-    .surprise-message p { font-size: 1.1rem; color: var(--text-dark); line-height: 1.5; }
+    
+    /* 🔴 UPDATED: Fluid Message Font */
+    .surprise-message h3 { 
+        font-family: var(--font-romantic); 
+        font-size: clamp(1.8rem, 4vw, 2.6rem); /* Fluid Size */
+        color: var(--deep-red); 
+        margin-bottom: 15px; 
+        line-height: 1.3; 
+        font-weight: 700;
+        text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.9);
+    }
+
+    
+ /* 🔴 UPDATED: Fluid Name Font */
+    .dynamic-name-highlight {
+        font-family: var(--font-ui); 
+        font-size: clamp(1.4rem, 3.5vw, 2rem); /* Fluid Size */
+        color: #ff1a53;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    .surprise-message p { font-size: 1.15rem; color: #444; line-height: 1.6; font-weight: 500;}
+
+    /* Glowing Sparkle Behind Ring */
+    .ring-sparkle { position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: radial-gradient(circle, rgba(255,255,255,1) 0%, transparent 60%); opacity: 0; animation: sparklePulse 1.5s infinite alternate; z-index: -1;}
+    @keyframes sparklePulse { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 1; } }
+
 </style>
 
 <div class="final-gift-section fade-in">
     <h2 class="script-heading dark">One Last Surprise...</h2>
     <p class="click-instruction">Tap the box to open 🎁</p>
 
-    <div class="minimal-gift-container" id="minimal-gift-container">
-        <div class="minimal-gift-box" id="minimal-gift">
-            <div class="minimal-gift-lid">
-                <div class="gift-ribbon-h"></div>
-                <div class="gift-ribbon-v"></div>
-            </div>
-            <div class="minimal-gift-body">
-                <div class="gift-ribbon-v-body"></div>
+    <div class="gift-wrapper">
+        <div class="magical-aura"></div>
+        <div class="minimal-gift-container" id="minimal-gift-container">
+            <div class="minimal-gift-box" id="minimal-gift">
+                <div class="minimal-gift-lid">
+                    <div class="gift-ribbon-h"></div>
+                    <div class="gift-ribbon-v"></div>
+                </div>
+                <div class="minimal-gift-body">
+                    <div class="light-burst"></div>
+                    <div class="gift-ribbon-v-body"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="surprise-message" id="surpriseMessage">
-        <h3>You are the best thing in my life ❤️</h3>
+        <h3>You are the best thing in my life, <span id="gift-dynamic-name" class="dynamic-name-highlight"></span> ❤️</h3>
         <p>This little website is just a small way to show how special you are.</p>
     </div>
+
+    <audio id="gift-tap-sound" src="assets/audio/click.mp3" preload="auto"></audio>
+    <audio id="gift-magic-sound" src="assets/audio/magic.mp3" preload="auto"></audio>
 </div>

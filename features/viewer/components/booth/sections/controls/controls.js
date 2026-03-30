@@ -38,7 +38,7 @@
         const img = state.userImage;
         const canvasRatio = canvas.width / canvas.height;
         const imgRatio = img.width / img.height;
-
+        
         let sourceWidth = img.width;
         let sourceHeight = img.height;
         let sourceX = 0;
@@ -90,7 +90,7 @@
             ctx.fillText("Cuties forever", 450, 550);
         }
         ctx.restore();
-
+        
         state.showCanvas();
         state.hidePlaceholder();
     };
@@ -100,7 +100,7 @@
 
     // Button Events
     if(btnStart) btnStart.addEventListener('click', () => { if(state.startCamera) state.startCamera(); });
-
+    
     if(btnSnap) btnSnap.addEventListener('click', () => {
         if(state.takeSnap) state.takeSnap(() => { state.renderCanvas(); });
     });

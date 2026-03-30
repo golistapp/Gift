@@ -6,13 +6,15 @@
     --primary-pink: #ff4d79;
     --soft-pink: #ffe6ea;
     --deep-red: #cc0033;
-    --text-dark: #4a0e1c;
-    --glass-bg: rgba(255, 255, 255, 0.45);
-    --glass-border: rgba(255, 255, 255, 0.6);
-
+    --text-dark: #2c1a1d; /* Thoda aur dark aur premium red-black */
+    
+    /* 🔴 UPDATED FOR WHITE THEME: Clean Frosted Glass */
+    --glass-bg: rgba(255, 255, 255, 0.85); 
+    --glass-border: rgba(255, 255, 255, 1);
+    
     /* Admin Colors */
     --admin-blue: #2563eb;
-    --admin-bg: #f1f5f9;
+    --admin-bg: #FAFAFA;
     --admin-text: #334155;
 
     /* Fonts */
@@ -26,14 +28,16 @@
     padding: 0;
     box-sizing: border-box;
     font-family: var(--font-ui);
-    -webkit-tap-highlight-color: transparent; /* Mobile click highlight remove karega */
+    -webkit-tap-highlight-color: transparent; 
 }
 
 body {
-    background-color: #f8fafc; /* Default background */
+    /* 🔴 UPDATED: Pure white crisp base */
+    background-color: #FFFFFF; 
     color: #333;
     overflow-x: hidden;
 }
+
 
 /* =========================================
    2. GLOBAL UTILITY CLASSES

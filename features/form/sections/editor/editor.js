@@ -2,7 +2,6 @@
     const state = window.formState;
     if (!state) return;
 
-    // Image Compression library load karna
     if (typeof imageCompression === 'undefined') {
         await new Promise((resolve) => {
             const script = document.createElement('script');
@@ -13,72 +12,83 @@
     }
 
     const memoryForm = document.getElementById('memory-form');
-    const imageInputsData = [];
+    let imageInputsData = [
+        { file: null, previewUrl: null, caption: "" },
+        { file: null, previewUrl: null, caption: "" },
+        { file: null, previewUrl: null, caption: "" },
+        { file: null, previewUrl: null, caption: "" },
+        { file: null, previewUrl: null, caption: "" }
+    ];
 
-    // --- 1. UI GENERATOR ---
-    function generateImageInputs() {
+    // Default Romantic Captions
+    const defaultCaptions = ["Sweet Memory", "Cutie Pie 🥰", "Golden Moments", "Precious ❤️", "Unforgettable"];
+
+    // 1. GENERATE BULK UPLOAD UI
+    function renderImageGrid() {
         const container = document.getElementById('image-upload-container');
         container.innerHTML = '';
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 0; i < 5; i++) {
             const div = document.createElement('div');
             div.className = 'form-polaroid';
+            
+            // Check if there's a new file, otherwise check database, otherwise show placeholder
+            const imgSrc = imageInputsData[i].previewUrl || state.memoryData?.[`image_${i+1}_url`] || `https://via.placeholder.com/300x300?text=Photo+${i+1}`;
+            const capValue = imageInputsData[i].caption || state.memoryData?.[`caption_${i+1}`] || '';
+            
             div.innerHTML = `
-                <label for="img-${i}" style="cursor: pointer; display: block;">
-                    <img id="prev-${i}" src="https://via.placeholder.com/300x300?text=Tap+to+Upload+Image+${i}" alt="Upload">
-                </label>
-                <input type="file" id="img-${i}" accept="image/*" hidden>
-                <input type="text" id="cap-${i}" class="polaroid-caption-input" placeholder="Caption for Image ${i}..." required>
+                <img id="prev-${i}" src="${imgSrc}" alt="Memory ${i+1}">
+                <input type="text" id="cap-${i}" class="polaroid-caption-input" placeholder="Caption for Photo ${i+1}..." value="${capValue}">
             `;
             container.appendChild(div);
 
-            const fileInput = div.querySelector(`#img-${i}`);
-            const preview = div.querySelector(`#prev-${i}`);
-
-            let imgData = { file: null, previewEl: preview, captionId: `cap-${i}` };
-            imageInputsData.push(imgData);
-
-            fileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    imgData.file = file;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => preview.src = ev.target.result;
-                    reader.readAsDataURL(file);
-                }
+            // Save caption input state so it isn't lost when we re-render
+            const capInput = div.querySelector(`#cap-${i}`);
+            capInput.addEventListener('input', (e) => {
+                imageInputsData[i].caption = e.target.value;
             });
         }
     }
 
-    // --- 2. ADMIN EDIT PRE-FILL ---
+    // Handle File Selection (Multiple Files)
+    const bulkInput = document.getElementById('bulk-upload');
+    if (bulkInput) {
+        bulkInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files).slice(0, 5); // Take max 5 files
+            files.forEach((file, index) => {
+                imageInputsData[index].file = file;
+                imageInputsData[index].previewUrl = URL.createObjectURL(file);
+            });
+            renderImageGrid(); // Re-render to show new images
+        });
+    }
+
+      // 2. SMART SERIAL NUMBER (Reads from URL/Admin)
+    async function setSerialNumber() {
+        const prefixEl = document.getElementById('serial-prefix');
+        // Admin ne jo ID link mein bheji hai (state.memoryId), wahi direct prefix ban jayegi
+        if (state.memoryId) {
+            prefixEl.innerText = `${state.memoryId}-`;
+        } else {
+            prefixEl.innerText = "GX-00-"; // Fallback
+        }
+    }
+
+    // 3. ADMIN PRE-FILL (For Edit Mode)
     function populateFormForEdit() {
         if(!state.memoryData) return;
         const md = state.memoryData;
-
+        
         document.getElementById('occasion-select').value = md.occasion || 'Happy Birthday';
         document.getElementById('gf-name').value = md.girlfriend_name || '';
-        document.getElementById('passcode-input').value = md.passcode || '';
-        document.getElementById('music-select').value = md.music_id || 'gift';
         document.getElementById('letter-text').value = md.message_text || '';
-
-        // 5 Open When Inputs
-        document.getElementById('ow-happy').value = md.open_when_happy || '';
-        document.getElementById('ow-sad').value = md.open_when_sad || '';
-        document.getElementById('ow-miss-me').value = md.open_when_miss_me || '';
-        document.getElementById('ow-hug').value = md.open_when_hug || '';
-        document.getElementById('ow-sorry').value = md.open_when_sorry || '';
-
+        
         for(let i=0; i<5; i++) {
-            const idx = i + 1;
-            if(md[`image_${idx}_url`]) {
-                document.getElementById(`prev-${idx}`).src = md[`image_${idx}_url`];
-            }
-            document.getElementById(`cap-${idx}`).value = md[`caption_${idx}`] || '';
+            imageInputsData[i].caption = md[`caption_${i+1}`] || '';
         }
-
         document.getElementById('lock-gift-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update & Save Changes';
     }
 
-    // --- 3. COMPRESSION & UPLOAD ---
+    // Upload & Compress Helpers
     async function compressImage(file) {
         const options = { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true, initialQuality: 0.5 };
         try { return await imageCompression(file, options); } catch (e) { return file; }
@@ -93,11 +103,52 @@
         const data = await response.json(); return data.url;
     }
 
-    // --- 4. SUBMIT LOGIC ---
+        // --- 🔴 NAYA: PREVIEW GIFT LOGIC (CORRECTED) ---
+    const previewBtn = document.getElementById('preview-gift-btn');
+    if (previewBtn) {
+        previewBtn.addEventListener('click', () => {
+            // 1. Check if basic details are filled
+            const gfName = document.getElementById('gf-name')?.value;
+            const occasion = document.getElementById('occasion-select')?.value;
+            const messageText = document.getElementById('letter-text')?.value;
+
+            if (!gfName || !messageText) {
+                alert("Please fill Basic Details and Love Letter before previewing!");
+                return;
+            }
+
+            // 2. Gather data temporarily in window object
+            window.previewGiftData = {
+                occasion: occasion,
+                girlfriend_name: gfName,
+                message_text: messageText,
+                
+                // Gather images and captions (IDs are prev-0 to prev-4 in bulk upload)
+                image_1_url: document.getElementById('prev-0')?.src || "",
+                caption_1: document.getElementById('cap-0')?.value || "Sweet Memory",
+                image_2_url: document.getElementById('prev-1')?.src || "",
+                caption_2: document.getElementById('cap-1')?.value || "Cutie Pie 🥰",
+                image_3_url: document.getElementById('prev-2')?.src || "",
+                caption_3: document.getElementById('cap-2')?.value || "Golden Moments",
+                image_4_url: document.getElementById('prev-3')?.src || "",
+                caption_4: document.getElementById('cap-3')?.value || "Precious ❤️",
+                image_5_url: document.getElementById('prev-4')?.src || "",
+                caption_5: document.getElementById('cap-4')?.value || "Unforgettable",
+            };
+
+            // 3. Open Viewer in a new tab with preview mode
+            const baseUrl = window.location.origin + window.location.pathname;
+            window.open(`${baseUrl}?mode=preview`, '_blank');
+        });
+    }
+
+
+
+    // 4. SUBMIT FORM
     if (memoryForm) {
         memoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
             let missingImage = false;
             for(let i=0; i<5; i++) {
                 const hasNewFile = imageInputsData[i].file !== null;
@@ -105,7 +156,7 @@
                 if(!hasNewFile && !hasOldUrl) { missingImage = true; break; }
             }
 
-            if(missingImage) return alert("Please upload all 5 photos!");
+            if(missingImage) return alert("Please select all 5 photos using the upload button!");
 
             const submitBtn = document.getElementById('lock-gift-btn');
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
@@ -123,24 +174,37 @@
                     }
                 }
 
-                const updatedData = {
+                // Construct full passcode
+                const prefix = document.getElementById('serial-prefix').innerText;
+                const userPass = document.getElementById('passcode-input').value;
+                const fullPasscode = prefix + userPass; 
+
+                              const updatedData = {
                     status: "locked",
                     locked_at: state.memoryData?.locked_at || new Date().toISOString(),
                     occasion: document.getElementById('occasion-select').value,
-                    passcode: document.getElementById('passcode-input').value,
+                    passcode: fullPasscode,
                     girlfriend_name: document.getElementById('gf-name').value,
-                    music_id: document.getElementById('music-select').value,
                     message_text: document.getElementById('letter-text').value,
-                    open_when_happy: document.getElementById('ow-happy').value,
-                    open_when_sad: document.getElementById('ow-sad').value,
-                    open_when_miss_me: document.getElementById('ow-miss-me').value,
-                    open_when_hug: document.getElementById('ow-hug').value,
-                    open_when_sorry: document.getElementById('ow-sorry').value,
                 };
+
+
+                // Clear out old deleted fields from Firebase
+                updatedData.music_id = null;
+                updatedData.open_when_happy = null;
+                updatedData.open_when_sad = null;
+                updatedData.open_when_miss_me = null;
+                updatedData.open_when_hug = null;
+                updatedData.open_when_sorry = null;
 
                 for(let i=0; i<5; i++) {
                     updatedData[`image_${i+1}_url`] = finalImageUrls[i];
-                    updatedData[`caption_${i+1}`] = document.getElementById(imageInputsData[i].captionId).value;
+                    
+                    // NAYA: Default Caption Logic
+                    let finalCaption = document.getElementById(`cap-${i}`).value.trim();
+                    if (!finalCaption) finalCaption = defaultCaptions[i]; // Blank hua toh auto-fill
+                    
+                    updatedData[`caption_${i+1}`] = finalCaption;
                 }
 
                 await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -164,7 +228,8 @@
     }
 
     // Initialize 
-    generateImageInputs();
+    renderImageGrid();
+    await setSerialNumber(); // Load Serial First
     if (state.mode === 'admin_edit') {
         populateFormForEdit();
     }

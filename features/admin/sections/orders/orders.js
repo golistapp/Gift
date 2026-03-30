@@ -12,10 +12,10 @@
     // 1. Fetch Orders from Firebase
     async function loadOrders() {
         try {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Fetching Latest Data...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Fetching Latest Data...</td></tr>';
             const response = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
             const data = await response.json();
-
+            
             allOrders = [];
             if (data) {
                 Object.keys(data).forEach(id => {
@@ -23,11 +23,11 @@
                 });
                 allOrders.reverse(); // Latest pehle dikhega
             }
-
+            
             renderTable(); // Filter karke table draw karega
         } catch (e) {
             console.error(e);
-            tbody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Error loading data!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Error loading data!</td></tr>';
         }
     }
 
@@ -35,17 +35,17 @@
     function isWithinDate(dateString, filterType) {
         if (filterType === 'all') return true;
         if (!dateString) return false;
-
+        
         const date = new Date(dateString);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
+        
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-
+        
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 7);
-
+        
         if (filterType === 'today') return date >= today;
         if (filterType === 'yesterday') return date >= yesterday && date < today;
         if (filterType === 'week') return date >= weekAgo;
@@ -68,14 +68,14 @@
         tbody.innerHTML = '';
 
         if (filteredOrders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#64748b;">No orders match your filter.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748b;">No orders match your filter.</td></tr>';
             return;
         }
 
         filteredOrders.forEach(memory => {
             const dateObj = memory.created_at ? new Date(memory.created_at) : null;
             const dateStr = dateObj ? dateObj.toLocaleDateString() : 'N/A';
-
+            
             const statusBadge = memory.status === 'locked' 
                 ? `<span class="badge badge-locked">Locked (Ready)</span>` 
                 : `<span class="badge badge-empty">Pending</span>`;
@@ -85,12 +85,36 @@
             const viewAdminLink = `${baseUrl}?mode=admin_preview&id=${memory.id}`;
             const viewLink = `${baseUrl}?id=${memory.id}`;
 
-            const tr = document.createElement('tr');
+            // NAYA: Enable/Disable toggle variable
+            const isEnabled = memory.is_enabled !== false; 
+
+                        const tr = document.createElement('tr');
+            
+                        // Message ka text set karna
+            const rawMsg = `Hello ${memory.customer_name || 'Customer'}! ❤️\n\nAapka Memory Gift create ho gaya hai. Kripya niche diye link par apni memories aur details fill karein:\n\n🔗 Link: ${formLink}\n\nThank you!`;
+            const encodedMsg = encodeURIComponent(rawMsg);
+            
+            // Customer ka proper mobile number nikalna (agar blank ho toh khali chhod dega)
+            const cleanNumber = memory.mobile_number ? memory.mobile_number.replace(/\D/g,'') : '';
+            const waLinkUrl = `https://wa.me/${cleanNumber ? '91'+cleanNumber : ''}?text=${encodedMsg}`;
+            
+            // NAYA: SMS ke liye direct link
+            const smsLinkUrl = `sms:${cleanNumber ? '91'+cleanNumber : ''}?body=${encodedMsg}`;
+
             tr.innerHTML = `
                 <td><strong>${memory.id}</strong><br><small style="color:#64748b">${dateStr}</small></td>
                 <td><strong>${memory.customer_name || 'N/A'}</strong><br><small style="color:#64748b">${memory.mobile_number || 'N/A'}</small></td>
                 <td>${statusBadge}</td>
-                <td style="min-width: 250px;"> <button class="action-btn" style="color: #3b82f6;" title="Copy Form Link" onclick="window.copyToClipboard('${formLink}')"><i class="fa-solid fa-link"></i></button>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="window.toggleCustomerStatus('${memory.id}', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td style="min-width: 300px;"> 
+                    <button class="action-btn" style="color: #3b82f6;" title="Copy Form Link" onclick="window.copyToClipboard('${formLink}')"><i class="fa-solid fa-link"></i></button>
+                    <button class="action-btn" style="color: #25d366;" title="Share on WhatsApp" onclick="window.open('${waLinkUrl}', '_blank')"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button class="action-btn" style="color: #0ea5e9;" title="Share via SMS" onclick="window.open('${smsLinkUrl}', '_self')"><i class="fa-solid fa-comment-sms"></i></button>
                     <button class="action-btn" style="color: #8b5cf6;" title="Admin Edit" onclick="window.open('${adminEditLink}', '_blank')"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button class="action-btn" style="color: #10b981;" title="Admin Preview" onclick="window.open('${viewAdminLink}', '_blank')"><i class="fa-solid fa-eye"></i></button>
                     <button class="action-btn" style="color: #ec4899;" title="Download Custom QR" onclick="window.downloadTableQR('${viewLink}', '${memory.id}')"><i class="fa-solid fa-qrcode"></i></button>
@@ -125,7 +149,24 @@
         });
     }
 
-    // --- GLOBAL FUNCTIONS (Modals, Delete & QR) ---
+    // --- GLOBAL FUNCTIONS (Modals, Toggle, Delete & QR) ---
+
+    // Toggle Status in Firebase
+    window.toggleCustomerStatus = async (id, status) => {
+        try {
+            await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_enabled: status })
+            });
+            // Update local array seamlessly
+            const orderIndex = allOrders.findIndex(o => o.id === id);
+            if(orderIndex > -1) allOrders[orderIndex].is_enabled = status;
+        } catch (e) {
+            alert("Error updating status.");
+            loadOrders(); // Revert toggle visually if failed
+        }
+    };
 
     window.openResetModal = (id) => {
         window.currentResetId = id;
@@ -184,12 +225,12 @@
         new QRCode(hiddenContainer, { 
             text: url, width: 300, height: 300, colorDark : "#cc0033", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H 
         });
-
+        
         setTimeout(() => { 
             const qrCanvas = hiddenContainer.querySelector('canvas');
             const qrImg = hiddenContainer.querySelector('img');
             let sourceImageSrc = '';
-
+            
             if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) { sourceImageSrc = qrImg.src; } 
             else if (qrCanvas) { sourceImageSrc = qrCanvas.toDataURL("image/png"); } 
             else { alert("Error generating QR"); return; }
@@ -198,35 +239,35 @@
             const ctx = finalCanvas.getContext('2d');
             const qrSize = 300;
             const padding = 50; 
-
+            
             finalCanvas.width = qrSize + (padding * 2);
             finalCanvas.height = qrSize + (padding * 2) + 60; 
-
+            
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
+            
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.onload = () => {
                 ctx.drawImage(img, padding, padding, qrSize, qrSize);
-
+                
                 const centerX = finalCanvas.width / 2;
                 const centerY = padding + (qrSize / 2);
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
                 ctx.fillStyle = "#ffffff";
                 ctx.fill();
-
+                
                 ctx.font = "40px Arial";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText("❤️", centerX, centerY + 2);
-
+                
                 ctx.fillStyle = "#cc0033";
                 ctx.font = "bold 26px 'Poppins', sans-serif";
                 ctx.textBaseline = "alphabetic";
                 ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
-
+                
                 const link = document.createElement('a');
                 link.download = `Premium_MemoryGift_QR_${id}.png`;
                 link.href = finalCanvas.toDataURL("image/png");

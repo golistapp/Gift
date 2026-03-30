@@ -4,7 +4,7 @@
             <i class="fa-solid fa-gift"></i> Memory Gift <span>Admin</span>
         </div>
         <div class="nav-actions" style="display: flex; align-items: center;">
-            <span id="session-timer" style="font-size: 13px; color: #64748b; margin-right: 15px; font-weight: 500;">
+            <span id="session-timer" class="desktop-only" style="font-size: 13px; color: #64748b; margin-right: 15px; font-weight: 500;">
                 <i class="fa-solid fa-clock-rotate-left"></i> Session: <span>30:00</span>
             </span>
             <button id="logout-btn" class="logout-btn">
@@ -35,13 +35,13 @@
         <i class="fa-solid fa-plus"></i>
     </button>
 
-    <div id="create-order-sheet" class="bottom-sheet-overlay hidden">
-        <div class="bottom-sheet-content">
+    <div id="create-order-sheet" class="modal-overlay hidden">
+        <div class="modal-content-wrapper">
             <div class="sheet-header">
                 <h2><i class="fa-solid fa-plus-circle"></i> Create New Order</h2>
                 <button id="close-sheet-btn" class="close-sheet"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
+            
             <div class="sheet-body">
                 <form id="generate-form">
                     <div class="input-group">
@@ -63,7 +63,10 @@
                         <div class="link-item">
                             <h3>Boyfriend Link (Form)</h3>
                             <input type="text" id="form-link" readonly>
-                            <button class="copy-btn" data-target="form-link"><i class="fa-regular fa-copy"></i> Copy Link</button>
+                            <div class="link-actions">
+                                <button class="copy-btn" data-target="form-link"><i class="fa-regular fa-copy"></i> Copy Link</button>
+                                <button class="wa-btn" id="wa-share-btn"><i class="fa-brands fa-whatsapp"></i> Share</button>
+                            </div>
                         </div>
                         <div class="link-item">
                             <h3>Girlfriend Link (View)</h3>
@@ -71,7 +74,7 @@
                             <button class="copy-btn" data-target="view-link"><i class="fa-regular fa-copy"></i> Copy Link</button>
                         </div>
                     </div>
-
+                    
                     <div class="qr-display-box">
                         <div id="qrcode-container"></div>
                         <button id="download-qr-btn" class="btn-green">

@@ -1,0 +1,185 @@
+<style>
+    /* ==========================================
+       👑 PREMIUM 100 REASONS SECTION (RESPONSIVE)
+       ========================================== */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600&display=swap');
+
+    .reasons-section {
+        min-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 50px 20px;
+        text-align: center;
+        position: relative;
+    }
+
+    .reasons-main-title {
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.8);
+        line-height: 1.2;
+    }
+    
+    .title-line1 {
+        font-family: var(--font-ui); 
+        /* 🔴 UPDATED: PC ke liye size limit badhayi (3.5rem se 4.2rem) */
+        font-size: clamp(2.2rem, 6vw, 4.2rem);
+        font-weight: 800;
+        color: #cc0033;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: block;
+    }
+
+    .title-line2 {
+        font-family: 'Playfair Display', serif; 
+        /* 🔴 UPDATED: PC ke liye size limit badhayi */
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        font-style: italic;
+        font-weight: 600;
+        color: #4a0e1c;
+        display: block;
+        margin-top: -5px;
+    }
+
+    /* 🔢 PREMIUM COUNTER */
+    .reason-counter-badge {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+        border: 1px solid rgba(255, 77, 121, 0.3);
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-family: var(--font-ui);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #cc0033;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 10px rgba(216, 27, 96, 0.1);
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+    }
+
+    /* 📓 LINED NOTEBOOK CARD (GRID LOCKED & RESPONSIVE) */
+    .white-paper-card {
+        width: 100%;
+        /* 🔴 UPDATED: Desktop/Tablet ke liye chaurai badha kar 750px kar di */
+        max-width: 750px;
+        min-height: 250px;
+        background-color: #fffdf9; 
+        background-image: 
+            linear-gradient(#ececec 1px, transparent 1px),
+            linear-gradient(180deg, #fffdf9 0%, #ffffff 100%);
+        background-size: 100% 40px, 100% 100%; /* EXACT 40px Grid */
+        background-position: 0 0;
+        
+        border-radius: 12px; 
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(216, 27, 96, 0.05); 
+        border: 1px solid rgba(255, 77, 121, 0.15); 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        /* 🔴 UPDATED: Top/Bottom padding 40px locked hai, Left/Right padding screen ke hisaab se adjust hogi */
+        padding: 40px clamp(20px, 5vw, 60px); 
+        margin-bottom: 35px;
+        position: relative;
+        overflow: hidden; 
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* ✍️ TEXT BASELINE ALIGNMENT */
+    .reason-text {
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+        /* 🔴 UPDATED: Desktop ke liye text size bada kar diya (1.8rem se 2.3rem) */
+        font-size: clamp(1.5rem, 3.5vw, 2.3rem);
+        color: #333333; /* Dark Charcoal */
+        font-weight: 600;
+        line-height: 40px; /* STRICT 40px LOCK */
+        z-index: 1; 
+        position: relative;
+        margin: 0;
+        padding: 0;
+        transform: translateY(2px); /* Baseline touch adjustment */
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.02);
+    }
+
+    /* Fast Typing Cursor */
+    .typing-cursor-reason {
+        display: inline-block; width: 2px; height: 1.1em; 
+        background-color: #cc0033; animation: blinkCursor 0.5s infinite; 
+        vertical-align: text-bottom; margin-left: 3px;
+    }
+
+    /* ✨ REFINED, LESS CLUTTERED SPARKLES */
+    .text-magic-sparkle {
+        position: absolute;
+        pointer-events: none;
+        z-index: 5;
+        animation: sparkleBurst 0.6s ease-out forwards;
+    }
+    @keyframes sparkleBurst {
+        0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; }
+        100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.2) rotate(45deg); opacity: 0; }
+    }
+
+    /* 🔘 ACTION BUTTON */
+    .btn-reason {
+        background: linear-gradient(135deg, #ff1a53, #cc0033);
+        color: white;
+        font-family: var(--font-ui);
+        /* 🔴 UPDATED: Button size thoda responsive banaya */
+        font-size: clamp(1.1rem, 2vw, 1.25rem);
+        font-weight: 600;
+        padding: clamp(15px, 2vw, 18px) clamp(30px, 4vw, 45px);
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(204, 0, 51, 0.3), inset 0 2px 5px rgba(255,255,255,0.3);
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-reason:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(204, 0, 51, 0.4); }
+    .btn-reason:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    /* Button Hearts */
+    .floating-btn-heart {
+        position: absolute; color: #ff4d79; font-size: 20px; pointer-events: none;
+        animation: floatUpHeartBtn 0.8s ease-out forwards; z-index: 5;
+    }
+    @keyframes floatUpHeartBtn {
+        0% { transform: translateY(0) scale(0.5); opacity: 1; }
+        100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+    }
+
+</style>
+
+<div class="reasons-section fade-in">
+    <h2 class="reasons-main-title">
+        <span class="title-line1">100 Reasons</span>
+        <span class="title-line2">Why I Love You</span>
+    </h2>
+    
+    <div id="reason-counter-badge" class="reason-counter-badge">
+        Tap to Begin ❤️
+    </div>
+
+    <div class="white-paper-card" id="reason-card">
+        <div id="reason-text-container" class="reason-text">
+            My heart has a hundred things to say...
+        </div>
+    </div>
+
+    <div class="reason-btn-wrapper">
+        <button id="btn-next-reason" class="btn-reason">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Reveal a Reason
+        </button>
+    </div>
+
+    <audio id="reason-click-sound" src="assets/audio/click.mp3" preload="auto"></audio>
+    <audio id="reason-type-sound" src="assets/audio/pen.mp3" preload="auto"></audio>
+</div>

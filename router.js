@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const appRoot = document.getElementById('app-root');
     const loader = document.getElementById('app-loader');
-
+    
     // URL parameters check karna
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentModule = 'login';
     } else if (mode === 'form' || (memoryId && mode === 'admin_edit')) {
         currentModule = 'form';
-    } else if (!memoryId && mode !== 'admin_preview') {
-        // Agar link galat hai aur kuch nahi hai, toh login par bhej do ya error dikhao
+    } else if (!memoryId && mode !== 'admin_preview' && mode !== 'preview') {
+        // 🔴 NAYA: mode !== 'preview' add kiya taaki login par redirect na ho
         currentModule = 'login'; 
     }
 

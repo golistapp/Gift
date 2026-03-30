@@ -1,61 +1,105 @@
 (function() {
-    const yesBtn = document.getElementById('btn-yes'); // ID se select kiya
-    const noBtn = document.getElementById('btn-no');   // ID se select kiya
-    // 🔴 FIX: HTML mein id 'proposal-gif' hai, usko match kiya
+    const yesBtn = document.getElementById('btn-yes'); 
+    const noBtn = document.getElementById('btn-no');   
     const pandaImg = document.getElementById('proposal-gif'); 
+    const clickSound = document.getElementById('prop-click-sound');
+    const yaySound = document.getElementById('prop-yay-sound');
+    
+    const propState = document.getElementById('proposal-state');
+    const successState = document.getElementById('success-state');
 
-    // "No" Button bhagane wala logic
+    // Dynamic Girlfriend Name (agar available ho toh add karega)
+    const state = window.viewerState;
+    const gfName = (state && state.memoryData && state.memoryData.girlfriend_name) ? state.memoryData.girlfriend_name : "";
+    if (gfName) {
+        const nameEl = document.getElementById('prop-dynamic-name');
+        if(nameEl) nameEl.innerText = ", " + gfName;
+        const succText = document.getElementById('success-dynamic-text');
+        if(succText) succText.innerText = `"I knew you'd say yes, ${gfName}! I love you! 💖"`;
+    }
+
+    // Confetti Helper Function
+    function fireProposalConfetti() {
+        for(let i=0; i<50; i++) {
+            const h = document.createElement('div');
+            h.innerHTML = ['💖', '✨', '🌹', '🥰'][Math.floor(Math.random()*4)];
+            h.style.position = 'fixed'; h.style.left = '50%'; h.style.top = '50%';
+            h.style.fontSize = (Math.random() * 25 + 15) + 'px';
+            h.style.pointerEvents = 'none'; h.style.zIndex = '99999';
+            h.style.transition = 'all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            document.body.appendChild(h);
+            setTimeout(() => {
+                h.style.transform = `translate(${(Math.random()-0.5)*800}px, ${(Math.random()-0.5)*800}px) scale(${Math.random() + 0.5})`;
+                h.style.opacity = '0';
+            }, 50);
+            setTimeout(() => h.remove(), 1500);
+        }
+    }
+    
+    // "No" Button Limited Movement Logic (Range restricted)
     if (noBtn) {
+        let moveCount = 0;
+        
         const moveButton = function(e) {
-            if (e && e.cancelable) e.preventDefault(); // Touch device scrolling issue rokne ke liye
-
-            // 🔴 NAYA: Jab bhi NO par click/touch/hover karein, Angry GIF lag jaye
+            if (e && e.cancelable) e.preventDefault(); 
+            
+            // Angry GIF & Click Sound
             if (pandaImg) pandaImg.src = "assets/gif/angry.gif";
+            if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(err=>{}); }
 
-            // Button ko random jagah move karna
-            const x = Math.random() * (window.innerWidth - this.clientWidth - 20);
-            const y = Math.random() * (window.innerHeight - this.clientHeight - 20);
+            // Pehle darne wala (Shake) animation play hoga
+            noBtn.classList.add('shake-anim');
+            
+            setTimeout(() => {
+                noBtn.classList.remove('shake-anim');
+                
+                // 🔴 FIX: Range fix kiya gaya hai taaki screen se bahar na jaaye.
+                // Apni position se max 120px left/right aur 80px up/down hi jayega
+                const maxMoveX = 120; 
+                const maxMoveY = 80;  
+                
+                const randomX = (Math.random() - 0.5) * 2 * maxMoveX;
+                const randomY = (Math.random() - 0.5) * 2 * maxMoveY;
 
-            this.style.position = 'fixed'; // fixed taaki pure screen par bhage aur card ke andar na phase
-            this.style.left = `${Math.max(10, x)}px`;
-            this.style.top = `${Math.max(10, y)}px`;
-            this.style.zIndex = '9999';
+                noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+                
+                // Thodi der baad button rone lagega
+                moveCount++;
+                if (moveCount > 4) {
+                    noBtn.innerHTML = "Okay fine... 😭"; 
+                }
+            }, 150); 
         };
 
         noBtn.addEventListener('mouseover', moveButton);
         noBtn.addEventListener('touchstart', moveButton, {passive: false});
+        noBtn.addEventListener('click', moveButton); 
     }
 
     // "Yes" Button Click Logic
     if (yesBtn) {
         yesBtn.addEventListener('click', async function() {
-            // 🔴 NAYA: Yes par click karne par Kiss GIF lag jaye
-            if (pandaImg) pandaImg.src = "assets/gif/kiss.gif"; 
-
+            // Play Sounds & Vibrate
+            if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(err=>{}); }
+            if (yaySound) { yaySound.currentTime = 0; yaySound.play().catch(err=>{}); }
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+            
             // Firebase me Time Save Karein!
-            const state = window.viewerState;
             if (state && state.memoryId && typeof firebaseConfig !== 'undefined') {
                 try {
-                    await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+                    fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            proposal_accepted_at: new Date().toISOString() 
-                        })
+                        body: JSON.stringify({ proposal_accepted_at: new Date().toISOString() })
                     });
-                    console.log("Proposal Time Saved!");
-                } catch(error) {
-                    console.log("Error saving proposal time.");
-                }
+                } catch(error) {}
             }
 
-            // Confetti ya Success message
-            yesBtn.innerHTML = "I Love You Too! ❤️";
-            yesBtn.style.transform = "scale(1.1)";
-            yesBtn.style.position = "static";
-
-            // No button ko humesha ke liye hide kar do
-            if (noBtn) noBtn.style.display = "none";
+            // Smoothly Screen Change karna aur Confetti fadna
+            propState.style.display = "none";
+            successState.style.display = "flex";
+            
+            fireProposalConfetti();
         });
     }
 })();

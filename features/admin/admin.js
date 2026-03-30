@@ -63,7 +63,6 @@
                 script.id = scriptId; script.src = `features/admin/sections/${sectionName}/${sectionName}.js`;
                 document.body.appendChild(script);
             } else {
-                // Re-trigger initialization if script already loaded
                 if(window[`initAdmin${sectionName}`]) window[`initAdmin${sectionName}`]();
             }
         } catch (error) {
@@ -82,7 +81,7 @@
     });
     loadAdminSection('overview');
 
-    // --- 4. 🔴 NAYA: FAB & BOTTOM SHEET LOGIC ---
+    // --- 4. FAB & MODAL LOGIC ---
     const fabBtn = document.getElementById('fab-create-btn');
     const bottomSheet = document.getElementById('create-order-sheet');
     const closeSheetBtn = document.getElementById('close-sheet-btn');
@@ -90,10 +89,10 @@
     fabBtn.addEventListener('click', () => bottomSheet.classList.remove('hidden'));
     closeSheetBtn.addEventListener('click', () => bottomSheet.classList.add('hidden'));
     bottomSheet.addEventListener('click', (e) => {
-        if (e.target === bottomSheet) bottomSheet.classList.add('hidden'); // Close on clicking outside
+        if (e.target === bottomSheet) bottomSheet.classList.add('hidden'); 
     });
 
-    // --- 5. 🔴 NAYA: GLOBAL QR GENERATION LOGIC ---
+    // --- 5. QR GENERATION & ID LOGIC ---
     if (!window.QRCode) {
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
@@ -104,10 +103,29 @@
     const generateBtn = document.getElementById('generate-btn');
     const baseUrl = window.location.origin + window.location.pathname;
 
-    window.copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
-        alert("Link Copied Successfully! 🔗");
+       window.copyToClipboard = (text) => {
+        // HTTP aur bina HTTPS wale local network ke liye fallback hack
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => alert("Link Copied Successfully! 🔗"));
+        } else {
+            let textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("Link Copied Successfully! 🔗");
+            } catch (err) {
+                alert("Copy failed. Please copy manually.");
+            }
+            textArea.remove();
+        }
     };
+
 
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -116,11 +134,25 @@
         });
     });
 
-    function generateMemoryId() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let id = '';
-        for (let i = 0; i < 6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-        return id;
+    // Smart Auto ID Generation (Max + 1)
+    async function getNextMemoryId() {
+        try {
+            const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+            const data = await res.json();
+            let maxNum = 0;
+            if (data) {
+                Object.keys(data).forEach(id => {
+                    if (id.startsWith('GX-')) {
+                        const num = parseInt(id.split('-')[1], 10);
+                        if (!isNaN(num) && num > maxNum) maxNum = num;
+                    }
+                });
+            }
+            const nextNum = maxNum + 1;
+            return `GX-${nextNum.toString().padStart(2, '0')}`;
+        } catch (e) {
+            return "GX-01"; // Fallback if database is completely empty
+        }
     }
 
     if(generateForm) {
@@ -128,13 +160,19 @@
             e.preventDefault();
             const cName = document.getElementById('customer-name').value;
             const cMobile = document.getElementById('customer-mobile').value;
-
+            
             generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
             generateBtn.disabled = true;
 
             try {
-                const memoryId = generateMemoryId();
-                const initialData = { customer_name: cName, mobile_number: cMobile, status: "empty", created_at: new Date().toISOString() };
+                const memoryId = await getNextMemoryId();
+                const initialData = { 
+                    customer_name: cName, 
+                    mobile_number: cMobile, 
+                    status: "empty", 
+                    is_enabled: true, // Enable/Disable toggle functionality
+                    created_at: new Date().toISOString() 
+                };
 
                 await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
                     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(initialData)
@@ -147,6 +185,15 @@
                 document.getElementById('form-link').value = formUrl;
                 document.getElementById('view-link').value = viewUrl;
 
+                // WhatsApp Share Button Logic
+                const waBtn = document.getElementById('wa-share-btn');
+                if (waBtn) {
+                    waBtn.onclick = () => {
+                        const msg = `Hello ${cName}! ❤️\n\nAapka Memory Gift create ho gaya hai. Kripya niche diye link par apni memories aur details fill karein:\n\n🔗 Link: ${formUrl}\n\nThank you!`;
+                        window.open(`https://wa.me/91${cMobile}?text=${encodeURIComponent(msg)}`, '_blank');
+                    };
+                }
+
                 const qrcodeContainer = document.getElementById('qrcode-container');
                 qrcodeContainer.innerHTML = ''; 
                 setTimeout(() => {
@@ -154,10 +201,8 @@
                 }, 200);
 
                 document.getElementById('result-section').classList.remove('hidden');
-
-                // Refresh data globally if functions exist
+                
                 if(window.initAdminoverview) window.initAdminoverview(); 
-                generateForm.reset();
 
             } catch (error) {
                 alert("Error generating QR.");
@@ -168,14 +213,14 @@
         });
     }
 
-    // Custom Premium QR Downloader Logic (Same as before, adapted for modal)
+    // Custom Premium QR Downloader Logic
     document.getElementById('download-qr-btn').addEventListener('click', () => {
         const qrcodeContainer = document.getElementById('qrcode-container');
         const id = document.getElementById('display-id').innerText;
         const qrCanvas = qrcodeContainer.querySelector('canvas');
         const qrImg = qrcodeContainer.querySelector('img');
         let sourceImageSrc = '';
-
+        
         if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) { sourceImageSrc = qrImg.src; } 
         else if (qrCanvas) { sourceImageSrc = qrCanvas.toDataURL("image/png"); } 
         else { alert("Please wait..."); return; }
@@ -183,11 +228,11 @@
         const finalCanvas = document.createElement('canvas');
         const ctx = finalCanvas.getContext('2d');
         const qrSize = 300, padding = 50; 
-
+        
         finalCanvas.width = qrSize + (padding * 2);
         finalCanvas.height = qrSize + (padding * 2) + 60; 
         ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
+        
         const img = new Image(); img.crossOrigin = "Anonymous";
         img.onload = () => {
             ctx.drawImage(img, padding, padding, qrSize, qrSize);
@@ -195,7 +240,7 @@
             ctx.beginPath(); ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI); ctx.fillStyle = "#ffffff"; ctx.fill();
             ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("❤️", centerX, centerY + 2);
             ctx.fillStyle = "#cc0033"; ctx.font = "bold 26px 'Poppins', sans-serif"; ctx.textBaseline = "alphabetic"; ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
-
+            
             const link = document.createElement('a');
             link.download = `Premium_MemoryGift_QR_${id}.png`;
             link.href = finalCanvas.toDataURL("image/png");

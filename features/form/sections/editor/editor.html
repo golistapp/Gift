@@ -7,51 +7,49 @@
     <form id="memory-form">
         <div class="editor-section">
             <h2 class="step-title">1. Basic Details & Vault Lock</h2>
-
+            
             <div class="input-wrapper mb-15">
                 <label>Occasion / Headline:</label>
                 <select id="occasion-select" class="elegant-input" required>
                     <option value="Happy Birthday">Happy Birthday</option>
                     <option value="Happy Anniversary">Happy Anniversary</option>
                     <option value="Happy Valentine's Day">Happy Valentine's Day</option>
-                    <option value="A Special Surprise">A Special Surprise</option>
-                    <option value="Just For You">Just For You</option>
+                    <option value="Proposal">Proposal</option>
                 </select>
             </div>
 
             <div class="input-wrapper mb-15">
-                <label>Girlfriend's Name:</label>
+                <label>Gift Person Name:</label>
                 <input type="text" id="gf-name" class="elegant-input" placeholder="e.g. Ananya" required>
             </div>
+
+      
+
             <div class="input-wrapper">
-                <label>Secret Passcode (6 Digits):</label>
-                <input type="text" id="passcode-input" class="elegant-input" maxlength="6" pattern="\d{6}" placeholder="e.g., 140224" required>
+                <label>Set Gift Person Date of Birth (Password):</label>
+                <div class="passcode-composite">
+                    <span id="serial-prefix" class="prefix-box"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                    <input type="text" id="passcode-input" class="elegant-input" maxlength="6" placeholder="e.g. 140298" required style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: none;">
+                </div>
             </div>
         </div>
 
         <div class="editor-section">
-            <h2 class="step-title">2. Choose Background Music</h2>
-            <div class="input-wrapper">
-                <select id="music-select" class="elegant-input" required>
-                    <option value="gift" selected>Romantic Love Song (Default)</option>
-                    <option value="romantic-piano">Romantic Piano</option>
-                    <option value="soft-violin">Soft Violin</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="editor-section">
-            <h2 class="step-title">3. The Main Love Letter</h2>
+            <h2 class="step-title">2. The Main Love Letter</h2>
             <textarea id="letter-text" class="elegant-input" rows="6" placeholder="My Dearest..." required></textarea>
         </div>
 
         <div class="editor-section">
-            <h2 class="step-title">4. "Open When..." Messages 💌</h2>
-            <input type="text" id="ow-happy" class="elegant-input mb-10" placeholder="Open when you're Happy..." required>
-            <input type="text" id="ow-sad" class="elegant-input mb-10" placeholder="Open when you're Sad..." required>
-            <input type="text" id="ow-miss-me" class="elegant-input mb-10" placeholder="Open when you miss me..." required>
-            <input type="text" id="ow-hug" class="elegant-input mb-10" placeholder="Open when you need a hug..." required>
-            <input type="text" id="ow-sorry" class="elegant-input" placeholder="Open when I am sorry..." required>
+            <h2 class="step-title">3. Upload 5 Memories</h2>
+            <div class="upload-controls mb-15" style="text-align: center;">
+                <label for="bulk-upload" class="btn-pink" style="padding: 12px 25px; display: inline-block; cursor: pointer; border-radius: 25px;">
+                    <i class="fa-solid fa-images"></i> Select Up To 5 Photos
+                </label>
+                <input type="file" id="bulk-upload" accept="image/*" multiple hidden>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">Select multiple files at once. You can re-select to change them.</p>
+            </div>
+            <div class="polaroid-grid" id="image-upload-container">
+                </div>
         </div>
 
         <div class="editor-section">
@@ -60,8 +58,15 @@
                 </div>
         </div>
 
+        <button type="button" id="preview-gift-btn" class="btn-pink" style="width: 100%; padding: 15px; font-size: 18px; margin-bottom: 15px; background: #f59e0b;">
+            <i class="fa-solid fa-eye"></i> Preview Gift
+        </button>
+
         <button type="submit" id="lock-gift-btn" class="btn-pink lock-btn-style" style="width: 100%; padding: 15px; font-size: 18px;">
             <i class="fa-solid fa-lock"></i> Lock Gift & Generate
         </button>
     </form>
 </div>
+
+
+     

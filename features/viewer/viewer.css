@@ -1,16 +1,96 @@
 /* =========================================
+   GIFTORAX PREMIUM FONT SYSTEM
+   ========================================= */
+:root {
+    /* 1. Headings - Premium & Romantic */
+    --font-heading: 'Playfair Display', serif;
+    
+    /* 2. Body Text - Clean & Readable */
+    --font-ui: 'Poppins', sans-serif;
+    
+    /* 3. Special Text - Cursive & Emotional */
+    --font-romantic: 'Dancing Script', cursive;
+}
+
+/* =========================================
    BASE VIEWER SETTINGS & UTILITIES
    ========================================= */
 .viewer-wrapper { 
-    background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%); 
+    /* PREMIUM WHITE TO SOFT PEARL GRADIENT */
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF9 50%, #FFF8FA 100%); 
     color: var(--text-dark); 
-    min-height: 100vh; 
+    min-height: 100vh;
+    min-height: 100dvh; 
     font-family: var(--font-ui); 
     position: relative;
     overflow-x: hidden;
+    
+    /* 🔴 YAHAN SE 95px PADDING HATA DI HAI TAAKI WHITE GAP KHATAM HO JAYE */
+    padding-top: 0px; 
 }
 
-/* Common Glassmorphism Card Style */
+/* Global Headings Enhancement */
+h1, h2, h3, .section-title, .script-heading {
+    letter-spacing: 0.5px;
+    text-shadow: 0px 4px 15px rgba(255, 77, 121, 0.15); 
+}
+
+
+/* 🔴 NAYA UPDATED: Sleek Frosted Header For White Theme */
+.top-logo-header {
+    position: fixed; /* 🔴 Ise fixed kiya taaki scroll karne par upar tiki rahe */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px; 
+    
+    /* 🔴 Glass effect transparent kiya (0.75 se 0.5) taaki piche ka image ache se dikhe */
+    background: #ffffff; 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    border-bottom: 1px solid rgba(255, 77, 121, 0.15); 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03), 0 5px 15px rgba(255, 77, 121, 0.05);   
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.top-logo-header img {
+    height: 82px; 
+    object-fit: contain;
+    margin-top: 2px;
+}
+
+.header-stars {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 5px; 
+}
+
+.left-stars { left: 20px; }
+.right-stars { right: 20px; }
+
+.header-stars .fa-star {
+    color: rgba(255, 133, 162, 0.75); 
+    filter: drop-shadow(0 0 4px rgba(255, 77, 121, 0.3)); 
+    animation: gentleTwinkle 3s infinite ease-in-out;
+}
+
+.header-stars .s1 { font-size: 8px; animation-delay: 0s; }
+.header-stars .s2 { font-size: 11px; animation-delay: 1s; }
+.header-stars .s3 { font-size: 8px; animation-delay: 2s; }
+
+@keyframes gentleTwinkle {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
 .glass-card { 
     background: var(--glass-bg); 
     backdrop-filter: blur(12px); 
@@ -19,7 +99,6 @@
     box-shadow: 0 8px 32px 0 rgba(255, 77, 121, 0.15); 
 }
 
-/* Common Section Title */
 .section-title { 
     font-family: var(--font-heading); 
     font-size: 35px; 
@@ -28,9 +107,15 @@
     text-align: center; 
 }
 
-/* Padding so content isn't hidden behind the bottom navigation */
 .padding-bottom-large { 
     padding-bottom: 120px; 
+}
+
+/* 🔴 BAAKI SCREENS KO HEADER KE NICHE DABNE SE BACHANE KE LIYE PADDING */
+#vault-mount,
+#booth-mount,
+#chat-mount {
+    padding-top: 95px;
 }
 
 /* =========================================
@@ -47,11 +132,10 @@
     overflow: hidden; 
 }
 
-/* 🔴 NAYA: Particle CSS Update ki gayi hai */
 .bg-heart { 
     position: absolute; 
-    bottom: -50px; /* Screen ke bahar niche se shuru hoga */
-    color: rgba(255, 77, 121, 0.6); 
+    bottom: -50px; 
+    color: rgba(255, 77, 121, 0.5); 
     font-size: 20px; 
     animation: floatUp linear forwards; 
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.4); 
@@ -60,7 +144,7 @@
 
 @keyframes floatUp { 
     0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0; } 
-    10% { opacity: 0.8; } /* Fade in */
-    90% { opacity: 0.8; } /* Fade out shuru */
+    10% { opacity: 0.8; } 
+    90% { opacity: 0.8; } 
     100% { transform: translateY(-110vh) rotate(360deg) scale(1.5); opacity: 0; } 
 }

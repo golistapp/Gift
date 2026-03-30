@@ -1,7 +1,7 @@
-/* 🔴 NAYA FIX: Admin Card ko screen ke hisaab se lock karna zaroori hai */
+/* Admin Card ko screen ke hisaab se lock karna zaroori hai */
 .admin-card {
     max-width: 100%;
-    overflow: hidden; /* Yeh table ko card se bahar nikalne se rokega */
+    overflow: hidden; 
 }
 
 /* Orders Toolbar (Search & Filters) */
@@ -16,20 +16,20 @@
 .elegant-select { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; background: #fff; font-family: var(--font-ui); font-size: 13px; color: #475569; cursor: pointer; appearance: auto; }
 .elegant-select:focus { border-color: var(--admin-blue); }
 
-/* 📱 Responsive Table & Mobile Scroll Fix */
+/* Responsive Table & Mobile Scroll Fix */
 .table-responsive { 
     width: 100%; 
-    max-width: 100vw; /* 🔴 Screen ki width lock */
-    overflow-x: auto !important; /* 🔴 Horizontal scroll force karega */
-    -webkit-overflow-scrolling: touch; /* 🔴 Mobile/Touch screen par smooth scroll */
-    display: block; /* 🔴 Table ko properly wrap karne ke liye */
+    max-width: 100vw; 
+    overflow-x: auto !important; 
+    -webkit-overflow-scrolling: touch; 
+    display: block; 
     border-radius: 8px;
     border: 1px solid #e2e8f0;
 }
 
 .data-table { 
     width: 100%; 
-    min-width: 900px; /* 🔴 Yeh table ko sikudne nahi dega, jisse scroll banega */
+    min-width: 900px; 
     border-collapse: collapse; 
     background: #fff;
 }
@@ -80,3 +80,11 @@
     .orders-toolbar { flex-direction: column; }
     .search-box, .filter-group { width: 100%; min-width: 100%; }
 }
+
+/* Status Toggle Switch */
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #10b981; }
+input:checked + .slider:before { transform: translateX(18px); }

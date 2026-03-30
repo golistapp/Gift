@@ -1,15 +1,21 @@
 <div class="chat-app-wrapper" id="gf-chat-wrapper">
-    <header class="chat-app-header">
-        <div class="header-left">
-            <div class="avatar"><i class="fa-solid fa-heart"></i></div>
-            <div class="header-info">
-                <div class="title-row">
-                    <h2>Secret Chat Room</h2>
-                </div>
-                <p id="live-status" class="header-status">Connecting...</p>
+    <div class="native-chat-header" id="native-chat-header">
+        <div class="chat-header-left">
+            <div class="chat-avatar">
+                <img src="assets/image/album1.jpg" alt="Profile" id="chat-profile-pic" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="fallback-avatar" style="display:none;"><i class="fa-solid fa-heart"></i></div>
+            </div>
+            <div class="chat-user-info">
+                <h2 id="chat-user-name">My Love ❤️</h2>
+                <span id="live-status">Connecting...</span>
             </div>
         </div>
-    </header>
+        <div class="chat-header-right">
+            <i class="fa-solid fa-video header-icon"></i>
+            <i class="fa-solid fa-phone header-icon"></i>
+            <i class="fa-solid fa-ellipsis-vertical header-icon"></i>
+        </div>
+    </div>
 
     <audio id="sound-send" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
     <audio id="sound-receive" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>

@@ -1,68 +1,206 @@
 <style>
-    /* Premium Envelope CSS */
-    .envelope-container { perspective: 1200px; display: flex; flex-direction: column; align-items: center; margin-top: 20px;}
-    .envelope-wrapper { position: relative; width: 320px; height: 220px; margin: 0 auto; cursor: pointer; transition: transform 0.5s ease; }
-    .envelope-wrapper:hover { transform: translateY(-10px) scale(1.02); }
-    .envelope { position: relative; width: 100%; height: 100%; background: #a80026; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-    
-    .env-front { position: absolute; top:0; left:0; width: 0; height: 0; border-left: 160px solid #cc0033; border-right: 160px solid #cc0033; border-bottom: 110px solid #b3002d; border-top: 110px solid transparent; z-index: 3; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
-    .env-flap { position: absolute; top:0; left:0; width: 0; height: 0; border-left: 160px solid transparent; border-right: 160px solid transparent; border-top: 130px solid #e60039; z-index: 4; transform-origin: top; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-    
-    .env-letter-preview { position: absolute; top: 10px; left: 15px; width: 290px; height: 190px; background: #fffdf9; border-radius: 8px; z-index: 2; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
-    .env-letter-preview img { width: 100%; height: 100%; object-fit: cover; }
-    
-    /* 🔴 NAYA: Heartbeat Animation yahan add ki gayi hai */
-    @keyframes heartbeat {
-        0%, 100% { transform: translateX(-50%) scale(1); }
-        50% { transform: translateX(-50%) scale(1.25); }
+    /* =========================================================
+       💌 3D ENVELOPE DESIGN (FULLY RESPONSIVE)
+       ========================================================= */
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@1,600&display=swap');
+
+    .envelope-container { 
+        perspective: 1200px; display: flex; flex-direction: column; align-items: center; 
+        justify-content: center; min-height: calc(100vh - 120px); width: 100%; 
+        margin: 0 auto; 
+        padding-top: clamp(150px, 20vh, 250px); 
     }
     
-    .heart-seal { position: absolute; top: 115px; left: 50%; transform: translateX(-50%); color: white; font-size: 30px; z-index: 5; transition: opacity 0.3s; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); animation: heartbeat 1.2s infinite ease-in-out; /* 🔴 NAYA */ }
+    .envelope-wrapper { 
+        position: relative; 
+        width: clamp(320px, 50vw, 450px); 
+        height: clamp(220px, 34vw, 310px); 
+        margin: 0 auto; cursor: pointer; transition: transform 0.5s ease; transform-style: preserve-3d; 
+    }
+    
+    .envelope-wrapper:hover { transform: translateY(-5px) scale(1.02); }
+    .envelope { position: relative; width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.25); transform-style: preserve-3d; }
+    
+    .env-back { position: absolute; top:0; left:0; width: 100%; height: 100%; background: linear-gradient(to bottom, #7a001c, #990026); border-radius: 8px; box-shadow: inset 0 20px 50px rgba(0,0,0,0.7); z-index: 1; }
+    
+    .env-front { 
+        position: absolute; top:0; left:0; width: 0; height: 0; 
+        border-left: clamp(160px, 25vw, 225px) solid #cc0033; 
+        border-right: clamp(160px, 25vw, 225px) solid #cc0033; 
+        border-bottom: clamp(110px, 17vw, 155px) solid #b3002d; 
+        border-top: clamp(110px, 17vw, 155px) solid transparent; 
+        z-index: 3; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; filter: drop-shadow(0 -4px 10px rgba(0,0,0,0.15)); 
+    }
+    
+    .env-flap { 
+        position: absolute; top:0; left:0; width: 0; height: 0; 
+        border-left: clamp(160px, 25vw, 225px) solid transparent; 
+        border-right: clamp(160px, 25vw, 225px) solid transparent; 
+        border-top: clamp(130px, 20vw, 180px) solid #e60039; 
+        z-index: 4; transform-origin: top; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25)); 
+    }
+    
+    .env-letter-preview { 
+        position: absolute; 
+        top: 5%; left: 5%; 
+        width: 90%; height: 85%; 
+        background: #fffdf9; border-radius: 8px; z-index: 2; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); overflow: hidden; 
+    }
+    .env-letter-preview img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .wax-seal { 
+        position: absolute; 
+        top: clamp(105px, 16vw, 145px); 
+        left: 50%; transform: translateX(-50%); 
+        width: clamp(55px, 8vw, 75px); 
+        height: clamp(55px, 8vw, 75px); 
+        background: radial-gradient(circle at 30% 30%, #ff4d79, #cc0033 60%, #800020); border-radius: 50%; z-index: 5; box-shadow: 0 5px 10px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.95); font-size: clamp(24px, 4vw, 32px); filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); transition: all 0.4s ease-out; animation: heartbeat 1.5s infinite ease-in-out; 
+    }
+    @keyframes heartbeat { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.15); } }
 
-    /* Open Animations */
     .envelope-wrapper.open .env-flap { transform: rotateX(180deg); z-index: 1; }
-    .envelope-wrapper.open .heart-seal { opacity: 0; }
-    .envelope-wrapper.open .env-letter-preview { transform: translateY(-120px); z-index: 3; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
-    .envelope-wrapper.open { animation: envelopeFloat 3s infinite ease-in-out; }
-    @keyframes envelopeFloat { 0%, 100% { transform: translateY(-10px) scale(1.02); } 50% { transform: translateY(-20px) scale(1.02); } }
-    .tap-text { margin-top: 30px; font-weight: 500; color: var(--deep-red); transition: opacity 0.3s; }
+    .envelope-wrapper.open .wax-seal { opacity: 0; transform: translateX(-50%) scale(1.5); pointer-events: none; }
+    
+    .envelope-wrapper.open .env-letter-preview { transform: translateY(calc(-40% - 30px)); z-index: 3; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    
+    .tap-text { margin-top: 30px; font-weight: 500; font-size: clamp(1rem, 2vw, 1.2rem); color: var(--deep-red); transition: opacity 0.3s; }
 
-    /* Notebook Letter CSS */
-    #love-notes-section { display: none; width: 100%; justify-content: center; margin-top: 80px; opacity: 0; transition: opacity 1s ease; padding: 0 15px;}
-    .notebook-page { background: #fffdf5; width: 100%; max-width: 600px; padding: 50px 30px; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: left; position: relative; background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(0, 150, 255, 0.15) 31px, rgba(0, 150, 255, 0.15) 32px); line-height: 32px; }
-    .notebook-page::after { content: ''; position: absolute; left: 15px; top: 0; height: 100%; width: 20px; background: radial-gradient(circle, #ddd 30%, transparent 35%) 0 0 / 20px 32px; }
-    .notebook-page::before { content: ''; position: absolute; top: 0; bottom: 0; left: 45px; width: 2px; background: rgba(255, 0, 0, 0.3); }
+    .magic-dust { position: absolute; pointer-events: none; z-index: 10; animation: dustFloat 1.2s ease-out forwards; }
+    @keyframes dustFloat { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.5); } }
+
+    .css-petal { width: 15px; height: 15px; background: #ff4d79; border-radius: 15px 0 15px 0; position: fixed; top: -20px; z-index: 999; pointer-events: none; opacity: 0.85; box-shadow: 0 0 10px rgba(204, 0, 51, 0.3); animation: fallPetal linear forwards; }
+    @keyframes fallPetal { 0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg) scale(1.2); opacity: 0; } }
+
+    /* =========================================================
+       👇 PREMIUM ROMANTIC NOTEBOOK DESIGN (RESPONSIVE GRID) 👇
+       ========================================================= */
+
+    #love-notes-section { display: none; width: 100%; justify-content: center; margin-top: 50px; opacity: 0; transition: opacity 0.8s ease; padding: 0 15px;}
     
-    .romantic-letter-content { font-family: var(--font-ui); font-size: 1.15rem; color: var(--text-dark); padding-left: 20px; z-index: 2; position: relative; line-height: 32px; font-weight: 500; }
+    .premium-white-card { 
+        background-color: #fcfaf5; 
+        background-image: 
+            linear-gradient(90deg, transparent 45px, #ff8080 45px, #ff8080 47px, transparent 47px),
+            linear-gradient(#e5e5e5 1px, transparent 1px);
+        background-size: 100% 100%, 100% 40px; 
+        background-position: 0 0;
+        width: 100%; 
+        max-width: 750px; 
+        padding: 40px clamp(20px, 4vw, 50px) 40px 60px; 
+        border-radius: 8px; 
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08), 0 5px 15px rgba(216, 27, 96, 0.05); 
+        text-align: left; 
+        position: relative; 
+        border: 1px solid #e2e8f0; 
+    }
     
-    .letter-line { opacity: 0; transform: translateY(15px); margin-bottom: 32px; }
+    .premium-white-card::before { display: none; }
+
+    .top-divider { 
+        display: block; 
+        text-align: center;
+        height: 40px; 
+        line-height: 40px; 
+        margin: 0 !important; 
+        margin-bottom: 40px !important; 
+        animation: fadeIn 1s ease-in-out forwards; 
+    }
     
-    .letter-signature { text-align: right; margin-top: 35px; font-weight: 700; color: var(--deep-red); font-size: 1.8rem; font-family: var(--font-heading);}
-    
-    .fade-in-text { animation: romanticFade 1.5s ease-out forwards; }
-    @keyframes romanticFade { to { opacity: 1; transform: translateY(0); } }
+    .top-emoji-icon { 
+        font-size: clamp(1.4rem, 2vw, 1.8rem); 
+        letter-spacing: 2px; 
+        opacity: 0.95; 
+        text-shadow: 0 2px 5px rgba(255, 77, 121, 0.3);
+        vertical-align: middle;
+    }
+
+    /* 🔴 NEW: Chhote Emojis ke liye naya class */
+    .small-emoji {
+        font-size: 0.6em !important;
+        vertical-align: baseline;
+    }
+
+    /* ---------------------------------------------------
+       🎯 STRICT GRID LOCK SYSTEM
+       --------------------------------------------------- */
+    .romantic-letter-content { margin: 0 !important; padding: 0 !important; }
+
+    .letter-line { 
+        margin: 0 !important; 
+        padding: 0 !important;
+        line-height: 40px !important; 
+        min-height: 40px !important;
+        display: block; 
+    } 
+
+    /* 🎯 LAYER 1: HEADING ("Hi Priya ❤️") */
+    #dynamic-letter-container .letter-line:first-child { 
+        font-family: 'Great Vibes', cursive !important; 
+        font-size: clamp(3.2rem, 5vw, 4rem) !important; 
+        color: #cc0033 !important; 
+        font-weight: 400 !important; 
+        text-align: left !important;   
+        transform: translateY(8px);
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.05); 
+        /* 🔴 NEW: Heading ke theek baad ek notebook line chhodne ke liye */
+        margin-bottom: 40px !important; 
+    }
+
+    /* 🎯 LAYER 2: BODY TEXT */
+    #dynamic-letter-container .letter-line:not(:first-child) { 
+        font-family: 'Playfair Display', serif !important; 
+        font-style: italic !important;
+        font-size: clamp(1.45rem, 2.5vw, 1.8rem) !important; 
+        color: #333333 !important; 
+        font-weight: 600 !important; 
+        text-align: left !important; 
+        transform: translateY(10px); 
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.02); 
+        /* 🔴 NEW: Har paragraph ke theek baad ek notebook line chhodne ke liye */
+        margin-bottom: 40px !important;
+    }
+
+    .typing-cursor-letter { display: inline-block; width: 2px; height: 1.1em; background-color: #ff4d79; animation: blinkCursor 0.7s infinite; vertical-align: text-bottom; margin-left: 5px; }
+    @keyframes blinkCursor { 50% { opacity: 0; } }
+
+    /* 🎯 LAYER 3: SIGNATURE */
+    .letter-signature { 
+        font-family: 'Great Vibes', cursive !important; 
+        font-size: clamp(2.8rem, 4.5vw, 3.6rem) !important; 
+        color: #cc0033 !important; 
+        font-weight: 400 !important; 
+        text-align: center !important; 
+        margin: 0 !important; 
+        margin-top: 40px !important; 
+        opacity: 0; 
+        transition: opacity 2s ease; 
+        display: block;
+        transform: translateY(4px); 
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+    }
 </style>
 
 <div class="envelope-container fade-in" id="envelope-main-view">
     <div class="envelope-wrapper" id="envelope">
         <div class="envelope">
+            <div class="env-back"></div>
             <div class="env-front"></div>
             <div class="env-letter-preview">
                 <img id="envelope-dynamic-card" src="assets/image/you are happy.jpg" alt="Surprise Card">
             </div>
             <div class="env-flap"></div>
-            <i class="fa-solid fa-heart heart-seal"></i>
+            <div class="wax-seal"><i class="fa-solid fa-heart"></i></div>
         </div>
     </div>
     <p class="tap-text" id="env-instructions">Tap to open my heart 💌</p>
 </div>
 
 <div id="love-notes-section">
-    <div class="notebook-page">
-        <div class="romantic-letter-content" id="dynamic-letter-container">
-            </div>
-        <div class="romantic-letter-content">
-            <p class="letter-line letter-signature" id="letter-sig">Forever Yours ❤️</p>
-        </div>
+    <div class="premium-white-card">
+        <div class="top-divider"><span class="top-emoji-icon">🌸 💓 🌸</span></div>
+        <div class="romantic-letter-content" id="dynamic-letter-container"></div>
+        <div><p class="letter-line letter-signature" id="letter-sig">Forever Yours <span class="small-emoji">❤️</span></p></div>
     </div>
 </div>
+
+<audio id="env-click-sound" src="assets/audio/click.mp3" preload="auto"></audio>

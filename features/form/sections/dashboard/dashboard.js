@@ -12,7 +12,7 @@
     const passInput = document.getElementById('check-passcode');
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
-
+    
     // Naye DOM Elements
     const chatArea = document.getElementById('bf-chat-area');
     const inputEl = document.getElementById('bf-chat-input');
@@ -93,7 +93,7 @@
         if (!statusEl) return;
         let statusHtml = "";
         const gfStatus = state.memoryData.gf_status;
-
+        
         if (gfStatus === 'typing...') statusHtml = '<span style="color:#a7f3d0;">typing...</span>';
         else if (gfStatus === 'online') statusHtml = '<span style="color:#a7f3d0;">online</span>';
         else if (gfStatus && gfStatus !== 'offline') {
@@ -122,7 +122,7 @@
         let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
         try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
-
+        
         return combinedChat;
     }
 
@@ -143,7 +143,7 @@
                 else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
                 else if (payload.path === "/gf_status") { state.memoryData.gf_status = payload.data; needChatRender = false; } 
                 else { needChatRender = false; }
-
+                
                 if (needChatRender) renderDashboardUI();
                 updateHeaderStatus();
             } catch(err) {}
@@ -164,14 +164,14 @@
 
     function renderDashboardUI() {
         updateHeaderStatus(); 
-
+        
         let rawChat = state.memoryData.chat || [];
         let firebaseChat = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
         firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
-
+        
         const chatList = syncWithLocalStorage(firebaseChat); 
         const count = state.memoryData.message_count || 0;
-
+        
         document.getElementById('bf-msg-count').innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted &bull; Cloud: ${firebaseChat.length}/100 (Total: ${count})`;
 
         if(chatList.length > 0) {
@@ -232,13 +232,13 @@
             const isBf = msgObj.sender === 'bf';
             const timeStr = formatTime(msgObj.timestamp);
             const msgTime = new Date(msgObj.timestamp).getTime();
-
+            
             let tickHtml = '';
             if (isBf) {
                 const isRead = gfReadTime >= msgTime;
                 tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}"><i class="fa-solid fa-check-double"></i></span>`;
             }
-
+            
             const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
 
             newHtml += `
@@ -254,7 +254,7 @@
                     </div>
                 </div>`;
         });
-
+        
         if (chatArea.innerHTML !== newHtml) {
             chatArea.innerHTML = newHtml;
             if (isNewMessage || dashLastMsgTime === "") chatArea.scrollTop = chatArea.scrollHeight; 
@@ -270,7 +270,7 @@
         if(currentReplyQuote) {
             finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
         }
-
+        
         playDashSound('send');
         if(navigator.vibrate) navigator.vibrate(40);
 
@@ -280,16 +280,16 @@
         try {
             const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
             const latestData = await res.json();
-
+            
             let rawChat = latestData.chat || [];
             let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
             chatList = chatList.filter(msg => msg !== null && msg.sender);
-
+            
             let newCount = (latestData.message_count || 0) + 1;
-
+            
             const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
             chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
-
+            
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
             await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
@@ -298,14 +298,14 @@
             });
 
             inputEl.value = ''; inputEl.style.height = 'auto'; 
-
+            
             // Clear Reply state
             currentReplyQuote = "";
             if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
 
             updateBFStatus('online'); 
         } catch(err) { alert("Error sending message."); }
-
+        
         sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
         sendBtn.disabled = false;
     }
@@ -389,10 +389,10 @@
             if(diffX > 40) {
                 let rawTextEl = swipedMsg.querySelector('.msg-raw-text');
                 let imgEl = swipedMsg.querySelector('.chat-img-msg');
-
+                
                 let quoteText = rawTextEl ? rawTextEl.innerText : "";
                 if(imgEl) quoteText = "📷 Photo";
-
+                
                 if(quoteText) {
                     currentReplyQuote = quoteText.substring(0, 40) + (quoteText.length > 40 ? "..." : "");
                     if(replyTextPreview) replyTextPreview.innerText = currentReplyQuote;

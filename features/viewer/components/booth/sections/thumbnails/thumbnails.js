@@ -14,7 +14,7 @@
             thumb.src = imgUrl;
             thumb.className = 'memory-thumb';
             thumb.alt = `Memory ${i}`;
-
+            
             // Thumbnail click par photo ko Canvas/Display par bhej do
             thumb.onclick = () => {
                 const img = new Image();
