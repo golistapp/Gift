@@ -1,0 +1,73 @@
+<div class="master-wrapper fade-in">
+    <div id="light-burst-overlay" class="hidden"></div>
+
+    <div id="particles-container"></div>
+
+    <div class="master-content">
+        <div class="premium-logo-area floating" id="secret-admin-trigger" title="Triple tap for secret access">
+            <div class="logo-gold-glow"></div>
+            <img src="assets/image/3dlogo.png" alt="GiftoraX 3D Logo" class="custom-3d-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+            <i class="fa-solid fa-gift gift-icon-3d fallback-icon" style="display:none;"></i>
+
+            <h1 class="brand-text">Giftora<span class="highlight-x">X</span></h1>
+        </div>
+
+        <div class="glass-gift-card" id="master-card">
+            <h2 class="romantic-heading">Someone left something special for you ❤️</h2>
+
+            <form id="master-login-form">
+                <div class="input-section">
+                    <div class="secret-input-wrapper">
+                        <span class="static-prefix">GX-</span>
+                        <input type="tel" id="master-input" class="secret-code-input" placeholder="Enter secret code" autocomplete="off" maxlength="9" required>
+                    </div>
+                    <p id="master-error" class="error-text hidden"><i class="fa-solid fa-circle-exclamation"></i> Incorrect code.</p>
+                </div>
+
+                <button type="submit" class="btn-gold-glow" id="master-open-btn">
+                    Tap to Open <span class="spinning-gift">🎁</span>
+                </button>
+            </form>
+
+            <div class="minimal-help-links">
+                <button type="button" id="btn-forgot-id" class="minimal-link">Forgot ID?</button>
+                <span class="dot-separator">•</span>
+                <button type="button" id="btn-forgot-pass" class="minimal-link">Forgot Password?</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="explore-area">
+        <a href="#" id="btn-explore" class="minimal-explore-btn">
+            Explore More <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div id="forgot-id-modal" class="hidden master-modal-overlay">
+        <div class="glass-gift-card modal-card fade-in-scale">
+            <button class="close-master-modal" id="close-forgot-id"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color: #4a154b; font-family: var(--font-heading); font-size: 26px; margin-bottom: 10px;">Find Your ID</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Enter your registered mobile number.</p>
+            <input type="tel" id="search-mobile-input" class="secret-code-input" placeholder="no. 790369xxxx" style="margin-bottom: 15px; text-align: center;">
+            <button id="search-id-btn" class="btn-gold-glow" style="padding: 12px; font-size: 15px; margin-top: 0;">Search ID</button>
+            <div id="search-result" class="search-result-area"></div>
+        </div>
+    </div>
+
+    <div id="forgot-pass-modal" class="hidden master-modal-overlay">
+        <div class="glass-gift-card modal-card fade-in-scale">
+            <button class="close-master-modal" id="close-forgot-pass"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color: #4a154b; font-family: var(--font-heading); font-size: 26px; margin-bottom: 10px;">Reset Password</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Enter your Gift ID to request recovery via WhatsApp.</p>
+
+            <div class="secret-input-wrapper" style="margin-bottom: 15px; height: 50px;">
+                <span class="static-prefix">GX-</span>
+                <input type="text" id="recover-id-input" class="secret-code-input" placeholder="02" maxlength="6" style="text-align: left;">
+            </div>
+
+            <button id="send-wa-btn" class="btn-gold-glow" style="padding: 12px; font-size: 15px; margin-top: 5px;">
+                Get Help <i class="fa-brands fa-whatsapp" style="font-size: 18px; margin-left: 5px; vertical-align: middle;"></i>
+            </button>
+        </div>
+    </div>
+</div>

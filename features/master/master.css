@@ -1,0 +1,68 @@
+/* Luxury Soft Gradient Background */
+.master-wrapper { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #fff5f7 0%, #fce4ec 50%, #f8bbd0 100%); padding: 20px; font-family: var(--font-ui); position: relative; overflow: hidden; }
+
+/* Particles Animation */
+#particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.particle { position: absolute; background: rgba(255, 255, 255, 0.6); border-radius: 50%; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); animation: floatUp linear infinite; }
+@keyframes floatUp { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-10vh) scale(1); opacity: 0; } }
+
+.master-content { z-index: 5; width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; }
+
+/* 3D Floating Logo */
+.premium-logo-area { text-align: center; margin-bottom: 30px; position: relative; cursor: pointer; user-select: none; }
+.floating { animation: floatLogo 4s ease-in-out infinite; }
+@keyframes floatLogo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+/* 🔴 NAYA: Custom 3D Logo Styling */
+.custom-3d-logo { width: 90px; height: 90px; object-fit: contain; position: relative; z-index: 2; filter: drop-shadow(0 10px 15px rgba(212, 175, 55, 0.4)); margin-bottom: -5px; }
+.gift-icon-3d { font-size: 55px; color: #d4af37; filter: drop-shadow(0 10px 15px rgba(212, 175, 55, 0.4)); position: relative; z-index: 2; }
+.logo-gold-glow { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 70px; height: 70px; background: radial-gradient(circle, rgba(212, 175, 55, 0.5) 0%, transparent 70%); z-index: 1; filter: blur(12px); animation: pulseGlow 3s infinite alternate; }
+@keyframes pulseGlow { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.8); } 100% { opacity: 1; transform: translateX(-50%) scale(1.2); } }
+
+.brand-text { font-family: var(--font-heading); font-size: 42px; margin-top: 5px; font-weight: 700; color: #4a154b; letter-spacing: 1px; }
+.highlight-x { background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip: text; color: transparent; font-weight: 800; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+/* Glassmorphism Card */
+.glass-gift-card { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); width: 100%; padding: 40px 25px; border-radius: 32px; box-shadow: 0 20px 50px rgba(216, 27, 96, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6); text-align: center; transition: transform 0.3s; }
+.romantic-heading { font-family: var(--font-romantic); font-size: 20px; color: #4a154b; margin-bottom: 30px; font-weight: 600; line-height: 1.4; }
+
+/* Secret Code Input */
+.secret-input-wrapper { display: flex; align-items: center; background: rgba(255, 255, 255, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.9); border-radius: 16px; height: 55px; padding: 0 20px; transition: 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
+.secret-input-wrapper:focus-within { background: #fff; border-color: #f48fb1; box-shadow: 0 0 15px rgba(244, 143, 177, 0.3); }
+.static-prefix { font-size: 18px; color: #b0bec5; font-weight: 700; margin-right: 8px; }
+.secret-code-input { flex-grow: 1; border: none; background: transparent; height: 100%; font-family: var(--font-ui); font-size: 18px; color: #4a154b; font-weight: 600; letter-spacing: 3px; outline: none; width: 100%;}
+.secret-code-input::placeholder { color: #cfd8dc; letter-spacing: 1px; font-weight: 400; font-size: 15px; }
+
+/* Premium Glowing Button */
+.btn-gold-glow { width: 100%; margin-top: 25px; padding: 16px; font-size: 18px; border-radius: 16px; font-weight: 600; font-family: var(--font-ui); color: white; background: linear-gradient(135deg, #f06292 0%, #ec407a 100%); border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(236, 64, 122, 0.3), inset 0 2px 0 rgba(255,255,255,0.2); transition: 0.3s; position: relative; overflow: hidden; }
+.btn-gold-glow:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(236, 64, 122, 0.4); }
+.btn-gold-glow:active { transform: translateY(1px); }
+.btn-gold-glow::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shimmer 3s infinite; }
+@keyframes shimmer { 0% { left: -100%; } 100% { left: 200%; } }
+
+/* 🔴 NAYA: Spinning Gift Animation */
+.spinning-gift { display: inline-block; margin-left: 5px; font-size: 20px; animation: spinEmoji 4s linear infinite; transform-origin: center; }
+@keyframes spinEmoji { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Minimal Links */
+.minimal-help-links { margin-top: 25px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+.dot-separator { color: #b0bec5; font-size: 10px; }
+.minimal-link { background: none; border: none; font-family: var(--font-ui); font-size: 12px; color: #78909c; font-weight: 500; cursor: pointer; transition: 0.2s; }
+.minimal-link:hover { color: #d81b60; }
+
+.explore-area { margin-top: 40px; z-index: 5; }
+.minimal-explore-btn { text-decoration: none; color: #4a154b; font-weight: 500; font-size: 14px; opacity: 0.7; transition: 0.2s; }
+.minimal-explore-btn:hover { opacity: 1; }
+
+/* Light Burst Animation */
+#light-burst-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.8) 100%); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.8s ease-in; }
+#light-burst-overlay.active { opacity: 1; pointer-events: all; }
+
+/* Modals & Error */
+.master-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(255, 255, 255, 0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(10px); }
+.modal-card { padding: 30px 20px; }
+.close-master-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.5); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; color: #4a154b; display: flex; justify-content: center; align-items: center; }
+.error-text { margin-top: 12px; text-align: center; color: #e53935; font-size: 13px; font-weight: 500;}
+.glass-gift-card.shake { animation: shakeError 0.4s ease-in-out; border-color: rgba(229, 57, 53, 0.3); }
+@keyframes shakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.search-result-area { margin-top: 15px; font-size: 14px; min-height: 20px; }
