@@ -20,10 +20,58 @@
         { file: null, previewUrl: null, caption: "" }
     ];
 
-    // Default Romantic Captions
     const defaultCaptions = ["Sweet Memory", "Cutie Pie 🥰", "Golden Moments", "Precious ❤️", "Unforgettable"];
 
-        // 1. GENERATE BULK UPLOAD UI & SINGLE UPLOAD
+    // 🔴 NAYA: Letter Templates Database (Sourced from Screenshots)
+    const letterTemplates = {
+        "Happy Birthday": {
+            en: "Today is all about you — the smile you bring and the joy you spread.\n\nYou make life brighter just by being in it.\n\nI'm grateful for every moment, every laugh, every memory with you.\n\nMay your day be filled with love, surprises, and everything you deserve.\n\nAnd I promise… this is just the beginning of many beautiful moments together.",
+            hi: "Aaj ka din sirf tumhare naam hai...\n\nTumhari smile meri duniya ko roshan karti hai.\n\nTumhare saath har moment special lagta hai.\n\nMain bas yahi chahta hoon ki tum hamesha khush raho.\n\nAur haan… aaj ka din sirf shuruaat hai aur bhi surprises ke liye ❤️"
+        },
+        "Happy Anniversary": {
+            en: "Another year, another chapter of our beautiful journey.\n\nThrough every moment, you've been my peace and my strength.\n\nI still fall for you a little more every single day.\n\nWhat we have is rare, real, and forever mine to cherish.\n\nHere's to us… and to many more memories yet to come.",
+            hi: "Ek aur saal, aur hamari kahani aur bhi khoobsurat ho gayi.\n\nTum mere liye sirf partner nahi… meri duniya ho.\n\nHar din tumse aur zyada pyaar ho jaata hai.\n\nJo hamare paas hai wo sach mein bohot special hai.\n\nAur main chahta hoon ki yeh safar kabhi khatam na ho ❤️"
+        },
+        "Happy Valentine's Day": {
+            en: "Loving you has been the most beautiful feeling of my life.\n\nYou are not just a part of my world — you are my world.\n\nEvery heartbeat of mine whispers your name.\n\nWith you, even the simplest moments feel magical.\n\nToday and always, I choose you… again and again.",
+            hi: "Tumse pyaar karna meri zindagi ka sabse khoobsurat ehsaas hai.\n\nTum meri life ka wo hissa ho jo sab kuch perfect bana deta hai.\n\nHar heartbeat mein bas tum ho.\n\nTumhare saath sab kuch magical lagta hai.\n\nAur main hamesha tumhe hi choose karunga… har baar ❤️"
+        },
+        "Proposal": {
+            en: "From the moment you came into my life, everything changed.\n\nYou became my reason to smile, my reason to dream.\n\nI don't just want moments with you… I want a lifetime.\n\nSo today, I ask you — will you be mine forever?\n\nBecause my heart already knows… it's always been you.",
+            hi: "Jab se tum meri zindagi mein aaye ho, sab kuch badal gaya.\n\nTum meri khushi ka reason ho, meri har dua ho.\n\nMain sirf moments nahi… poori zindagi tumhare saath jeena chahta hoon.\n\nToh aaj main tumse poochta hoon…\n\nKya tum hamesha ke liye meri banogi? ❤️"
+        }
+    };
+
+    // 🔴 NAYA: Letter Handlers
+    const occasionSelect = document.getElementById('occasion-select');
+    const gfNameInput = document.getElementById('gf-name');
+    const langRadios = document.getElementsByName('letter-lang');
+    const resetBtn = document.getElementById('reset-letter-btn');
+    const letterTextarea = document.getElementById('letter-text');
+    const dynamicGreeting = document.getElementById('dynamic-greeting');
+
+    function updateGreeting() {
+        const name = gfNameInput.value.trim() || "[Name]";
+        dynamicGreeting.innerText = `Hi ${name} ❤️,`;
+    }
+
+    function loadTemplate() {
+        const occasion = occasionSelect.value;
+        let lang = "en";
+        for (const radio of langRadios) { if (radio.checked) lang = radio.value; }
+
+        if (letterTemplates[occasion] && letterTemplates[occasion][lang]) {
+            letterTextarea.value = letterTemplates[occasion][lang];
+        }
+    }
+
+    gfNameInput.addEventListener('input', updateGreeting);
+    occasionSelect.addEventListener('change', loadTemplate);
+    langRadios.forEach(r => r.addEventListener('change', loadTemplate));
+    resetBtn.addEventListener('click', loadTemplate);
+
+
+    // 1. GENERATE BULK UPLOAD UI & SINGLE UPLOAD
     function renderImageGrid() {
         const container = document.getElementById('image-upload-container');
         container.innerHTML = '';
@@ -31,11 +79,9 @@
             const div = document.createElement('div');
             div.className = 'form-polaroid';
 
-            // Check if there's a new file, otherwise check database, otherwise show placeholder
             const imgSrc = imageInputsData[i].previewUrl || state.memoryData?.[`image_${i+1}_url`] || `https://via.placeholder.com/300x300?text=Tap+to+Add+Photo+${i+1}`;
             const capValue = imageInputsData[i].caption || state.memoryData?.[`caption_${i+1}`] || '';
 
-            // 🔴 NAYA: Image ko <label> ke andar rakha taaki click karne par gallery khule
             div.innerHTML = `
                 <label class="polaroid-img-wrapper" for="single-img-${i}" title="Click to replace image">
                     <img id="prev-${i}" src="${imgSrc}" alt="Memory ${i+1}">
@@ -45,19 +91,16 @@
             `;
             container.appendChild(div);
 
-            // 🔴 NAYA: Individual Image File Selection Logic
             const singleInput = div.querySelector(`#single-img-${i}`);
             singleInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     imageInputsData[i].file = file;
                     imageInputsData[i].previewUrl = URL.createObjectURL(file);
-                    // Sirf us ek image ka preview change karo bina poora grid hilaye
                     div.querySelector(`#prev-${i}`).src = imageInputsData[i].previewUrl;
                 }
             });
 
-            // Save caption input state
             const capInput = div.querySelector(`#cap-${i}`);
             capInput.addEventListener('input', (e) => {
                 imageInputsData[i].caption = e.target.value;
@@ -65,28 +108,25 @@
         }
     }
 
-
-    // Handle File Selection (Multiple Files)
     const bulkInput = document.getElementById('bulk-upload');
     if (bulkInput) {
         bulkInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files).slice(0, 5); // Take max 5 files
+            const files = Array.from(e.target.files).slice(0, 5); 
             files.forEach((file, index) => {
                 imageInputsData[index].file = file;
                 imageInputsData[index].previewUrl = URL.createObjectURL(file);
             });
-            renderImageGrid(); // Re-render to show new images
+            renderImageGrid(); 
         });
     }
 
-      // 2. SMART SERIAL NUMBER (Reads from URL/Admin)
+    // 2. SMART SERIAL NUMBER 
     async function setSerialNumber() {
         const prefixEl = document.getElementById('serial-prefix');
-        // Admin ne jo ID link mein bheji hai (state.memoryId), wahi direct prefix ban jayegi
         if (state.memoryId) {
             prefixEl.innerText = `${state.memoryId}-`;
         } else {
-            prefixEl.innerText = "GX-00-"; // Fallback
+            prefixEl.innerText = "GX-00-"; 
         }
     }
 
@@ -97,7 +137,18 @@
 
         document.getElementById('occasion-select').value = md.occasion || 'Happy Birthday';
         document.getElementById('gf-name').value = md.girlfriend_name || '';
-        document.getElementById('letter-text').value = md.message_text || '';
+
+        // Setup Smart Name & Template Extractor
+        updateGreeting();
+        let msg = md.message_text || '';
+        const name = md.girlfriend_name || '';
+        const prefixCheck = `Hi ${name} ❤️,\n\n`;
+
+        // Remove greeting if it was saved together previously
+        if (msg.startsWith(prefixCheck)) {
+            msg = msg.substring(prefixCheck.length).trim();
+        }
+        document.getElementById('letter-text').value = msg;
 
         for(let i=0; i<5; i++) {
             imageInputsData[i].caption = md[`caption_${i+1}`] || '';
@@ -105,7 +156,6 @@
         document.getElementById('lock-gift-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update & Save Changes';
     }
 
-    // Upload & Compress Helpers
     async function compressImage(file) {
         const options = { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true, initialQuality: 0.5 };
         try { return await imageCompression(file, options); } catch (e) { return file; }
@@ -120,27 +170,27 @@
         const data = await response.json(); return data.url;
     }
 
-        // --- 🔴 NAYA: PREVIEW GIFT LOGIC (CORRECTED) ---
+    // --- PREVIEW GIFT LOGIC ---
     const previewBtn = document.getElementById('preview-gift-btn');
     if (previewBtn) {
         previewBtn.addEventListener('click', () => {
-            // 1. Check if basic details are filled
             const gfName = document.getElementById('gf-name')?.value;
             const occasion = document.getElementById('occasion-select')?.value;
-            const messageText = document.getElementById('letter-text')?.value;
+            const messageBody = document.getElementById('letter-text')?.value;
 
-            if (!gfName || !messageText) {
+            if (!gfName || !messageBody) {
                 alert("Please fill Basic Details and Love Letter before previewing!");
                 return;
             }
 
-            // 2. Gather data temporarily in window object
+            // Combine Dynamic Greeting + Letter Body for Preview
+            const finalPreviewMessage = document.getElementById('dynamic-greeting').innerText + "\n\n" + messageBody;
+
             window.previewGiftData = {
                 occasion: occasion,
                 girlfriend_name: gfName,
-                message_text: messageText,
+                message_text: finalPreviewMessage, // Combined message passes perfectly to viewer
 
-                // Gather images and captions (IDs are prev-0 to prev-4 in bulk upload)
                 image_1_url: document.getElementById('prev-0')?.src || "",
                 caption_1: document.getElementById('cap-0')?.value || "Sweet Memory",
                 image_2_url: document.getElementById('prev-1')?.src || "",
@@ -153,13 +203,10 @@
                 caption_5: document.getElementById('cap-4')?.value || "Unforgettable",
             };
 
-            // 3. Open Viewer in a new tab with preview mode
             const baseUrl = window.location.origin + window.location.pathname;
             window.open(`${baseUrl}?mode=preview`, '_blank');
         });
     }
-
-
 
     // 4. SUBMIT FORM
     if (memoryForm) {
@@ -191,22 +238,22 @@
                     }
                 }
 
-                // Construct full passcode
                 const prefix = document.getElementById('serial-prefix').innerText;
                 const userPass = document.getElementById('passcode-input').value;
                 const fullPasscode = prefix + userPass; 
 
-                              const updatedData = {
+                // Combine Greeting + Text for final database save
+                const finalMessageText = document.getElementById('dynamic-greeting').innerText + "\n\n" + document.getElementById('letter-text').value;
+
+                const updatedData = {
                     status: "locked",
                     locked_at: state.memoryData?.locked_at || new Date().toISOString(),
                     occasion: document.getElementById('occasion-select').value,
                     passcode: fullPasscode,
                     girlfriend_name: document.getElementById('gf-name').value,
-                    message_text: document.getElementById('letter-text').value,
+                    message_text: finalMessageText, // Combined
                 };
 
-
-                // Clear out old deleted fields from Firebase
                 updatedData.music_id = null;
                 updatedData.open_when_happy = null;
                 updatedData.open_when_sad = null;
@@ -216,11 +263,8 @@
 
                 for(let i=0; i<5; i++) {
                     updatedData[`image_${i+1}_url`] = finalImageUrls[i];
-
-                    // NAYA: Default Caption Logic
                     let finalCaption = document.getElementById(`cap-${i}`).value.trim();
-                    if (!finalCaption) finalCaption = defaultCaptions[i]; // Blank hua toh auto-fill
-
+                    if (!finalCaption) finalCaption = defaultCaptions[i]; 
                     updatedData[`caption_${i+1}`] = finalCaption;
                 }
 
@@ -246,8 +290,12 @@
 
     // Initialize 
     renderImageGrid();
-    await setSerialNumber(); // Load Serial First
+    await setSerialNumber(); 
+
+    // Auto load template only if it's a new form. If edit, populateFormForEdit will handle it.
     if (state.mode === 'admin_edit') {
         populateFormForEdit();
+    } else {
+        loadTemplate();
     }
 })();

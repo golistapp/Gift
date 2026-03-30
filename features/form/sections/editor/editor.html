@@ -23,9 +23,7 @@
                 <input type="text" id="gf-name" class="elegant-input" placeholder="e.g. Ananya" required>
             </div>
 
-      
-
-                       <div class="input-wrapper">
+            <div class="input-wrapper">
                 <label>Set Gift Person Date of Birth (Password):</label>
                 <div class="passcode-composite">
                     <span id="serial-prefix" class="prefix-box"><i class="fa-solid fa-spinner fa-spin"></i></span>
@@ -37,7 +35,23 @@
 
         <div class="editor-section">
             <h2 class="step-title">2. The Main Love Letter</h2>
-            <textarea id="letter-text" class="elegant-input" rows="6" placeholder="My Dearest..." required></textarea>
+            
+            <div class="letter-toolbar">
+                <div class="lang-toggle">
+                    <input type="radio" id="lang-en" name="letter-lang" value="en" checked>
+                    <label for="lang-en">English</label>
+                    <input type="radio" id="lang-hi" name="letter-lang" value="hi">
+                    <label for="lang-hi">Hinglish</label>
+                </div>
+                <button type="button" id="reset-letter-btn" class="btn-reset">
+                    <i class="fa-solid fa-rotate-right"></i> Reset
+                </button>
+            </div>
+
+            <div class="letter-container">
+                <div class="letter-greeting" id="dynamic-greeting">Hi [Name] ❤️,</div>
+                <textarea id="letter-text" class="letter-textarea" rows="10" placeholder="Write your letter here..." required></textarea>
+            </div>
         </div>
 
         <div class="editor-section">
@@ -53,12 +67,6 @@
                 </div>
         </div>
 
-        <div class="editor-section">
-            <h2 class="step-title">5. Upload 5 Memories</h2>
-            <div class="polaroid-grid" id="image-upload-container">
-                </div>
-        </div>
-
         <button type="button" id="preview-gift-btn" class="btn-pink" style="width: 100%; padding: 15px; font-size: 18px; margin-bottom: 15px; background: #f59e0b;">
             <i class="fa-solid fa-eye"></i> Preview Gift
         </button>
@@ -68,6 +76,3 @@
         </button>
     </form>
 </div>
-
-
-     
