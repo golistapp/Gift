@@ -86,31 +86,31 @@
         }
     };
 
-    // 🚀 INITIAL BOOT & LOGIC
+        // 🚀 INITIAL BOOT
     try {
+        const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
         
-        // 🔴 NAYA: Preview Logic - Agar preview mode hai toh form se data lo
-        if (mode === 'preview') {
-            if (window.opener && window.opener.previewGiftData) {
-                // Form wali temporary memory ko Viewer mein set kar do
-                window.viewerState.memoryData = window.opener.previewGiftData;
-                window.viewerState.memoryData.status = "locked"; // Fake lock taaki aage ka code chal sake
-            } else {
-                document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Preview Data Missing! 💔<br><small style="font-size: 14px; color: #666;">Please click "Preview Gift" button from the form page.</small></h2>';
-                return;
-            }
-        } else {
-            // Normal User/Admin Preview: Firebase se data uthao
-            const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
-            if (!response.ok) throw new Error("Firebase returned " + response.status);
-            window.viewerState.memoryData = await response.json();
+        if (!response.ok) throw new Error("Firebase returned " + response.status);
+        
+        window.viewerState.memoryData = await response.json();
+
+        // 🔴 NAYA LOGIC: Security Check (Enable/Disable)
+        // Agar disabled hai aur admin preview nahi kar raha hai, toh block kar do
+        if (window.viewerState.memoryData && window.viewerState.memoryData.is_enabled === false && mode !== 'admin_preview') {
+            document.body.innerHTML = `
+                <div style="text-align:center; margin-top:25vh; padding: 20px; font-family: var(--font-ui);">
+                    <i class="fa-solid fa-eye-slash" style="font-size: 60px; color: #94a3b8; margin-bottom: 20px;"></i>
+                    <h2 style="color:#334155; font-size: 24px; margin-bottom: 10px;">Access Denied</h2>
+                    <p style="color:#64748b; font-size: 14px;">This surprise is currently hidden or disabled by the sender.</p>
+                </div>`;
+            return; // Code yahin ruk jayega, Vault load nahi hoga
         }
 
-        // Agar data nahi hai ya gift lock nahi hua hai
         if (!window.viewerState.memoryData || window.viewerState.memoryData.status !== "locked") {
             document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise is not ready yet! 💔</h2>';
             return;
         }
+
 
         // Particle System chalu karo
         startBackgroundParticles();
