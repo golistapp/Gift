@@ -23,31 +23,48 @@
     // Default Romantic Captions
     const defaultCaptions = ["Sweet Memory", "Cutie Pie 🥰", "Golden Moments", "Precious ❤️", "Unforgettable"];
 
-    // 1. GENERATE BULK UPLOAD UI
+        // 1. GENERATE BULK UPLOAD UI & SINGLE UPLOAD
     function renderImageGrid() {
         const container = document.getElementById('image-upload-container');
         container.innerHTML = '';
         for (let i = 0; i < 5; i++) {
             const div = document.createElement('div');
             div.className = 'form-polaroid';
-            
+
             // Check if there's a new file, otherwise check database, otherwise show placeholder
-            const imgSrc = imageInputsData[i].previewUrl || state.memoryData?.[`image_${i+1}_url`] || `https://via.placeholder.com/300x300?text=Photo+${i+1}`;
+            const imgSrc = imageInputsData[i].previewUrl || state.memoryData?.[`image_${i+1}_url`] || `https://via.placeholder.com/300x300?text=Tap+to+Add+Photo+${i+1}`;
             const capValue = imageInputsData[i].caption || state.memoryData?.[`caption_${i+1}`] || '';
-            
+
+            // 🔴 NAYA: Image ko <label> ke andar rakha taaki click karne par gallery khule
             div.innerHTML = `
-                <img id="prev-${i}" src="${imgSrc}" alt="Memory ${i+1}">
+                <label class="polaroid-img-wrapper" for="single-img-${i}" title="Click to replace image">
+                    <img id="prev-${i}" src="${imgSrc}" alt="Memory ${i+1}">
+                </label>
+                <input type="file" id="single-img-${i}" accept="image/*" hidden>
                 <input type="text" id="cap-${i}" class="polaroid-caption-input" placeholder="Caption for Photo ${i+1}..." value="${capValue}">
             `;
             container.appendChild(div);
 
-            // Save caption input state so it isn't lost when we re-render
+            // 🔴 NAYA: Individual Image File Selection Logic
+            const singleInput = div.querySelector(`#single-img-${i}`);
+            singleInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    imageInputsData[i].file = file;
+                    imageInputsData[i].previewUrl = URL.createObjectURL(file);
+                    // Sirf us ek image ka preview change karo bina poora grid hilaye
+                    div.querySelector(`#prev-${i}`).src = imageInputsData[i].previewUrl;
+                }
+            });
+
+            // Save caption input state
             const capInput = div.querySelector(`#cap-${i}`);
             capInput.addEventListener('input', (e) => {
                 imageInputsData[i].caption = e.target.value;
             });
         }
     }
+
 
     // Handle File Selection (Multiple Files)
     const bulkInput = document.getElementById('bulk-upload');
@@ -77,11 +94,11 @@
     function populateFormForEdit() {
         if(!state.memoryData) return;
         const md = state.memoryData;
-        
+
         document.getElementById('occasion-select').value = md.occasion || 'Happy Birthday';
         document.getElementById('gf-name').value = md.girlfriend_name || '';
         document.getElementById('letter-text').value = md.message_text || '';
-        
+
         for(let i=0; i<5; i++) {
             imageInputsData[i].caption = md[`caption_${i+1}`] || '';
         }
@@ -122,7 +139,7 @@
                 occasion: occasion,
                 girlfriend_name: gfName,
                 message_text: messageText,
-                
+
                 // Gather images and captions (IDs are prev-0 to prev-4 in bulk upload)
                 image_1_url: document.getElementById('prev-0')?.src || "",
                 caption_1: document.getElementById('cap-0')?.value || "Sweet Memory",
@@ -148,7 +165,7 @@
     if (memoryForm) {
         memoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             let missingImage = false;
             for(let i=0; i<5; i++) {
                 const hasNewFile = imageInputsData[i].file !== null;
@@ -199,11 +216,11 @@
 
                 for(let i=0; i<5; i++) {
                     updatedData[`image_${i+1}_url`] = finalImageUrls[i];
-                    
+
                     // NAYA: Default Caption Logic
                     let finalCaption = document.getElementById(`cap-${i}`).value.trim();
                     if (!finalCaption) finalCaption = defaultCaptions[i]; // Blank hua toh auto-fill
-                    
+
                     updatedData[`caption_${i+1}`] = finalCaption;
                 }
 
