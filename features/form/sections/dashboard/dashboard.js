@@ -86,6 +86,9 @@
             state.userPasscode = enteredPass;
             lockScreen.classList.add('hidden');
             dashMain.classList.remove('hidden');
+            // NAYA: Header mein Gift Person ka naam set karna
+            document.getElementById('chat-person-name').innerText = state.memoryData.girlfriend_name || "My Love ❤️";
+
             updateBFStatus('online'); updateBFReadReceipt(); 
             renderDashboardUI(); startRealtimeDashboard(); 
         } else {
