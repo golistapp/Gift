@@ -1,11 +1,11 @@
 (function() {
     let enteredPasscode = "";
     const MAX_LENGTH = 6;
-    
+
     const vaultKeypad = document.getElementById('vault-keypad');
     const unlockBtn = document.getElementById('unlock-btn');
     const dots = document.querySelectorAll('#dots-container .dot');
-    
+
     // 🔴 PURANA ORIGINAL SOUND: HTML wale audio tag ko wapas connect kar diya
     const keySound = document.getElementById('keypad-sound');
 
@@ -23,13 +23,13 @@
         const heart = document.createElement('div');
         heart.innerHTML = '❤️';
         heart.className = 'floating-heart';
-        
+
         const rect = buttonEl.getBoundingClientRect();
         heart.style.left = (rect.left + rect.width / 2 - 14) + 'px'; 
         heart.style.top = (rect.top - 10) + 'px'; 
-        
+
         document.body.appendChild(heart);
-        
+
         setTimeout(() => heart.remove(), 800);
     }
 
@@ -80,9 +80,13 @@
             const state = window.viewerState; 
             if (!state || !state.memoryData) return;
 
-            if (enteredPasscode === state.memoryData.passcode) {
+            // NAYA LOGIC: Database ke passcode ko fetch karo
+            const storedPass = state.memoryData.passcode || "";
+
+            // Check karo ki enteredPasscode storedPass ke barabar hai ya uske last mein aata hai
+            if (storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode))) {
                 state.userPasscode = enteredPasscode; 
-                
+
                 try {
                     fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, { 
                         method: 'PATCH', 
@@ -92,14 +96,15 @@
                 } catch(e) {}
 
                 document.getElementById('vault-mount').classList.add('hidden');
-                
+
                 await window.loadViewerComponent('surprise', 'surprise-mount');
                 await window.loadViewerComponent('layout', 'footer-mount');
-                
+
                 document.getElementById('surprise-mount').classList.remove('hidden');
                 document.getElementById('footer-mount').classList.remove('hidden');
 
             } else {
+                // Wrong Passcode Logic
                 if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
                 dots.forEach(dot => {
                     dot.style.background = 'transparent';
@@ -114,3 +119,5 @@
         });
     }
 })();
+
+
