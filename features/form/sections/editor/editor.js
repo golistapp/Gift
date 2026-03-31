@@ -59,7 +59,7 @@
         const occasion = occasionSelect.value;
         let lang = "en";
         for (const radio of langRadios) { if (radio.checked) lang = radio.value; }
-
+        
         if (letterTemplates[occasion] && letterTemplates[occasion][lang]) {
             letterTextarea.value = letterTemplates[occasion][lang];
         }
@@ -78,10 +78,10 @@
         for (let i = 0; i < 5; i++) {
             const div = document.createElement('div');
             div.className = 'form-polaroid';
-
+            
             const imgSrc = imageInputsData[i].previewUrl || state.memoryData?.[`image_${i+1}_url`] || `https://via.placeholder.com/300x300?text=Tap+to+Add+Photo+${i+1}`;
             const capValue = imageInputsData[i].caption || state.memoryData?.[`caption_${i+1}`] || '';
-
+            
             div.innerHTML = `
                 <label class="polaroid-img-wrapper" for="single-img-${i}" title="Click to replace image">
                     <img id="prev-${i}" src="${imgSrc}" alt="Memory ${i+1}">
@@ -134,22 +134,22 @@
     function populateFormForEdit() {
         if(!state.memoryData) return;
         const md = state.memoryData;
-
+        
         document.getElementById('occasion-select').value = md.occasion || 'Happy Birthday';
         document.getElementById('gf-name').value = md.girlfriend_name || '';
-
+        
         // Setup Smart Name & Template Extractor
         updateGreeting();
         let msg = md.message_text || '';
         const name = md.girlfriend_name || '';
         const prefixCheck = `Hi ${name} ❤️,\n\n`;
-
+        
         // Remove greeting if it was saved together previously
         if (msg.startsWith(prefixCheck)) {
             msg = msg.substring(prefixCheck.length).trim();
         }
         document.getElementById('letter-text').value = msg;
-
+        
         for(let i=0; i<5; i++) {
             imageInputsData[i].caption = md[`caption_${i+1}`] || '';
         }
@@ -190,7 +190,7 @@
                 occasion: occasion,
                 girlfriend_name: gfName,
                 message_text: finalPreviewMessage, // Combined message passes perfectly to viewer
-
+                
                 image_1_url: document.getElementById('prev-0')?.src || "",
                 caption_1: document.getElementById('cap-0')?.value || "Sweet Memory",
                 image_2_url: document.getElementById('prev-1')?.src || "",
@@ -212,7 +212,7 @@
     if (memoryForm) {
         memoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
             let missingImage = false;
             for(let i=0; i<5; i++) {
                 const hasNewFile = imageInputsData[i].file !== null;
@@ -291,7 +291,7 @@
     // Initialize 
     renderImageGrid();
     await setSerialNumber(); 
-
+    
     // Auto load template only if it's a new form. If edit, populateFormForEdit will handle it.
     if (state.mode === 'admin_edit') {
         populateFormForEdit();

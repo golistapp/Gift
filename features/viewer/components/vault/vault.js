@@ -74,35 +74,38 @@
         });
     }
 
-    // Unlock Button Event
+    // 🔥 NAYA LOGIC: Gift Kholne Ka Common Function
+    async function executeUnlockSequence(state, passcodeToSave) {
+        state.userPasscode = passcodeToSave; 
+
+        try {
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, { 
+                method: 'PATCH', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
+            });
+        } catch(e) {}
+
+        // Vault chhupao, Surprise dikhao
+        document.getElementById('vault-mount').classList.add('hidden');
+
+        await window.loadViewerComponent('surprise', 'surprise-mount');
+        await window.loadViewerComponent('layout', 'footer-mount');
+
+        document.getElementById('surprise-mount').classList.remove('hidden');
+        document.getElementById('footer-mount').classList.remove('hidden');
+    }
+
+    // Unlock Button Event (Manual Entry ke liye)
     if (unlockBtn) {
         unlockBtn.addEventListener('click', async () => {
             const state = window.viewerState; 
             if (!state || !state.memoryData) return;
 
-            // NAYA LOGIC: Database ke passcode ko fetch karo
             const storedPass = state.memoryData.passcode || "";
 
-            // Check karo ki enteredPasscode storedPass ke barabar hai ya uske last mein aata hai
             if (storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode))) {
-                state.userPasscode = enteredPasscode; 
-
-                try {
-                    fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, { 
-                        method: 'PATCH', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
-                    });
-                } catch(e) {}
-
-                document.getElementById('vault-mount').classList.add('hidden');
-
-                await window.loadViewerComponent('surprise', 'surprise-mount');
-                await window.loadViewerComponent('layout', 'footer-mount');
-
-                document.getElementById('surprise-mount').classList.remove('hidden');
-                document.getElementById('footer-mount').classList.remove('hidden');
-
+                await executeUnlockSequence(state, enteredPasscode);
             } else {
                 // Wrong Passcode Logic
                 if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
@@ -118,6 +121,23 @@
             }
         });
     }
+
+    // 🔥 NAYA LOGIC: Auto-Unlock Check (Master Portal Bypass)
+    setTimeout(() => {
+        const state = window.viewerState;
+        if (state && state.memoryId) {
+            // Master portal se aane wala "VIP Pass" check karo
+            const authPass = sessionStorage.getItem(`auth_${state.memoryId}`);
+            
+            if (authPass === "true") {
+                // Security ke liye pass use karne ke baad delete kar do
+                sessionStorage.removeItem(`auth_${state.memoryId}`);
+                
+                // Actual passcode database se nikal kar direct unlock kar do
+                const actualPass = state.memoryData.passcode || "";
+                executeUnlockSequence(state, actualPass);
+            }
+        }
+    }, 100);
+
 })();
-
-

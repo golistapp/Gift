@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const appRoot = document.getElementById('app-root');
     const loader = document.getElementById('app-loader');
-
+    
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
     const memoryId = urlParams.get('id');

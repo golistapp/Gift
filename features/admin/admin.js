@@ -155,63 +155,66 @@
         }
     }
 
-    if(generateForm) {
-        generateForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const cName = document.getElementById('customer-name').value;
-            const cMobile = document.getElementById('customer-mobile').value;
-            
-            generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
-            generateBtn.disabled = true;
-
-            try {
-                const memoryId = await getNextMemoryId();
-                const initialData = { 
-                    customer_name: cName, 
-                    mobile_number: cMobile, 
-                    status: "empty", 
-                    is_enabled: true, // Enable/Disable toggle functionality
-                    created_at: new Date().toISOString() 
-                };
-
-                await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(initialData)
-                });
-
-                const formUrl = `${baseUrl}?mode=form&id=${memoryId}`;
-                const viewUrl = `${baseUrl}?id=${memoryId}`; 
-
-                document.getElementById('display-id').innerText = memoryId;
-                document.getElementById('form-link').value = formUrl;
-                document.getElementById('view-link').value = viewUrl;
-
-                // WhatsApp Share Button Logic
-                const waBtn = document.getElementById('wa-share-btn');
-                if (waBtn) {
-                    waBtn.onclick = () => {
-                        const msg = `Hello ${cName}! ❤️\n\nAapka Memory Gift create ho gaya hai. Kripya niche diye link par apni memories aur details fill karein:\n\n🔗 Link: ${formUrl}\n\nThank you!`;
-                        window.open(`https://wa.me/91${cMobile}?text=${encodeURIComponent(msg)}`, '_blank');
-                    };
-                }
-
-                const qrcodeContainer = document.getElementById('qrcode-container');
-                qrcodeContainer.innerHTML = ''; 
-                setTimeout(() => {
-                    new QRCode(qrcodeContainer, { text: viewUrl, width: 250, height: 250, colorDark : "#cc0033", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-                }, 200);
-
-                document.getElementById('result-section').classList.remove('hidden');
+           // NAYA AUR COMPLETE SUBMIT EVENT (Crash Fix)
+        if (generateForm) {
+            generateForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 
-                if(window.initAdminoverview) window.initAdminoverview(); 
+                // 1. Data Collect Karein
+                const cName = document.getElementById('customer-name').value;
+                const cMobile = document.getElementById('customer-mobile').value;
+                
+                // Email field agar nahi mila toh app crash nahi hoga (Safe Check)
+                const emailInput = document.getElementById('customer-email');
+                const cEmail = emailInput ? emailInput.value : "giftoraxofficial@gmail.com"; 
+                
+                // 2. Button Loading State
+                generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+                generateBtn.disabled = true;
 
-            } catch (error) {
-                alert("Error generating QR.");
-            } finally {
-                generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
-                generateBtn.disabled = false;
-            }
-        });
-    }
+                try {
+                    // 3. Database mein bhejein
+                    const memoryId = await getNextMemoryId();
+                    const initialData = { 
+                        customer_name: cName, 
+                        mobile_number: cMobile, 
+                        customer_email: cEmail, // Email database mein jayega
+                        status: "empty", 
+                        is_enabled: true, 
+                        created_at: new Date().toISOString() 
+                    };
+
+                    await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(initialData)
+                    });
+
+                    // 4. Success ke baad reset
+                    alert(`✅ Success! New Order ID generated: ${memoryId}`);
+                    generateForm.reset();
+                    
+                    // Modal close karein (agar id match hoti hai)
+                    const modal = document.getElementById('new-order-modal');
+                    if(modal) modal.classList.add('hidden');
+                    
+                    // Dashboard list ko turant refresh karein
+                    if(typeof loadDashboardData === 'function') {
+                        loadDashboardData();
+                    } else {
+                        window.location.reload(); // Fallback agar function nahi mila
+                    }
+
+                } catch (err) {
+                    console.error("Firebase Save Error: ", err);
+                    alert("❌ Kuch gadbad hui! Please internet check karein.");
+                } finally {
+                    // 5. Button ko wapas normal karein
+                    generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
+                    generateBtn.disabled = false;
+                }
+            });
+        }
 
     // Custom Premium QR Downloader Logic
     document.getElementById('download-qr-btn').addEventListener('click', () => {

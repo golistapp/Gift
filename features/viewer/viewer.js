@@ -30,31 +30,31 @@
         if (!bgContainer) return;
 
         const symbols = ['❤️', '💖', '✨','❣️', '💕'];
-
+        
         setInterval(() => {
             if (document.hidden) return; // Tab inactive ho toh performance bachayega
-
+            
             const particle = document.createElement('div');
             particle.className = 'bg-heart';
             particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-
+            
             // Random horizontal position (0 to 100vw)
             particle.style.left = Math.random() * 100 + 'vw';
-
+            
             // Random duration (4 seconds se 9 seconds ke beech)
             const duration = Math.random() * 5 + 4;
             particle.style.animationDuration = duration + 's';
-
+            
             // Random size 
             particle.style.fontSize = (Math.random() * 15 + 12) + 'px';
-
+            
             bgContainer.appendChild(particle);
-
+            
             // Animation khatam hone ke baad memory se hatana zaruri hai
             setTimeout(() => {
                 if (particle.parentNode) particle.remove();
             }, duration * 1000);
-
+            
         }, 600); // Har 600ms mein ek naya symbol nikalega
     }
 
@@ -89,9 +89,9 @@
         // 🚀 INITIAL BOOT
     try {
         const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
-
+        
         if (!response.ok) throw new Error("Firebase returned " + response.status);
-
+        
         window.viewerState.memoryData = await response.json();
 
         // 🔴 NAYA LOGIC: Security Check (Enable/Disable)
@@ -132,7 +132,7 @@
         if (mode === 'admin_preview' || mode === 'preview' || isMasterUnlocked) {
             await window.loadViewerComponent('surprise', 'surprise-mount');
             await window.loadViewerComponent('layout', 'footer-mount'); 
-
+            
             document.getElementById('surprise-mount').classList.remove('hidden');
             document.getElementById('footer-mount').classList.remove('hidden');
             const vaultMount = document.getElementById('vault-mount');
