@@ -1,0 +1,58 @@
+<div class="dashboard-wrapper fade-in" id="dash-wrapper">
+    <div id="dash-lock-screen" class="lock-screen-box">
+        <i class="fa-solid fa-lock lock-icon"></i>
+        <h2 class="dash-title" style="margin-bottom: 5px;">Dashboard Locked</h2>
+        <p class="lock-desc">Enter your 6-digit passcode.</p>
+        <div class="input-wrapper" style="max-width: 250px; margin: 0 auto;">
+            <input type="password" id="check-passcode" class="elegant-input text-center tracking-widest" maxlength="6" placeholder="******">
+        </div>
+        <button id="verify-passcode-btn" class="btn-pink mt-20" style="padding: 12px 30px; font-size: 16px;">Unlock</button>
+        <p id="passcode-error" class="error-text hidden mt-10">Incorrect Passcode!</p>
+    </div>
+
+    <div id="dash-main-screen" class="hidden locked-dashboard">
+        <header class="chat-app-header">
+            <div class="header-left">
+                <div class="avatar"><i class="fa-solid fa-heart"></i></div>
+                <div class="header-info">
+                    <h2 id="chat-person-name">Secret Chat Room</h2>
+
+                    <p id="live-status" class="header-status">Connecting...</p>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="meta-time"><i class="fa-solid fa-envelope-open-text"></i> <span id="track-scanned">Wait...</span></div>
+                <div class="meta-time"><i class="fa-solid fa-ring"></i> <span id="track-proposal">Wait...</span></div>
+            </div>
+        </header>
+
+        <div id="scroll-arrows" class="scroll-arrows hidden">
+            <button id="scroll-top-btn"><i class="fa-solid fa-angle-up"></i></button>
+            <button id="scroll-bottom-btn"><i class="fa-solid fa-angle-down"></i></button>
+        </div>
+
+        <div id="bf-chat-area" class="chat-area whatsapp-bg"></div>
+             
+        <div class="chat-input-wrapper">
+            <div id="bf-img-popup" class="img-popup hidden">
+                <div class="img-popup-header">Send a Memory <i class="fa-solid fa-xmark" id="bf-close-popup" style="cursor:pointer; padding:5px; font-size:16px;"></i></div>
+                <div class="img-grid" id="bf-img-grid"></div>
+            </div>
+
+            <div id="reply-preview-box" class="reply-preview-box hidden">
+                <div class="reply-content">
+                    <span id="reply-text-preview"></span>
+                </div>
+                <i class="fa-solid fa-xmark cancel-reply" id="cancel-reply-btn"></i>
+            </div>
+
+            <div class="chat-input-inner">
+                <button id="bf-gallery-btn" class="gallery-btn" disabled><i class="fa-regular fa-image"></i></button>
+                <textarea id="bf-chat-input" placeholder="Type a message..." disabled rows="1"></textarea>
+                <button id="bf-send-btn" class="send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <p id="bf-msg-count" class="msg-count">🔒 End-to-End Encrypted | Msg: 0/100</p>
+        </div>
+    </div>
+</div>

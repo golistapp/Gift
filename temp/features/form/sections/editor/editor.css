@@ -1,0 +1,38 @@
+/* Editor Section Styles */
+.editor-header { text-align: center; margin-bottom: 30px; }
+.editor-header h1 { font-family: var(--font-heading); font-size: 42px; color: #D81B60; margin-bottom: 5px;}
+.editor-header p { color: #666; font-size: 14px; }
+.editor-section { background: #ffffff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(216, 27, 96, 0.05); margin-bottom: 25px; }
+.step-title { font-size: 18px; color: #D81B60; margin-bottom: 15px; border-bottom: 1px dashed #fce4ec; padding-bottom: 10px; }
+
+/* Composite Passcode Input */
+.passcode-composite { display: flex; align-items: stretch; height: 50px; }
+.prefix-box { background: #f0f0f0; border: 2px solid #fce4ec; border-right: none; border-radius: 10px 0 0 10px; padding: 0 15px; font-family: var(--font-ui); font-size: 16px; color: #D81B60; font-weight: bold; display: flex; align-items: center; justify-content: center; white-space: nowrap; flex-shrink: 0; }
+.passcode-composite .elegant-input { border-radius: 0 10px 10px 0; border-left: none; height: 100%; margin: 0; flex-grow: 1; min-width: 0; }
+
+/* 🔴 NAYA: Letter Section Styles */
+.letter-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.lang-toggle { display: flex; background: #fce4ec; border-radius: 25px; overflow: hidden; border: 1px solid #fbcfe8; }
+.lang-toggle input { display: none; }
+.lang-toggle label { padding: 8px 18px; font-size: 12px; font-weight: 600; color: #D81B60; cursor: pointer; transition: 0.3s; margin: 0; }
+.lang-toggle input:checked + label { background: #D81B60; color: white; }
+
+.btn-reset { background: transparent; border: 1px solid #D81B60; color: #D81B60; border-radius: 20px; padding: 6px 15px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 5px;}
+.btn-reset:hover { background: #fce4ec; }
+
+.letter-container { border: 2px solid #fce4ec; border-radius: 12px; background: #fffafb; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+.letter-container:focus-within { border-color: #D81B60; box-shadow: 0 0 0 3px rgba(216, 27, 96, 0.1); }
+.letter-greeting { padding: 18px 18px 5px 18px; font-family: var(--font-ui); font-size: 15px; font-weight: 600; color: #333; pointer-events: none; }
+.letter-textarea { width: 100%; border: none; background: transparent; padding: 5px 18px 18px 18px; font-size: 14px; outline: none; font-family: var(--font-ui); resize: vertical; line-height: 1.8; color: #444; }
+
+/* Single Image Upload Hover Effect */
+.polaroid-img-wrapper { position: relative; cursor: pointer; display: block; }
+.polaroid-img-wrapper::after { content: '\f030'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: white; background: rgba(216, 27, 96, 0.7); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+.polaroid-img-wrapper:hover::after { opacity: 1; }
+
+/* Polaroids Upload Grid */
+.polaroid-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; align-items: flex-start; }
+.form-polaroid { background: white; padding: 10px 10px 15px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 250px; border-radius: 4px; transition: 0.3s; position: relative; }
+.form-polaroid:hover { box-shadow: 0 8px 25px rgba(216, 27, 96, 0.2); }
+.form-polaroid img { width: 100%; height: 250px; object-fit: cover; border-radius: 2px; border: 1px solid #fce4ec; }
+.polaroid-caption-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; padding: 8px; margin-top: 10px; text-align: center; outline: none; font-family: var(--font-heading); font-size: 18px; color: #D81B60;}
