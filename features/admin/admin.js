@@ -129,7 +129,8 @@
 
     async function getNextMemoryId() {
         try {
-            const res = await fetch(`${firebaseConfig.secureApiURL}/memories.json`);
+            // 🔴 NAYA FIX: ab explicit taur par window.firebaseConfig ka use ho raha hai
+            const res = await fetch(`${window.firebaseConfig.secureApiURL}/memories.json`);
             if (!res.ok) {
                 const errText = await res.text();
                 throw new Error(`Server returned ${res.status}: ${errText}`);
@@ -175,13 +176,13 @@
                     created_at: new Date().toISOString() 
                 };
 
-                const res = await fetch(`${firebaseConfig.secureApiURL}/memories/${memoryId}.json`, {
+                // 🔴 NAYA FIX: ab explicit taur par window.firebaseConfig ka use ho raha hai
+                const res = await fetch(`${window.firebaseConfig.secureApiURL}/memories/${memoryId}.json`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(initialData)
                 });
 
-                // 🔴 SMART DEBUGGER: अगर Vercel फेल होता है, तो असली एरर दिखाएगा!
                 if (!res.ok) {
                     const errText = await res.text();
                     throw new Error(`Server Error (${res.status}): ${errText}`);
@@ -201,7 +202,6 @@
 
             } catch (err) {
                 console.error("Firebase Save Error: ", err);
-                // 🔴 स्क्रीन पर साफ़-साफ़ एरर दिखाएगा
                 alert("❌ VERCEL ERROR: \n\n" + err.message);
             } finally {
                 generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
