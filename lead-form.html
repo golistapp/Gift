@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Surprise - GiftoraX</title>
+    <link rel="stylesheet" href="landing-assets/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .form-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+        .lead-card {
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success-message {
+            display: none;
+            background: rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            color: #2ed573;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 1.05rem;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script src="api/firebase.config.js"></script>
+</head>
+<body class="theme-premium-dark">
+
+    <div class="form-container">
+        <div class="hero__background-effects" aria-hidden="true" style="top: 50%;"></div>
+
+        <div class="base-card lead-card">
+            <h2 class="section-heading" style="font-size: 2rem;">Let's Get Started ❤️</h2>
+            <p class="section-subtext" style="margin-bottom: 30px;">Enter your details to create a magical surprise.</p>
+
+            <form id="surprise-lead-form">
+                <div class="form-group">
+                    <input type="text" id="user-name" class="form-input" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="user-mobile" class="form-input" placeholder="Mobile Number" pattern="[0-9]{10}" title="Enter 10 digit mobile number" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="user-email" class="form-input" placeholder="Email Address" required>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--massive" style="width: 100%; margin-top: 10px;" id="submit-btn">
+                    Submit Details
+                </button>
+            </form>
+
+            <div id="success-msg" class="success-message">
+                <i class="fa-solid fa-circle-check"></i> 
+                We will contact you within 24 hours.<br>
+                <strong>GiftoraX Team</strong><br>
+                Thank you for visiting!
+            </div>
+            
+            <a href="index.html" style="display: inline-block; margin-top: 24px; color: var(--text-muted); font-size: 0.9rem; text-decoration: underline;">&larr; Back to Home</a>
+        </div>
+    </div>
+
+    <script src="landing-assets/lead-form.js"></script>
+</body>
+</html>
