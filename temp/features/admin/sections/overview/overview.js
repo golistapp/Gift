@@ -1,7 +1,7 @@
 // Function ko global window mein attach kiya hai taaki naya order banne par refresh ho sake
 window.initAdminoverview = async function() {
     try {
-        const response = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+        const response = await fetch(`${firebaseConfig.secureApiURL}/memories.json`);
         const data = await response.json();
         
         let total = 0, empty = 0, locked = 0;

@@ -13,7 +13,7 @@
     async function loadOrders() {
         try {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Fetching Latest Data...</td></tr>';
-            const response = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+            const response = await fetch(`${firebaseConfig.secureApiURL}/memories.json`);
             const data = await response.json();
             
             allOrders = [];
@@ -154,7 +154,7 @@
     // Toggle Status in Firebase
     window.toggleCustomerStatus = async (id, status) => {
         try {
-            await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, {
+            await fetch(`${firebaseConfig.secureApiURL}/memories/${id}.json`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_enabled: status })
@@ -180,7 +180,7 @@
 
     async function resetData(payload) {
         try {
-            await fetch(`${firebaseConfig.databaseURL}/memories/${window.currentResetId}.json`, { 
+            await fetch(`${firebaseConfig.secureApiURL}/memories/${window.currentResetId}.json`, { 
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
             });
             alert("Reset Successful!");
@@ -210,7 +210,7 @@
     window.deleteMemory = async (id) => {
         if(confirm(`DANGER! Delete ID: ${id} forever?`)) {
             try {
-                await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, { method: 'DELETE' });
+                await fetch(`${firebaseConfig.secureApiURL}/memories/${id}.json`, { method: 'DELETE' });
                 alert("Deleted successfully.");
                 loadOrders();
             } catch(e) { alert("Error deleting."); }

@@ -55,7 +55,8 @@
 
     function updateBFStatus(statusStr) {
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+            // 🔴 SECURE VERCEL PROXY CALL
+            fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_status: statusStr })
             }).catch(e => {});
         }
@@ -64,7 +65,8 @@
     function updateBFReadReceipt() {
         if (document.hidden) return; 
         if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+            // 🔴 SECURE VERCEL PROXY CALL
+            fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_last_read: new Date().toISOString() })
             }).catch(e => {});
         }
@@ -76,17 +78,15 @@
     });
     window.addEventListener('beforeunload', () => updateBFStatus(new Date().toISOString()));
 
-        unlockBtn.addEventListener('click', () => {
+    unlockBtn.addEventListener('click', () => {
         const storedPass = state.memoryData.passcode || "";
         const enteredPass = passInput.value.trim();
 
-        // NAYA LOGIC: Check karega ki database ka password (e.g. GX-01-123456)
-        // user ke enter kiye hue 6 digits (e.g. 123456) se match ya end karta hai ya nahi.
         if (storedPass === enteredPass || (enteredPass !== "" && storedPass.endsWith(enteredPass))) {
             state.userPasscode = enteredPass;
             lockScreen.classList.add('hidden');
             dashMain.classList.remove('hidden');
-            // NAYA: Header mein Gift Person ka naam set karna
+            
             document.getElementById('chat-person-name').innerText = state.memoryData.girlfriend_name || "My Love ❤️";
 
             updateBFStatus('online'); updateBFReadReceipt(); 
@@ -95,7 +95,6 @@
             errorMsg.classList.remove('hidden');
         }
     });
-
 
     function updateHeaderStatus() {
         const statusEl = document.getElementById('live-status');
@@ -136,7 +135,9 @@
     }
 
     function startRealtimeDashboard() {
+        // 🟢 LIVE CONNECTION: ise nahi chhera hai, taki chat real-time chalti rahe
         const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
+        
         chatStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
@@ -157,6 +158,7 @@
                 updateHeaderStatus();
             } catch(err) {}
         });
+        
         chatStream.addEventListener('patch', (e) => {
             try {
                 const payload = JSON.parse(e.data);
@@ -214,7 +216,6 @@
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
             } catch(e) { decryptedText = ""; }
 
-            // 🔴 NAYA: Parse Quote Text
             let quoteHtml = "";
             const quoteRegex = /\[QUOTE\](.*?)\[\/QUOTE\]/s;
             const match = decryptedText.match(quoteRegex);
@@ -274,7 +275,6 @@
     async function sendMessageToFirebase(rawText) {
         if(!rawText && !currentReplyQuote) return;
 
-        // 🔴 NAYA: Add quote wrapper if reply is active
         let finalMsgText = rawText;
         if(currentReplyQuote) {
             finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
@@ -287,7 +287,8 @@
         sendBtn.disabled = true;
 
         try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
+            // 🔴 SECURE VERCEL PROXY CALL
+            const res = await fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`);
             const latestData = await res.json();
 
             let rawChat = latestData.chat || [];
@@ -301,14 +302,14 @@
 
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
-            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
+            // 🔴 SECURE VERCEL PROXY CALL
+            await fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chatList, message_count: newCount })
             });
 
             inputEl.value = ''; inputEl.style.height = 'auto'; 
 
-            // Clear Reply state
             currentReplyQuote = "";
             if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
 
@@ -319,7 +320,6 @@
         sendBtn.disabled = false;
     }
 
-    // Gallery Popup Logic
     const imgPopup = document.getElementById('bf-img-popup');
     const closePopup = document.getElementById('bf-close-popup');
     const imgGrid = document.getElementById('bf-img-grid');
@@ -360,7 +360,6 @@
         inputEl.addEventListener('focus', () => { updateBFReadReceipt(); updateBFStatus('online'); });
     }
 
-    // 🔴 NAYA: Scroll Arrows Logic
     let scrollTimeout;
     if(chatArea && scrollArrows) {
         chatArea.addEventListener('scroll', () => {
@@ -372,7 +371,6 @@
         if(scrollBottomBtn) scrollBottomBtn.addEventListener('click', () => chatArea.scrollTo({top: chatArea.scrollHeight, behavior: 'smooth'}));
     }
 
-    // 🔴 NAYA: Swipe To Reply Logic
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
     if(chatArea) {
         chatArea.addEventListener('touchstart', e => {
