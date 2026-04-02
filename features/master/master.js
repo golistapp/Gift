@@ -1,6 +1,5 @@
 (function() {
     const masterForm = document.getElementById('master-login-form');
-    // Naye dono inputs fetch kiye
     const masterIdInput = document.getElementById('master-id-input');
     const masterPassInput = document.getElementById('master-pass-input');
     
@@ -26,7 +25,6 @@
     }
     createParticles();
 
-    // Type karte hi error gayab ho jaye
     if(masterIdInput) masterIdInput.addEventListener('input', hideError);
     if(masterPassInput) masterPassInput.addEventListener('input', hideError);
 
@@ -48,7 +46,6 @@
         });
     }
 
-    // 3. Auto Format (Sirf numbers accept karega)
     if(masterIdInput) {
         masterIdInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^0-9A-Z]/gi, '').toUpperCase(); 
@@ -60,7 +57,7 @@
         });
     }
 
-    // 4. Main Login Logic (Naya Dual Box System)
+    // 3. 🔴 SECURE VERCEL AUTH LOGIN LOGIC 🔴
     if (masterForm) {
         masterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -73,33 +70,43 @@
                 return; 
             }
 
-            // Agar ID '3' dali, toh 'GX-03' banayega, agar '100' dali toh 'GX-100' banayega
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
             
             openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
 
             try {
-                const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
-                if (!res.ok) throw new Error("Fetch failed");
+                // सीधे Firebase जाने के बजाय, Vercel Auth API को कॉल कर रहे हैं
+                const res = await fetch(firebaseConfig.authApiURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memoryId: memoryId, passcode: enteredPasscode })
+                });
+
                 const data = await res.json();
 
-                if (data && data.status === "locked" && data.is_enabled !== false) {
-                    const storedPass = data.passcode || "";
-                    if (storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode))) {
-                        if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
-                        lightBurst.classList.remove('hidden');
-                        setTimeout(() => {
-                            lightBurst.classList.add('active');
-                            sessionStorage.setItem(`auth_${memoryId}`, "true"); 
-                            setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
-                        }, 50);
-                        return;
-                    }
+                if (res.ok && data.token) {
+                    if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
+                    lightBurst.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        lightBurst.classList.add('active');
+                        // 🔴 VIP Token को Save कर रहे हैं ताकि Viewer इसे इस्तेमाल कर सके
+                        sessionStorage.setItem(`auth_${memoryId}`, "true"); 
+                        sessionStorage.setItem(`fb_token_${memoryId}`, data.token); 
+                        
+                        setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
+                    }, 50);
+                    return;
+                } else {
+                    showError(data.error || "Incorrect Details.");
                 }
-                showError();
-            } catch (err) { showError("Network error. Please try again."); } 
-            finally { openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; openBtn.disabled = false; }
+            } catch (err) { 
+                showError("Network error. Please try again."); 
+            } finally { 
+                openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; 
+                openBtn.disabled = false; 
+            }
         });
     }
 
@@ -110,7 +117,7 @@
         if(masterPassInput) { masterPassInput.value = ''; masterPassInput.focus(); }
     }
 
-    // --- 5. FORGOT ID SYSTEM ---
+    // --- 4. FORGOT ID SYSTEM (Via Vercel Proxy) ---
     const forgotIdBtn = document.getElementById('btn-forgot-id');
     const forgotIdModal = document.getElementById('forgot-id-modal');
     const closeForgotId = document.getElementById('close-forgot-id');
@@ -142,7 +149,8 @@
         searchBtn.disabled = true;
 
         try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+            // 🔴 SECURE VERCEL PROXY CALL
+            const res = await fetch(`${firebaseConfig.secureApiURL}/memories.json`);
             const data = await res.json();
             let foundId = null;
             
@@ -188,7 +196,7 @@
         }
     });
 
-    // --- 6. FORGOT PASSWORD SYSTEM ---
+    // --- 5. FORGOT PASSWORD SYSTEM (Via Vercel Proxy) ---
     const forgotPassBtn = document.getElementById('btn-forgot-pass');
     const forgotPassModal = document.getElementById('forgot-pass-modal');
     const closeForgotPass = document.getElementById('close-forgot-pass');
@@ -229,10 +237,11 @@
         sendWaBtn.disabled = true;
 
         try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${askId}.json`);
+            // 🔴 SECURE VERCEL PROXY CALL
+            const res = await fetch(`${firebaseConfig.secureApiURL}/memories/${askId}.json`);
             const data = await res.json();
             
-            if (data) {
+            if (data && !data.error) {
                 const dbMob = (data.mobile_number || "").replace(/\D/g,'');
                 const dbName = (data.customer_name || "").toLowerCase();
 

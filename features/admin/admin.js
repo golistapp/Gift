@@ -137,7 +137,9 @@
     // Smart Auto ID Generation (Max + 1)
     async function getNextMemoryId() {
         try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+
+            const res = await fetch(`${firebaseConfig.secureApiURL}/memories.json`);
+
             const data = await res.json();
             let maxNum = 0;
             if (data) {
@@ -184,7 +186,7 @@
                         created_at: new Date().toISOString() 
                     };
 
-                    await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
+                    await fetch(`${firebaseConfig.secureApiURL}/memories/${memoryId}.json`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(initialData)
