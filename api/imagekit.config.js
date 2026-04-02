@@ -1,15 +1,14 @@
 // ==========================================
-// SECURE IMAGEKIT CONFIGURATION (Vercel Ready)
+// IMAGEKIT CONFIGURATION FILE
 // ==========================================
 
-window.IMAGEKIT_CONFIG = {
+// api/imagekit.config.js mein update karein:
+const IMAGEKIT_CONFIG = {
     publicKey: "public_mOww3EhDXvtS8/35MxbmdZz0lWs=",
+    privateKey: "private_ynzGyUgx02b3teUim5q8YLvGfd8=", // <-- Yeh add karein (Testing ke liye)
     urlEndpoint: "https://ik.imagekit.io/hryqx2lst9",
-
-    // 🔴 privateKey यहाँ से हमेशा के लिए डिलीट कर दी गई है! 🔴
-
-    // नया Vercel ऑथेंटिकेशन एंडपॉइंट (Signature के लिए)
-    authEndpoint: "/api/imagekit-auth"
 };
 
-console.log("📸 Secure ImageKit Config Loaded Globally!");
+
+// Agar koi problem na ho toh console mein message print karega testing ke waqt
+console.log("ImageKit Config Loaded Successfully 🗃️");

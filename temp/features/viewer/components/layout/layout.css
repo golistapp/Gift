@@ -1,0 +1,107 @@
+/* 🔴 NAYA: Music Player Round Button (Milky Frosted Glass) */
+.pill-music-player { 
+    position: fixed; 
+    bottom: 85px; 
+    left: 20px; 
+    background: rgba(255, 255, 255, 0.6); 
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; 
+    padding: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 5px 20px rgba(255, 77, 121, 0.2); 
+    cursor: pointer; 
+    z-index: 1000; 
+    transition: transform 0.3s; 
+}
+
+.pill-music-player:hover {
+    transform: scale(1.05);
+}
+
+.music-icon-bg { 
+    width: 100%; 
+    height: 100%; 
+    background: transparent; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--deep-red); 
+    font-size: 20px;
+    transition: 0.3s; 
+}
+
+.music-text-area { display: none; }
+
+.music-playing .music-icon-bg { 
+    background: transparent !important; 
+    color: var(--deep-red) !important; 
+    animation: pulseGlow 2s infinite; 
+}
+
+@keyframes pulseGlow { 
+    0% { box-shadow: 0 0 0 0 rgba(204, 0, 51, 0.3); } 
+    70% { box-shadow: 0 0 0 15px rgba(204, 0, 51, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(204, 0, 51, 0); } 
+}
+
+/* 🔴 NAYA: Bottom Navigation Bar (Sleek & Smart Auto-Hide) */
+.bottom-nav-bar { 
+    position: fixed; 
+    bottom: 10px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 95%; 
+    max-width: 450px; 
+    display: flex; 
+    justify-content: space-around; 
+    padding: 8px 0; /* 🔴 Height kam kar di gayi hai */
+    border-radius: 25px; /* 🔴 Thoda aur sleek shape */
+    z-index: 999; 
+    box-shadow: 0 8px 25px rgba(255, 77, 121, 0.2); 
+    background: rgba(255, 255, 255, 0.7); /* Premium Glassmorphism */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    /* 🔴 FAST TRANSITION for Hide/Show */
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-in-out;
+}
+
+/* 🔴 NAYA: Magic class jo navbar ko hide karegi */
+.bottom-nav-bar.nav-hidden {
+    transform: translate(-50%, 150%); /* Niche slide ho jayega */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nav-btn { 
+    background: none; 
+    border: none; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    color: #888; 
+    cursor: pointer; 
+    width: 33%; 
+    transition: 0.2s; 
+    font-family: var(--font-ui); 
+    padding: 4px 0; /* Icons ko pass laane ke liye */
+}
+
+.nav-btn i { font-size: 20px; margin-bottom: 4px; } /* 🔴 Icon size thoda chota */
+.nav-btn span { font-size: 10px; font-weight: 600; } /* 🔴 Text size thoda chota */
+
+.active-nav { color: var(--deep-red); transform: scale(1.05); }
+
+.nav-divider { 
+    width: 1px; 
+    background: rgba(204, 0, 51, 0.15); 
+    height: 25px; /* 🔴 Divider ki height adjust ki */
+    align-self: center; 
+}

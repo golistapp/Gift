@@ -186,27 +186,23 @@
         }
     };
 
-        const ChatNetwork = {
+    const ChatNetwork = {
         updateStatus: function(statusStr) {
             if (state.mode === 'admin_preview' || !state.memoryId || typeof firebaseConfig === 'undefined') return;
-            // 🔴 SECURE VERCEL PROXY CALL
-            fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`, {
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_status: statusStr })
             }).catch(e => {});
         },
 
         updateReadReceipt: function() {
             if (state.mode === 'admin_preview' || document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
-            // 🔴 SECURE VERCEL PROXY CALL
-            fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`, {
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_last_read: new Date().toISOString() })
             }).catch(e => {});
         },
 
         startRealtime: function() {
             if (window.gfChatStream) window.gfChatStream.close();
-            
-            // 🟢 LIVE CONNECTION: इसे नहीं छेड़ा है, ताकि 10s टाइमआउट न हो
             window.gfChatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
 
             window.gfChatStream.addEventListener('put', (e) => {
@@ -255,8 +251,7 @@
             if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; DOM.sendBtn.disabled = true; }
 
             try {
-                // 🔴 SECURE VERCEL PROXY CALL
-                const res = await fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`);
+                const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
                 const latestData = await res.json();
                 
                 let chatList = Array.isArray(latestData.chat) ? latestData.chat : Object.values(latestData.chat || []);
@@ -267,8 +262,7 @@
                 chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
                 if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
-                // 🔴 SECURE VERCEL PROXY CALL
-                await fetch(`${firebaseConfig.secureApiURL}/memories/${state.memoryId}.json`, {
+                await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat: chatList, message_count: newCount })
                 });
@@ -287,7 +281,6 @@
             }
         }
     };
-
 
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
     if(DOM.chatArea) {
