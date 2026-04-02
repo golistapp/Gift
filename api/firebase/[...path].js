@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-// Vercel में Firebase Admin को Initialize करें (ताकि रूल्स बायपास हो सकें)
+// Vercel में Firebase Admin को Initialize करें
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
@@ -19,10 +19,14 @@ if (!admin.apps.length) {
 export default async function handler(req, res) {
     const { path } = req.query; 
     
-    // Frontend से आया हुआ पाथ बनाएं (e.g., 'memories/GX-01')
-    const targetPath = path ? path.join('/') : '';
+    // Frontend से आया हुआ पाथ बनाएं
+    let targetPath = path ? path.join('/') : '';
     
-    // Firebase Admin का सीधा रेफरेंस लें (यह सारे Security Rules को बायपास कर देता है)
+    // 🔴 यह रही असली फिक्स: .json को हटाना होगा क्योंकि Admin SDK को इसकी जरूरत नहीं होती
+    if (targetPath.endsWith('.json')) {
+        targetPath = targetPath.replace('.json', '');
+    }
+
     const dbRef = admin.database().ref(targetPath);
 
     try {
@@ -31,17 +35,14 @@ export default async function handler(req, res) {
             return res.status(200).json(snapshot.val());
         } 
         else if (req.method === 'PATCH') {
-            // चैट अपडेट करना, स्टेटस बदलना (यहाँ Admin Power यूज़ हो रही है)
             await dbRef.update(req.body);
             return res.status(200).json({ success: true });
         } 
         else if (req.method === 'PUT') {
-            // नया आर्डर बनाना
             await dbRef.set(req.body);
             return res.status(200).json({ success: true });
         } 
         else if (req.method === 'DELETE') {
-            // आर्डर डिलीट करना
             await dbRef.remove();
             return res.status(200).json({ success: true });
         } 
