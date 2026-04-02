@@ -1,5 +1,4 @@
 (async function() {
-    // --- 1. ROUTE PROTECTION ---
     if (!localStorage.getItem('adminToken')) {
         window.location.href = '?mode=login';
         return;
@@ -12,7 +11,6 @@
 
     window.adminState = { currentTab: 'overview' };
 
-    // --- 2. 30-MINUTE AUTO LOGOUT ---
     let idleTime = 30 * 60;
     let idleTimer;
     function resetIdleTimer() { idleTime = 30 * 60; }
@@ -43,7 +41,6 @@
         }
     });
 
-    // --- 3. DYNAMIC MODULE LOADER ---
     async function loadAdminSection(sectionName) {
         try {
             mountPoint.innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 30px; color: #3b82f6;"></i></div>';
@@ -81,7 +78,6 @@
     });
     loadAdminSection('overview');
 
-    // --- 4. FAB & MODAL LOGIC ---
     const fabBtn = document.getElementById('fab-create-btn');
     const bottomSheet = document.getElementById('create-order-sheet');
     const closeSheetBtn = document.getElementById('close-sheet-btn');
@@ -92,7 +88,6 @@
         if (e.target === bottomSheet) bottomSheet.classList.add('hidden'); 
     });
 
-    // --- 5. QR GENERATION & ID LOGIC ---
     if (!window.QRCode) {
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
@@ -103,8 +98,7 @@
     const generateBtn = document.getElementById('generate-btn');
     const baseUrl = window.location.origin + window.location.pathname;
 
-       window.copyToClipboard = (text) => {
-        // HTTP aur bina HTTPS wale local network ke liye fallback hack
+    window.copyToClipboard = (text) => {
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(() => alert("Link Copied Successfully! 🔗"));
         } else {
@@ -126,7 +120,6 @@
         }
     };
 
-
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetId = e.currentTarget.getAttribute('data-target');
@@ -134,12 +127,13 @@
         });
     });
 
-    // Smart Auto ID Generation (Max + 1)
     async function getNextMemoryId() {
         try {
-
             const res = await fetch(`${firebaseConfig.secureApiURL}/memories.json`);
-
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Server returned ${res.status}: ${errText}`);
+            }
             const data = await res.json();
             let maxNum = 0;
             if (data) {
@@ -153,72 +147,69 @@
             const nextNum = maxNum + 1;
             return `GX-${nextNum.toString().padStart(2, '0')}`;
         } catch (e) {
-            return "GX-01"; // Fallback if database is completely empty
+            console.error("ID Fetch Error:", e);
+            return "GX-01"; 
         }
     }
 
-           // NAYA AUR COMPLETE SUBMIT EVENT (Crash Fix)
-        if (generateForm) {
-            generateForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                // 1. Data Collect Karein
-                const cName = document.getElementById('customer-name').value;
-                const cMobile = document.getElementById('customer-mobile').value;
-                
-                // Email field agar nahi mila toh app crash nahi hoga (Safe Check)
-                const emailInput = document.getElementById('customer-email');
-                const cEmail = emailInput ? emailInput.value : "giftoraxofficial@gmail.com"; 
-                
-                // 2. Button Loading State
-                generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
-                generateBtn.disabled = true;
+    if (generateForm) {
+        generateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const cName = document.getElementById('customer-name').value;
+            const cMobile = document.getElementById('customer-mobile').value;
+            const emailInput = document.getElementById('customer-email');
+            const cEmail = emailInput ? emailInput.value : "giftoraxofficial@gmail.com"; 
+            
+            generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            generateBtn.disabled = true;
 
-                try {
-                    // 3. Database mein bhejein
-                    const memoryId = await getNextMemoryId();
-                    const initialData = { 
-                        customer_name: cName, 
-                        mobile_number: cMobile, 
-                        customer_email: cEmail, // Email database mein jayega
-                        status: "empty", 
-                        is_enabled: true, 
-                        created_at: new Date().toISOString() 
-                    };
+            try {
+                const memoryId = await getNextMemoryId();
+                const initialData = { 
+                    customer_name: cName, 
+                    mobile_number: cMobile, 
+                    customer_email: cEmail, 
+                    status: "empty", 
+                    is_enabled: true, 
+                    created_at: new Date().toISOString() 
+                };
 
-                    await fetch(`${firebaseConfig.secureApiURL}/memories/${memoryId}.json`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(initialData)
-                    });
+                const res = await fetch(`${firebaseConfig.secureApiURL}/memories/${memoryId}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(initialData)
+                });
 
-                    // 4. Success ke baad reset
-                    alert(`✅ Success! New Order ID generated: ${memoryId}`);
-                    generateForm.reset();
-                    
-                    // Modal close karein (agar id match hoti hai)
-                    const modal = document.getElementById('new-order-modal');
-                    if(modal) modal.classList.add('hidden');
-                    
-                    // Dashboard list ko turant refresh karein
-                    if(typeof loadDashboardData === 'function') {
-                        loadDashboardData();
-                    } else {
-                        window.location.reload(); // Fallback agar function nahi mila
-                    }
-
-                } catch (err) {
-                    console.error("Firebase Save Error: ", err);
-                    alert("❌ Kuch gadbad hui! Please internet check karein.");
-                } finally {
-                    // 5. Button ko wapas normal karein
-                    generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
-                    generateBtn.disabled = false;
+                // 🔴 SMART DEBUGGER: अगर Vercel फेल होता है, तो असली एरर दिखाएगा!
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Server Error (${res.status}): ${errText}`);
                 }
-            });
-        }
 
-    // Custom Premium QR Downloader Logic
+                alert(`✅ Success! New Order ID generated: ${memoryId}`);
+                generateForm.reset();
+                
+                const modal = document.getElementById('new-order-modal');
+                if(modal) modal.classList.add('hidden');
+                
+                if(typeof loadDashboardData === 'function') {
+                    loadDashboardData();
+                } else {
+                    window.location.reload(); 
+                }
+
+            } catch (err) {
+                console.error("Firebase Save Error: ", err);
+                // 🔴 स्क्रीन पर साफ़-साफ़ एरर दिखाएगा
+                alert("❌ VERCEL ERROR: \n\n" + err.message);
+            } finally {
+                generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
+                generateBtn.disabled = false;
+            }
+        });
+    }
+
     document.getElementById('download-qr-btn').addEventListener('click', () => {
         const qrcodeContainer = document.getElementById('qrcode-container');
         const id = document.getElementById('display-id').innerText;
