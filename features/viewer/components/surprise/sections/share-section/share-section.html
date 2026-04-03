@@ -1,0 +1,166 @@
+<style>
+    /* ==========================================
+       👑 GIFTORAX LIGHT-LUXURY SHARE SECTION CSS
+       ========================================== */
+    .share-wrapper {
+        padding: 50px 20px 80px 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        
+        /* 🔴 NEW: Light, glowing pearlescent/soft pink gradient background (No velvet) */
+        background-color: #fff2f5; /* Light soft pink base */
+        background-image: 
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.8) 0%, transparent 40%), /* White soft glow top-left */
+            radial-gradient(circle at 80% 80%, rgba(255, 179, 198, 0.5) 0%, transparent 40%), /* Soft pink glow bottom-right */
+            linear-gradient(180deg, #fff2f5 0%, #ffe0e9 100%); /* Subtle vertical gradient for depth */
+        position: relative;
+    }
+    
+    /* 🔴 NEW: Exquisite Micro-Shimmer overlay (replaces large diamonds) */
+    .share-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: url('assets/image/micro_diamond_dust.png'); /* Extremely subtle, fine glitter pattern on transparent BG */
+        background-size: 100px 100px;
+        background-repeat: repeat;
+        opacity: 0.15; /* Barely visible, just a high-end shimmer */
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    /* Soft glowing strings of lights at the top (light version) */
+    .share-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 100px;
+        background: url('assets/image/top_fairy_lights_light.png') repeat-x center top; /* Light/Gold/Pink lights string */
+        background-size: contain;
+        z-index: 2;
+        opacity: 0.7;
+    }
+
+    /* THE ENHANCED GLASS PRISM CARD */
+    .share-glass-card {
+        /* 🔴 UPDATED: Very high transparency and extreme backdrop blur for true 'frosted prism' look */
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.35));
+        backdrop-filter: blur(60px); /* Intensely deep blur */
+        -webkit-backdrop-filter: blur(60px);
+        
+        /* 🔴 UPDATED: Extremely thin, polished pearlescent border */
+        border: 1px solid rgba(255, 255, 255, 0.9); 
+        border-radius: 24px;
+        padding: 45px 25px;
+        max-width: 450px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 35px 70px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(216, 27, 96, 0.1); /* Lighter, cleaner shadows */
+        position: relative;
+        overflow: hidden;
+        z-index: 10; /* Above shimmer */
+    }
+    
+    /* 🔴 UPDATED: Subtle Prism light refraction (light interaction) */
+    .share-glass-card::before {
+        content: '';
+        position: absolute;
+        top: -10px; left: -10px; right: -10px; bottom: -10px;
+        background: url('assets/image/prism_refraction_subtle.png') no-repeat center; /* Transparent prism pattern */
+        background-size: cover;
+        mix-blend-mode: color-dodge;
+        opacity: 0.25; /* Softer effect */
+        pointer-events: none;
+    }
+
+    /* Top Floating Icon (Playful) */
+    .share-icon-top {
+        font-size: 3rem;
+        color: #ff4d79;
+        margin-bottom: 15px;
+        filter: drop-shadow(0 5px 15px rgba(255, 77, 121, 0.5));
+        animation: floatShareIcon 3s ease-in-out infinite;
+    }
+
+    @keyframes floatShareIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Heading using your Premium Playfair Font */
+    .share-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #cc0033;
+        margin-bottom: 15px;
+        letter-spacing: 0.5px;
+        text-shadow: 0px 4px 15px rgba(255, 77, 121, 0.25);
+    }
+
+    /* Clean Subtext (Poppins) */
+    .share-description {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.05rem;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 35px;
+        font-weight: 500;
+    }
+    
+    .share-description-line { display: block; margin-bottom: 5px; }
+
+    /* 🔴 UPDATED: Polished rose-gold/soft pink pill button (matching the light theme) */
+    .whatsapp-share-btn {
+        background: linear-gradient(135deg, #ff1a53, #ff66b3); /* Bright, warm pink gradient (rose gold/velvet pink feel) */
+        color: #ffffff;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 600;
+        padding: 16px 35px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        /* Highly polished gold/pink glow shadow */
+        box-shadow: 0 10px 25px rgba(204, 0, 51, 0.3), inset 0 2px 5px rgba(255, 255, 255, 0.5); 
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .whatsapp-share-btn i {
+        font-size: 1.5rem;
+        color: #fff; /* Icon white for a cleaner look against the button gradient */
+    }
+
+    .whatsapp-share-btn:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 15px 35px rgba(204, 0, 51, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.6);
+    }
+
+    .whatsapp-share-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+</style>
+
+<div class="share-wrapper fade-in">
+    <div class="share-glass-card">
+        <div class="share-icon-top"><i class="fa-regular fa-paper-plane"></i></div>
+        <h2 class="share-title">Share the Magic ✨</h2>
+        
+               <p class="share-description">
+            <span class="share-description-line">Hey 👋</span>
+            <span class="share-description-line"><strong>GiftoraX</strong> presents a beautifully crafted surprise experience 🎁</span>
+        </p>
+
+        
+        <button class="whatsapp-share-btn" id="btn-share-whatsapp">
+            <i class="fa-brands fa-whatsapp"></i> Send via WhatsApp
+        </button>
+    </div>
+</div>

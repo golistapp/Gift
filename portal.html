@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GiftoraX ❤️</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,400;0,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="global.css" id="global-css">
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("7eVbnhDVRBEKFSC-x"); // Aapki Public Key yahan hai
+       })();
+    </script>
+
+    <script src="config/imagekit.config.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>    
+    <style id="dynamic-styles"></style>
+    <script src="config/firebase.config.js"></script>
+</head>
+
+<body>
+    <div id="app-loader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <i class="fa-solid fa-heart fa-beat" style="color: #ff4d79; font-size: 40px;"></i>
+    </div>
+    <div id="app-root"></div>
+    <script src="router.js"></script>
+</body>
+</html>
