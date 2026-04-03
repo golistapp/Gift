@@ -159,41 +159,47 @@
         return combinedChat;
     }
 
-    function startRealtimeDashboard() {
-        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
+        function startRealtimeDashboard() {
+        // 1. Sirf Chat ko suno
+        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
         chatStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                let needChatRender = true;
-                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
-                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
-                else if (payload.path.startsWith("/chat/")) {
-                    const index = parseInt(payload.path.split('/')[2]);
+                if (payload.path === "/") { state.memoryData.chat = payload.data; } 
+                else {
+                    const idx = parseInt(payload.path.split('/')[1]);
                     if (!state.memoryData.chat) state.memoryData.chat = [];
-                    state.memoryData.chat[index] = payload.data;
-                } 
-                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
-                else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
-                else if (payload.path === "/gf_status") { state.memoryData.gf_status = payload.data; needChatRender = false; } 
-                else { needChatRender = false; }
-
-                if (needChatRender) renderDashboardUI();
-                updateHeaderStatus();
+                    state.memoryData.chat[idx] = payload.data;
+                }
+                renderDashboardUI();
             } catch(err) {}
         });
-        chatStream.addEventListener('patch', (e) => {
+
+        // 2. Sirf GF ke Status ko suno
+        const statusStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_status.json`);
+        statusStream.addEventListener('put', (e) => {
             try {
                 const payload = JSON.parse(e.data);
-                if (payload.path === "/") { 
-                    state.memoryData = { ...state.memoryData, ...payload.data }; 
-                    const keys = Object.keys(payload.data);
-                    const onlyStatus = keys.every(k => k === 'gf_status' || k === 'bf_status');
-                    if (!onlyStatus) renderDashboardUI();
+                if (payload.data !== undefined) {
+                    state.memoryData.gf_status = payload.data;
                     updateHeaderStatus();
                 }
             } catch(err) {}
         });
+
+        // 3. GF ke Read Receipt ko suno
+        const readStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_last_read.json`);
+        readStream.addEventListener('put', (e) => {
+            try {
+                const payload = JSON.parse(e.data);
+                if (payload.data !== undefined) {
+                    state.memoryData.gf_last_read = payload.data;
+                    renderDashboardUI();
+                }
+            } catch(err) {}
+        });
     }
+
 
     function renderDashboardUI() {
         updateHeaderStatus(); 
