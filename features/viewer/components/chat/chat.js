@@ -259,42 +259,14 @@
             if(navigator.vibrate) navigator.vibrate(40); 
             if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; DOM.sendBtn.disabled = true; }
 
-                        try {
-                // 🔴 NAYA: Poora data nahi, sirf chat aur count ko securely target karo
-                const chatRes = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
-                let rawChat = await chatRes.json() || [];
-                let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
-                chatList = chatList.filter(msg => msg !== null && msg.sender);
-
-                const countRes = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`);
-                let currentCount = await countRes.json() || 0;
-                let newCount = currentCount + 1;
-
-                const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
-                chatList.push({ sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() });
-                if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
-
-                // NAYA: Sirf chat aur count ko wapas Firebase mein save karo
-                await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(chatList)
-                });
-                await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newCount)
-                });
-
-
-                if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
-
-                currentReplyQuote = "";
-                DOM.replyPreviewBox.classList.add('hidden');
-
-                this.updateStatus('online'); 
+                                        this.updateStatus('online'); 
                 if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; DOM.sendBtn.disabled = false; }
                 return true;
             } catch(err) { 
                 if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; DOM.sendBtn.disabled = false; }
                 return false; 
             }
+
         }
     };
 

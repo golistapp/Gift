@@ -316,43 +316,41 @@
         sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
         sendBtn.disabled = true;
 
-                try {
-            // 🔴 NAYA: Poora data nahi, sirf chat aur count ko securely target karo
-            const chatRes = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
-            let rawChat = await chatRes.json() || [];
-            let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
-            chatList = chatList.filter(msg => msg !== null && msg.sender);
-
-            const countRes = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`);
-            let currentCount = await countRes.json() || 0;
-            let newCount = currentCount + 1;
-
+                        try {
             const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
-            chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
+            const newMsgObj = { sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() };
 
-            if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
-
-            // NAYA: Sirf chat aur count ko wapas Firebase mein save karo
-            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(chatList)
-            });
-            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newCount)
-            });
-
-
+            // 🚀 1. SUPERFAST UI: Button dabte hi screen turant normal karo (No Waiting!)
             inputEl.value = ''; inputEl.style.height = 'auto'; 
-
-            // Clear Reply state
             currentReplyQuote = "";
             if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
+            sendBtn.disabled = false;
+            updateBFStatus('online');
 
-            updateBFStatus('online'); 
-        } catch(err) { alert("Error sending message."); }
+            // 🚀 2. FIREBASE PUSH: Purana data download kiye bina direct 1 message feko (Takes milliseconds)
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
+                method: 'POST', // POST direct naya data add karta hai
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(newMsgObj)
+            });
 
-        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
-        sendBtn.disabled = false;
-    }
+            // 3. Count ko background mein chupke se badhao
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`)
+                .then(res => res.json())
+                .then(count => {
+                    fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify((count || 0) + 1)
+                    });
+                });
+
+        } catch(err) { 
+            console.error("Error sending", err);
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
+            sendBtn.disabled = false;
+        }
+
 
     // Gallery Popup Logic
     const imgPopup = document.getElementById('bf-img-popup');
