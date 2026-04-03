@@ -2,7 +2,6 @@
     const state = window.viewerState;
     if (!state) return;
 
-     // --- 1. DOM Elements ---
     const DOM = {
         wrapper: document.getElementById('gf-chat-wrapper'),
         chatArea: document.getElementById('chat-messages-area'),
@@ -12,7 +11,7 @@
         soundSend: document.getElementById('sound-send'),
         soundReceive: document.getElementById('sound-receive'),
         statusEl: document.getElementById('live-status'),
-        userNameEl: document.getElementById('chat-user-name'), // 🔴 New Element
+        userNameEl: document.getElementById('chat-user-name'), 
         galleryBtn: document.getElementById('gf-gallery-btn'),
         imgPopup: document.getElementById('gf-img-popup'),
         imgGrid: document.getElementById('gf-img-grid'),
@@ -59,30 +58,26 @@
         initViewportFix: function() {
             if (window.visualViewport && DOM.wrapper) {
                 window.visualViewport.addEventListener('resize', () => {
-                    // Mobile keyboard adjustment
                     if (window.visualViewport.height < window.innerHeight - 50) {
                         DOM.wrapper.style.height = `${window.visualViewport.height}px`;
                     } else {
-                        DOM.wrapper.style.height = `calc(100dvh - 70px)`; // Nav bar space
+                        DOM.wrapper.style.height = `calc(100dvh - 70px)`; 
                     }
                     if(DOM.chatArea) DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
                 });
             }
         },
 
-        // 🔴 Status Update for Native Layout
         updateHeader: function() {
             if (!DOM.statusEl) return;
             const bfStatus = (state.memoryData || {}).bf_status;
 
-                        // NAYA: Set dynamic Name (Customer / Boyfriend ka naam dikhayega)
             if(DOM.userNameEl && state.memoryData) {
                 DOM.userNameEl.innerText = state.memoryData.customer_name || "My Love ❤️";
             }
 
-
             if (bfStatus === 'typing...') DOM.statusEl.innerHTML = '<span style="color:#D81B60; font-style: italic;">typing...</span>';
-            else if (bfStatus === 'online') DOM.statusEl.innerHTML = '<span style="color:#10b981; font-weight: 600;">online</span>'; // Green online indicator
+            else if (bfStatus === 'online') DOM.statusEl.innerHTML = '<span style="color:#10b981; font-weight: 600;">online</span>'; 
             else if (bfStatus && bfStatus !== 'offline') {
                 let dateObj = new Date(bfStatus);
                 if(!isNaN(dateObj)) DOM.statusEl.innerHTML = `last seen at ${this.formatTime(bfStatus)}`;
@@ -187,36 +182,38 @@
     };
 
     const ChatNetwork = {
+        // 🔴 BUG FIXED: Status direct gf_status file mein update hoga
         updateStatus: function(statusStr) {
             if (state.mode === 'admin_preview' || !state.memoryId || typeof firebaseConfig === 'undefined') return;
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_status: statusStr })
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_status.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(statusStr)
             }).catch(e => {});
         },
 
+        // 🔴 BUG FIXED: Read receipt direct file mein update hoga
         updateReadReceipt: function() {
             if (state.mode === 'admin_preview' || document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gf_last_read: new Date().toISOString() })
+            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_last_read.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(new Date().toISOString())
             }).catch(e => {});
         },
 
-                        startRealtime: function() {
+        startRealtime: function() {
             if (window.gfChatStream) window.gfChatStream.close();
             if (window.bfStatusStream) window.bfStatusStream.close();
             if (window.bfReadStream) window.bfReadStream.close();
 
+            // 🚀 SUPERFAST SSE STREAMING
             window.gfChatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
             const handleChatData = (e) => {
                 try {
                     const payload = JSON.parse(e.data);
                     if (payload && payload.data !== null) {
                         if (payload.path === "/") { 
-                            state.memoryData.chat = payload.data; 
+                            state.memoryData.chat = Array.isArray(payload.data) ? payload.data : Object.values(payload.data);
                         } else {
-                            const idx = parseInt(payload.path.replace(/[^0-9]/g, ''));
                             if (!state.memoryData.chat) state.memoryData.chat = [];
-                            if (!isNaN(idx)) state.memoryData.chat[idx] = payload.data;
+                            state.memoryData.chat.push(payload.data);
                         }
                         ChatUI.renderMessages();
                     }
@@ -249,25 +246,25 @@
                 const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
                 const newMsgObj = { sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() };
 
-                // 🚀 1. INSTANT UI UPDATE
-                if (!state.memoryData.chat) state.memoryData.chat = [];
-                const newIndex = state.memoryData.chat.length;
-                state.memoryData.chat.push(newMsgObj);
-                ChatUI.renderMessages();
-
-                // 🚀 2. UI CLEAR
+                // 🚀 FAST UI UPDATE: Turant screen se input hat jayega
                 if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
                 currentReplyQuote = "";
                 if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
                 this.updateStatus('online'); 
 
-                // 🚀 3. BACKGROUND UPLOAD
-                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat/${newIndex}.json`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMsgObj)
+                // 🚀 SUPERFAST POST: Firebase seedha naya push karega
+                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMsgObj)
                 });
-                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newIndex + 1)
-                });
+
+                // Message count update
+                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`)
+                    .then(res => res.json())
+                    .then(count => {
+                        fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
+                            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify((count || 0) + 1)
+                        });
+                    });
 
                 return true;
             } catch(err) { 
@@ -276,7 +273,6 @@
             }
         }
     };
-
 
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
     if(DOM.chatArea) {
@@ -305,7 +301,7 @@
                 let imgEl = swipedMsg.querySelector('.chat-img-msg');
 
                 let quoteText = rawTextEl ? rawTextEl.innerText : "";
-                if(imgEl) quoteText = "📸 Photo";
+                if(imgEl) quoteText = "📷 Photo";
 
                 if(quoteText) {
                     currentReplyQuote = quoteText.substring(0, 40) + (quoteText.length > 40 ? "..." : "");
