@@ -247,7 +247,7 @@
         },
 
 
-        sendMessage: async function(rawText) {
+                sendMessage: async function(rawText) {
             if(!rawText && !currentReplyQuote) return false;
 
             let finalMsgText = rawText;
@@ -259,16 +259,43 @@
             if(navigator.vibrate) navigator.vibrate(40); 
             if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; DOM.sendBtn.disabled = true; }
 
-                                        this.updateStatus('online'); 
+            try {
+                const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
+                const newMsgObj = { sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() };
+
+                // 🚀 1. SUPERFAST UI: Turant message clear karo
+                if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
+                currentReplyQuote = "";
+                if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
                 if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; DOM.sendBtn.disabled = false; }
+                this.updateStatus('online'); 
+
+                // 🚀 2. FIREBASE PUSH: Direct upload
+                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(newMsgObj)
+                });
+
+                // 3. Background Count Update
+                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`)
+                    .then(res => res.json())
+                    .then(count => {
+                        fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
+                            method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify((count || 0) + 1)
+                        });
+                    });
+
                 return true;
             } catch(err) { 
+                console.error(err);
                 if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; DOM.sendBtn.disabled = false; }
                 return false; 
             }
-
         }
     };
+
 
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
     if(DOM.chatArea) {

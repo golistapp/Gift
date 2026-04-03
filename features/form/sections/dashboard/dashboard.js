@@ -301,10 +301,9 @@
         dashLastMsgTime = currentLastMsg.timestamp;
     }
 
-    async function sendMessageToFirebase(rawText) {
+        async function sendMessageToFirebase(rawText) {
         if(!rawText && !currentReplyQuote) return;
 
-        // 🔴 NAYA: Add quote wrapper if reply is active
         let finalMsgText = rawText;
         if(currentReplyQuote) {
             finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
@@ -316,11 +315,11 @@
         sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
         sendBtn.disabled = true;
 
-                        try {
+        try {
             const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
             const newMsgObj = { sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() };
 
-            // 🚀 1. SUPERFAST UI: Button dabte hi screen turant normal karo (No Waiting!)
+            // 🚀 1. SUPERFAST UI: Button dabte hi input box turant khaali karo
             inputEl.value = ''; inputEl.style.height = 'auto'; 
             currentReplyQuote = "";
             if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
@@ -328,9 +327,9 @@
             sendBtn.disabled = false;
             updateBFStatus('online');
 
-            // 🚀 2. FIREBASE PUSH: Purana data download kiye bina direct 1 message feko (Takes milliseconds)
+            // 🚀 2. FIREBASE PUSH: Direct message send karna (Takes milliseconds)
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
-                method: 'POST', // POST direct naya data add karta hai
+                method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify(newMsgObj)
             });
@@ -350,6 +349,8 @@
             sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
             sendBtn.disabled = false;
         }
+    } // 🔴 YEH BRACKET MISSING THA, AB FIX HO GAYA HAI!
+
 
 
     // Gallery Popup Logic
