@@ -3,174 +3,120 @@
     const memoryId = urlParams.get('id');
     const mode = urlParams.get('mode'); 
 
-    // 🔴 NAYA: Preview mode mein ID ki zarurat nahi hai isliye check update kiya
     if (!memoryId && mode !== 'preview') {
-        alert("Invalid Link! QR code mein memory ID nahi hai.");
-        return;
+        alert("Invalid Link! QR code mein memory ID nahi hai."); return;
     }
 
-    // Safety check: Agar Firebase file load nahi hui toh batayega
     if (typeof firebaseConfig === 'undefined') {
-        alert("Error: Firebase config missing! Check api/firebase.config.js");
-        return;
+        alert("Error: Firebase config missing! Check config/firebase.config.js"); return;
     }
 
-    // 🌐 GLOBAL STATE
-    window.viewerState = {
-        memoryId: memoryId || "PREVIEW_MODE",
-        mode: mode,
-        memoryData: null,
-        userPasscode: "",
-        isMusicPlaying: false
-    };
+    window.viewerState = { memoryId: memoryId || "PREVIEW_MODE", mode: mode, memoryData: null, userPasscode: "", isMusicPlaying: false };
 
-    // Background Particle Engine (Dil udane wala system)
     function startBackgroundParticles() {
         const bgContainer = document.getElementById('hearts-bg');
         if (!bgContainer) return;
-
         const symbols = ['❤️', '💖', '✨','❣️', '💕'];
-        
         setInterval(() => {
-            if (document.hidden) return; // Tab inactive ho toh performance bachayega
-            
+            if (document.hidden) return;
             const particle = document.createElement('div');
             particle.className = 'bg-heart';
             particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-            
-            // Random horizontal position (0 to 100vw)
             particle.style.left = Math.random() * 100 + 'vw';
-            
-            // Random duration (4 seconds se 9 seconds ke beech)
             const duration = Math.random() * 5 + 4;
             particle.style.animationDuration = duration + 's';
-            
-            // Random size 
             particle.style.fontSize = (Math.random() * 15 + 12) + 'px';
-            
             bgContainer.appendChild(particle);
-            
-            // Animation khatam hone ke baad memory se hatana zaruri hai
-            setTimeout(() => {
-                if (particle.parentNode) particle.remove();
-            }, duration * 1000);
-            
-        }, 600); // Har 600ms mein ek naya symbol nikalega
+            setTimeout(() => { if (particle.parentNode) particle.remove(); }, duration * 1000);
+        }, 600);
     }
 
-    // 🧩 COMPONENT LOADER
     window.loadViewerComponent = async function(componentName, mountNodeId) {
         const mountNode = document.getElementById(mountNodeId);
         if (!mountNode) return;
-
         try {
             const htmlRes = await fetch(`features/viewer/components/${componentName}/${componentName}.html`);
             if (htmlRes.ok) mountNode.innerHTML = await htmlRes.text();
-
             if (!document.getElementById(`css-${componentName}`)) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.id = `css-${componentName}`;
-                link.href = `features/viewer/components/${componentName}/${componentName}.css`;
-                document.head.appendChild(link);
+                const link = document.createElement('link'); link.rel = 'stylesheet'; link.id = `css-${componentName}`;
+                link.href = `features/viewer/components/${componentName}/${componentName}.css`; document.head.appendChild(link);
             }
-
             if (!document.getElementById(`js-${componentName}`)) {
-                const script = document.createElement('script');
-                script.id = `js-${componentName}`;
-                script.src = `features/viewer/components/${componentName}/${componentName}.js`;
-                document.body.appendChild(script);
+                const script = document.createElement('script'); script.id = `js-${componentName}`;
+                script.src = `features/viewer/components/${componentName}/${componentName}.js`; document.body.appendChild(script);
             }
-        } catch (error) {
-            console.error(`Error loading component: ${componentName}`, error);
-        }
+        } catch (error) { console.error(`Error:`, error); }
     };
 
-    // 🚀 INITIAL BOOT
+    // 🚀 INITIAL BOOT (SECURED)
     try {
-        // 🔴 NAYA LOGIC: Agar Preview Mode hai, toh Database nahi, Local Storage use karo
         if (mode === 'preview') {
             const previewData = localStorage.getItem('gx_preview_data');
-            if (previewData) {
-                window.viewerState.memoryData = JSON.parse(previewData);
-            } else {
-                document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Preview Data Missing! Please try again. 💔</h2>';
-                return;
-            }
-        } else {
-            // Normal Mode: Firebase se fetch karo
-            const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
-            if (!response.ok) throw new Error("Firebase returned " + response.status);
+            if (previewData) window.viewerState.memoryData = JSON.parse(previewData);
+            else { document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Preview Data Missing! 💔</h2>'; return; }
+        } else if (mode === 'admin_preview') {
+            // Admin Mode - Use Auth Token
+            const adminToken = localStorage.getItem('adminToken');
+            const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json?auth=${adminToken}`);
             window.viewerState.memoryData = await response.json();
+        } else {
+            // 🔒 Normal Mode - SECURE VERCEL API SE SIRF STATUS MANGO
+            const response = await fetch('/api/verify-passcode', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memoryId: memoryId, requestType: 'status_check' })
+            });
+            const resData = await response.json();
+            
+            if (!resData.success) {
+                document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise Not Found! 💔</h2>'; return;
+            }
+            
+            window.viewerState.memoryData = resData.publicData;
 
-            // 🔴 NAYA JADOO: URL mein Gift Person ka naam jodne ke liye
-            if (window.viewerState.memoryData && window.viewerState.memoryData.girlfriend_name && mode !== 'admin_preview' && mode !== 'preview') {
+            if (window.viewerState.memoryData.girlfriend_name) {
                 const gfName = encodeURIComponent(window.viewerState.memoryData.girlfriend_name.trim());
-                // Bina page reload kiye address bar ka URL change kar dega
                 window.history.replaceState(null, '', `?id=${memoryId}&for=${gfName}`);
             }
-        } // 🔴 YEH RAHA WOH MISSING BRACKET JO FIX KAR DIYA GAYA HAI!
-
-        // Security Check (Enable/Disable)
-        // Agar disabled hai aur admin preview nahi kar raha hai, toh block kar do
-        if (window.viewerState.memoryData && window.viewerState.memoryData.is_enabled === false && mode !== 'admin_preview') {
-            document.body.innerHTML = `
-                <div style="text-align:center; margin-top:25vh; padding: 20px; font-family: var(--font-ui);">
-                    <i class="fa-solid fa-eye-slash" style="font-size: 60px; color: #94a3b8; margin-bottom: 20px;"></i>
-                    <h2 style="color:#334155; font-size: 24px; margin-bottom: 10px;">Access Denied</h2>
-                    <p style="color:#64748b; font-size: 14px;">This surprise is currently hidden or disabled by the sender.</p>
-                </div>`;
-            return; 
         }
 
-        if (!window.viewerState.memoryData || window.viewerState.memoryData.status !== "locked") {
-            document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise is not ready yet! 💔</h2>';
-            return;
+        const md = window.viewerState.memoryData;
+        if (md && md.is_enabled === false && mode !== 'admin_preview') {
+            document.body.innerHTML = `<div style="text-align:center; margin-top:25vh; padding: 20px;"><i class="fa-solid fa-eye-slash" style="font-size: 60px; color: #94a3b8; margin-bottom: 20px;"></i><h2 style="color:#334155;">Access Denied</h2><p>This surprise is currently hidden.</p></div>`; return; 
         }
 
-        // Particle System chalu karo
+        if (!md || md.status !== "locked") {
+            document.body.innerHTML = '<h2 style="text-align:center; margin-top:20vh; color:#cc0033;">Surprise is not ready yet! 💔</h2>'; return;
+        }
+
         startBackgroundParticles();
 
-        // 🔴 NAYA LOGIC: Session Storage se check karo ki user Master Portal se toh nahi aaya
-        const savedPasscode = sessionStorage.getItem(`auth_${memoryId}`);
         let isMasterUnlocked = false;
-
-        if (savedPasscode) {
-            // Password wapas verify kar lo security ke liye
-            const storedPass = window.viewerState.memoryData.passcode || "";
-            if (storedPass === savedPasscode || (savedPasscode !== "" && storedPass.endsWith(savedPasscode))) {
-                isMasterUnlocked = true;
-                window.viewerState.userPasscode = savedPasscode; // Aage decryption ke liye passcode zaroori hai
+        if (mode !== 'admin_preview' && mode !== 'preview') {
+            const savedPasscode = sessionStorage.getItem(`auth_${memoryId}`);
+            if (savedPasscode) {
+                // Background unlock agar session pehle se hai
+                const unlockRes = await fetch('/api/verify-passcode', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memoryId: memoryId, enteredPasscode: savedPasscode, requestType: 'unlock' })
+                });
+                const unlockData = await unlockRes.json();
+                if (unlockData.success) {
+                    window.viewerState.memoryData = unlockData.memoryData; // 🟢 FULL DATA LOADED
+                    window.viewerState.userPasscode = savedPasscode;
+                    isMasterUnlocked = true;
+                }
             }
         }
 
-        // Routing Logic
-        // Agar Admin hai, Preview hai, YA Master portal se unlock ho chuka hai -> Direct andar jao
         if (mode === 'admin_preview' || mode === 'preview' || isMasterUnlocked) {
             await window.loadViewerComponent('surprise', 'surprise-mount');
             await window.loadViewerComponent('layout', 'footer-mount'); 
-            
             document.getElementById('surprise-mount').classList.remove('hidden');
             document.getElementById('footer-mount').classList.remove('hidden');
-            const vaultMount = document.getElementById('vault-mount');
-            if(vaultMount) vaultMount.classList.add('hidden');
-
-            // Scanned status update karo agar master portal se open hua hai (taaki Dashboard me "read" show ho)
-            if (isMasterUnlocked) {
-                fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, { 
-                    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ scanned_at: new Date().toISOString() }) 
-                }).catch(e => {});
-            }
-
+            if(document.getElementById('vault-mount')) document.getElementById('vault-mount').classList.add('hidden');
         } else {
-            // Agar normal direct link kisi ne kholi hai, toh Vault dikhao
             await window.loadViewerComponent('vault', 'vault-mount');
         }
 
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        alert("System Error: " + error.message);
-    }
+    } catch (error) { alert("System Error: " + error.message); }
 })();
-6
