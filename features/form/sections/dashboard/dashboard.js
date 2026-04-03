@@ -76,25 +76,49 @@
     });
     window.addEventListener('beforeunload', () => updateBFStatus(new Date().toISOString()));
 
-        unlockBtn.addEventListener('click', () => {
-        const storedPass = state.memoryData.passcode || "";
+            unlockBtn.addEventListener('click', async () => {
         const enteredPass = passInput.value.trim();
+        if (!enteredPass) return;
 
-        // NAYA LOGIC: Check karega ki database ka password (e.g. GX-01-123456)
-        // user ke enter kiye hue 6 digits (e.g. 123456) se match ya end karta hai ya nahi.
-        if (storedPass === enteredPass || (enteredPass !== "" && storedPass.endsWith(enteredPass))) {
-            state.userPasscode = enteredPass;
-            lockScreen.classList.add('hidden');
-            dashMain.classList.remove('hidden');
-            // NAYA: Header mein Gift Person ka naam set karna
-            document.getElementById('chat-person-name').innerText = state.memoryData.girlfriend_name || "My Love ❤️";
+        // Button Loading State
+        unlockBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+        unlockBtn.disabled = true;
+        errorMsg.classList.add('hidden');
 
-            updateBFStatus('online'); updateBFReadReceipt(); 
-            renderDashboardUI(); startRealtimeDashboard(); 
-        } else {
+        try {
+            // 🚀 SERVER SE PASSWORD VERIFY KARNA
+            const response = await fetch('/api/verify-passcode', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memoryId: state.memoryId, enteredPasscode: enteredPass, requestType: 'unlock' })
+            });
+            const resData = await response.json();
+
+            if (resData.success) {
+                // Password match ho gaya! Ab backend ne full data (chat/photos) de diya hai
+                state.memoryData = resData.memoryData;
+                state.userPasscode = enteredPass;
+
+                lockScreen.classList.add('hidden');
+                dashMain.classList.remove('hidden');
+
+                document.getElementById('chat-person-name').innerText = state.memoryData.girlfriend_name || "My Love ❤️";
+
+                updateBFStatus('online'); updateBFReadReceipt(); 
+                renderDashboardUI(); startRealtimeDashboard(); 
+            } else {
+                errorMsg.innerText = "Incorrect Passcode!";
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (e) {
+            errorMsg.innerText = "Network Error! Try again.";
             errorMsg.classList.remove('hidden');
         }
+
+        // Button Reset
+        unlockBtn.innerHTML = 'Verify <i class="fa-solid fa-arrow-right"></i>';
+        unlockBtn.disabled = false;
     });
+
 
 
     function updateHeaderStatus() {
