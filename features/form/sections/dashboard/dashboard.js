@@ -316,25 +316,30 @@
         sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
         sendBtn.disabled = true;
 
-        try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
-            const latestData = await res.json();
-
-            let rawChat = latestData.chat || [];
+                try {
+            // 🔴 NAYA: Poora data nahi, sirf chat aur count ko securely target karo
+            const chatRes = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
+            let rawChat = await chatRes.json() || [];
             let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
             chatList = chatList.filter(msg => msg !== null && msg.sender);
 
-            let newCount = (latestData.message_count || 0) + 1;
+            const countRes = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`);
+            let currentCount = await countRes.json() || 0;
+            let newCount = currentCount + 1;
 
             const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
             chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
 
             if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
 
-            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat: chatList, message_count: newCount })
+            // NAYA: Sirf chat aur count ko wapas Firebase mein save karo
+            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(chatList)
             });
+            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newCount)
+            });
+
 
             inputEl.value = ''; inputEl.style.height = 'auto'; 
 
