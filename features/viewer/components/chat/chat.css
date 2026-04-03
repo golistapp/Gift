@@ -63,13 +63,13 @@
     display: flex; 
     flex-direction: column; 
     gap: 4px; 
-
+    
     background-color: #fdf2f5; 
     background-image: url("../../../../assets/image/wallpaper.png"); 
     background-size: cover; 
     background-position: center bottom;
     background-attachment: fixed; 
-
+    
     scroll-behavior: smooth; 
     position: relative;
 }
@@ -201,11 +201,22 @@
     100% { opacity: 1; transform: translateY(0); } 
 }
 
+/* --- START POINT (In 2 lines ko dhundho) --- */
 /* Chat Bubbles ke liye 3D Phone animations */
 @keyframes popFromLeftPhone { 
-    0% { opacity: 0; transform: translate(-35vw, -30px) scale(0.1); } 
+
+/* --- ISE NAYE CODE SE REPLACE KARO --- */
+    0% { opacity: 0; transform: translate(-38vw, -35vh) scale(0); } 
     100% { opacity: 1; transform: translate(0, 0) scale(1); } 
 }
+
+@keyframes popFromRightPhone { 
+    0% { opacity: 0; transform: translate(38vw, -35vh) scale(0); } 
+
+/* --- END POINT (In 2 lines tak replace karna hai) --- */
+    100% { opacity: 1; transform: translate(0, 0) scale(1); } 
+}
+
 
 @keyframes popFromRightPhone { 
     0% { opacity: 0; transform: translate(35vw, -30px) scale(0.1); } 
