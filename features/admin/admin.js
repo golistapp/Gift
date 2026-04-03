@@ -86,11 +86,13 @@
     const bottomSheet = document.getElementById('create-order-sheet');
     const closeSheetBtn = document.getElementById('close-sheet-btn');
 
-    fabBtn.addEventListener('click', () => bottomSheet.classList.remove('hidden'));
-    closeSheetBtn.addEventListener('click', () => bottomSheet.classList.add('hidden'));
-    bottomSheet.addEventListener('click', (e) => {
-        if (e.target === bottomSheet) bottomSheet.classList.add('hidden'); 
-    });
+    if(fabBtn) fabBtn.addEventListener('click', () => bottomSheet.classList.remove('hidden'));
+    if(closeSheetBtn) closeSheetBtn.addEventListener('click', () => bottomSheet.classList.add('hidden'));
+    if(bottomSheet) {
+        bottomSheet.addEventListener('click', (e) => {
+            if (e.target === bottomSheet) bottomSheet.classList.add('hidden'); 
+        });
+    }
 
     // --- 5. QR GENERATION & ID LOGIC ---
     if (!window.QRCode) {
@@ -103,8 +105,7 @@
     const generateBtn = document.getElementById('generate-btn');
     const baseUrl = window.location.origin + window.location.pathname;
 
-       window.copyToClipboard = (text) => {
-        // HTTP aur bina HTTPS wale local network ke liye fallback hack
+    window.copyToClipboard = (text) => {
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(() => alert("Link Copied Successfully! 🔗"));
         } else {
@@ -126,7 +127,6 @@
         }
     };
 
-
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetId = e.currentTarget.getAttribute('data-target');
@@ -134,13 +134,16 @@
         });
     });
 
-    // Smart Auto ID Generation (Max + 1)
+    // 🔴 FIXED: Token added to getNextMemoryId
     async function getNextMemoryId() {
         try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+            const adminToken = localStorage.getItem('adminToken');
+            const res = await fetch(`${firebaseConfig.databaseURL}/memories.json?auth=${adminToken}`);
+            if (!res.ok) throw new Error("Permission Denied");
+
             const data = await res.json();
             let maxNum = 0;
-            if (data) {
+            if (data && !data.error) {
                 Object.keys(data).forEach(id => {
                     if (id.startsWith('GX-')) {
                         const num = parseInt(id.split('-')[1], 10);
@@ -151,105 +154,104 @@
             const nextNum = maxNum + 1;
             return `GX-${nextNum.toString().padStart(2, '0')}`;
         } catch (e) {
-            return "GX-01"; // Fallback if database is completely empty
+            console.error("ID Generation Error:", e);
+            return "GX-01"; // Fallback only if totally empty
         }
     }
 
-           // NAYA AUR COMPLETE SUBMIT EVENT (Crash Fix)
-        if (generateForm) {
-            generateForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                // 1. Data Collect Karein
-                const cName = document.getElementById('customer-name').value;
-                const cMobile = document.getElementById('customer-mobile').value;
-                
-                // Email field agar nahi mila toh app crash nahi hoga (Safe Check)
-                const emailInput = document.getElementById('customer-email');
-                const cEmail = emailInput ? emailInput.value : "giftoraxofficial@gmail.com"; 
-                
-                // 2. Button Loading State
-                generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
-                generateBtn.disabled = true;
+    // 🔴 FIXED: Token and Error handling added to Form Submit
+    if (generateForm) {
+        generateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-                try {
-                    // 3. Database mein bhejein
-                    const memoryId = await getNextMemoryId();
-                    const initialData = { 
-                        customer_name: cName, 
-                        mobile_number: cMobile, 
-                        customer_email: cEmail, // Email database mein jayega
-                        status: "empty", 
-                        is_enabled: true, 
-                        created_at: new Date().toISOString() 
-                    };
+            const cName = document.getElementById('customer-name').value;
+            const cMobile = document.getElementById('customer-mobile').value;
+            const emailInput = document.getElementById('customer-email');
+            const cEmail = emailInput ? emailInput.value : "giftoraxofficial@gmail.com"; 
 
-                    await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(initialData)
-                    });
+            generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            generateBtn.disabled = true;
 
-                    // 4. Success ke baad reset
-                    alert(`✅ Success! New Order ID generated: ${memoryId}`);
-                    generateForm.reset();
-                    
-                    // Modal close karein (agar id match hoti hai)
-                    const modal = document.getElementById('new-order-modal');
-                    if(modal) modal.classList.add('hidden');
-                    
-                    // Dashboard list ko turant refresh karein
-                    if(typeof loadDashboardData === 'function') {
-                        loadDashboardData();
-                    } else {
-                        window.location.reload(); // Fallback agar function nahi mila
-                    }
+            try {
+                const memoryId = await getNextMemoryId();
+                const initialData = { 
+                    customer_name: cName, 
+                    mobile_number: cMobile, 
+                    customer_email: cEmail, 
+                    status: "empty", 
+                    is_enabled: true, 
+                    created_at: new Date().toISOString() 
+                };
 
-                } catch (err) {
-                    console.error("Firebase Save Error: ", err);
-                    alert("❌ Kuch gadbad hui! Please internet check karein.");
-                } finally {
-                    // 5. Button ko wapas normal karein
-                    generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
-                    generateBtn.disabled = false;
+                const adminToken = localStorage.getItem('adminToken');
+                const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json?auth=${adminToken}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(initialData)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to save to database. Authentication error.");
                 }
-            });
-        }
+
+                alert(`✅ Success! New Order ID generated: ${memoryId}`);
+                generateForm.reset();
+
+                if (bottomSheet) bottomSheet.classList.add('hidden');
+
+                // Refresh the list seamlessly if orders page is active
+                if(typeof window.loadOrdersData === 'function') {
+                    window.loadOrdersData();
+                } else if(window.initAdminoverview) {
+                    window.initAdminoverview();
+                }
+
+            } catch (err) {
+                console.error("Firebase Save Error: ", err);
+                alert("❌ Error: Could not save order! Check connection or login again.");
+            } finally {
+                generateBtn.innerHTML = '<i class="fa-solid fa-qrcode"></i> Generate QR & Links';
+                generateBtn.disabled = false;
+            }
+        });
+    }
 
     // Custom Premium QR Downloader Logic
-    document.getElementById('download-qr-btn').addEventListener('click', () => {
-        const qrcodeContainer = document.getElementById('qrcode-container');
-        const id = document.getElementById('display-id').innerText;
-        const qrCanvas = qrcodeContainer.querySelector('canvas');
-        const qrImg = qrcodeContainer.querySelector('img');
-        let sourceImageSrc = '';
-        
-        if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) { sourceImageSrc = qrImg.src; } 
-        else if (qrCanvas) { sourceImageSrc = qrCanvas.toDataURL("image/png"); } 
-        else { alert("Please wait..."); return; }
+    const downloadQrBtn = document.getElementById('download-qr-btn');
+    if (downloadQrBtn) {
+        downloadQrBtn.addEventListener('click', () => {
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            const id = document.getElementById('display-id').innerText;
+            const qrCanvas = qrcodeContainer.querySelector('canvas');
+            const qrImg = qrcodeContainer.querySelector('img');
+            let sourceImageSrc = '';
 
-        const finalCanvas = document.createElement('canvas');
-        const ctx = finalCanvas.getContext('2d');
-        const qrSize = 300, padding = 50; 
-        
-        finalCanvas.width = qrSize + (padding * 2);
-        finalCanvas.height = qrSize + (padding * 2) + 60; 
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-        
-        const img = new Image(); img.crossOrigin = "Anonymous";
-        img.onload = () => {
-            ctx.drawImage(img, padding, padding, qrSize, qrSize);
-            const centerX = finalCanvas.width / 2, centerY = padding + (qrSize / 2);
-            ctx.beginPath(); ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI); ctx.fillStyle = "#ffffff"; ctx.fill();
-            ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("❤️", centerX, centerY + 2);
-            ctx.fillStyle = "#cc0033"; ctx.font = "bold 26px 'Poppins', sans-serif"; ctx.textBaseline = "alphabetic"; ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
-            
-            const link = document.createElement('a');
-            link.download = `Premium_MemoryGift_QR_${id}.png`;
-            link.href = finalCanvas.toDataURL("image/png");
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        };
-        img.src = sourceImageSrc;
-    });
+            if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) { sourceImageSrc = qrImg.src; } 
+            else if (qrCanvas) { sourceImageSrc = qrCanvas.toDataURL("image/png"); } 
+            else { alert("Please wait..."); return; }
 
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+            const qrSize = 300, padding = 50; 
+
+            finalCanvas.width = qrSize + (padding * 2);
+            finalCanvas.height = qrSize + (padding * 2) + 60; 
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+            const img = new Image(); img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                ctx.drawImage(img, padding, padding, qrSize, qrSize);
+                const centerX = finalCanvas.width / 2, centerY = padding + (qrSize / 2);
+                ctx.beginPath(); ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI); ctx.fillStyle = "#ffffff"; ctx.fill();
+                ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("❤️", centerX, centerY + 2);
+                ctx.fillStyle = "#cc0033"; ctx.font = "bold 26px 'Poppins', sans-serif"; ctx.textBaseline = "alphabetic"; ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
+
+                const link = document.createElement('a');
+                link.download = `Premium_MemoryGift_QR_${id}.png`;
+                link.href = finalCanvas.toDataURL("image/png");
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            };
+            img.src = sourceImageSrc;
+        });
+    }
 })();

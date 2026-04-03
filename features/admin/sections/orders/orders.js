@@ -1,4 +1,4 @@
-(function() {
+window.initAdminorders = function() {
     const tbody = document.getElementById('orders-tbody');
     const searchInput = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
@@ -7,66 +7,62 @@
     const resetModal = document.getElementById('reset-modal');
     const baseUrl = window.location.origin + window.location.pathname;
 
-    let allOrders = []; // Filter ke liye saara data yahan store hoga
+    let allOrders = [];
 
-    // 1. Fetch Orders from Firebase
-    async function loadOrders() {
+    // 1. Fetch Orders from Firebase (Fixed token logic)
+    window.loadOrdersData = async function() {
+        if(!tbody) return;
         try {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Fetching Latest Data...</td></tr>';
-            const response = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
+
+            const adminToken = localStorage.getItem('adminToken');
+            const response = await fetch(`${firebaseConfig.databaseURL}/memories.json?auth=${adminToken}`);
+            if (!response.ok) throw new Error("Permission Denied / Token Expired");
+
             const data = await response.json();
-            
             allOrders = [];
-            if (data) {
+
+            if (data && !data.error) {
                 Object.keys(data).forEach(id => {
                     allOrders.push({ id, ...data[id] });
                 });
-                allOrders.reverse(); // Latest pehle dikhega
+                allOrders.reverse();
             }
-            
-            renderTable(); // Filter karke table draw karega
+            renderTable(); 
         } catch (e) {
             console.error(e);
-            tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Error loading data!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Error loading data! Please check connection or login again.</td></tr>';
         }
-    }
+    };
 
-    // 2. Date Filter Logic
     function isWithinDate(dateString, filterType) {
         if (filterType === 'all') return true;
         if (!dateString) return false;
-        
         const date = new Date(dateString);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        
+        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+        const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
         if (filterType === 'today') return date >= today;
         if (filterType === 'yesterday') return date >= yesterday && date < today;
         if (filterType === 'week') return date >= weekAgo;
         return true;
     }
 
-    // 3. Render Table & Apply Filters
     function renderTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const statusVal = statusFilter.value;
-        const dateVal = dateFilter.value;
+        if(!tbody) return;
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const statusVal = statusFilter ? statusFilter.value : 'all';
+        const dateVal = dateFilter ? dateFilter.value : 'all';
 
         const filteredOrders = allOrders.filter(order => {
-            const matchSearch = order.id.toLowerCase().includes(searchTerm) || (order.customer_name || '').toLowerCase().includes(searchTerm);
+            const matchSearch = String(order.id).toLowerCase().includes(searchTerm) || String(order.customer_name || '').toLowerCase().includes(searchTerm);
             const matchStatus = statusVal === 'all' || order.status === statusVal;
             const matchDate = isWithinDate(order.created_at, dateVal);
             return matchSearch && matchStatus && matchDate;
         });
 
         tbody.innerHTML = '';
-
         if (filteredOrders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748b;">No orders match your filter.</td></tr>';
             return;
@@ -75,7 +71,6 @@
         filteredOrders.forEach(memory => {
             const dateObj = memory.created_at ? new Date(memory.created_at) : null;
             const dateStr = dateObj ? dateObj.toLocaleDateString() : 'N/A';
-            
             const statusBadge = memory.status === 'locked' 
                 ? `<span class="badge badge-locked">Locked (Ready)</span>` 
                 : `<span class="badge badge-empty">Pending</span>`;
@@ -84,21 +79,13 @@
             const adminEditLink = `${baseUrl}?mode=admin_edit&id=${memory.id}`;
             const viewAdminLink = `${baseUrl}?mode=admin_preview&id=${memory.id}`;
             const viewLink = `${baseUrl}?id=${memory.id}`;
-
-            // NAYA: Enable/Disable toggle variable
             const isEnabled = memory.is_enabled !== false; 
+            const tr = document.createElement('tr');
 
-                        const tr = document.createElement('tr');
-            
-                        // Message ka text set karna
             const rawMsg = `Hello ${memory.customer_name || 'Customer'}! ❤️\n\nAapka Memory Gift create ho gaya hai. Kripya niche diye link par apni memories aur details fill karein:\n\n🔗 Link: ${formLink}\n\nThank you!`;
             const encodedMsg = encodeURIComponent(rawMsg);
-            
-            // Customer ka proper mobile number nikalna (agar blank ho toh khali chhod dega)
-            const cleanNumber = memory.mobile_number ? memory.mobile_number.replace(/\D/g,'') : '';
+            const cleanNumber = memory.mobile_number ? String(memory.mobile_number).replace(/\D/g,'') : '';
             const waLinkUrl = `https://wa.me/${cleanNumber ? '91'+cleanNumber : ''}?text=${encodedMsg}`;
-            
-            // NAYA: SMS ke liye direct link
             const smsLinkUrl = `sms:${cleanNumber ? '91'+cleanNumber : ''}?body=${encodedMsg}`;
 
             tr.innerHTML = `
@@ -126,12 +113,10 @@
         });
     }
 
-    // 4. Input Events (Live Search & Filter)
-    searchInput.addEventListener('input', renderTable);
-    statusFilter.addEventListener('change', renderTable);
-    dateFilter.addEventListener('change', renderTable);
+    if (searchInput) searchInput.addEventListener('input', renderTable);
+    if (statusFilter) statusFilter.addEventListener('change', renderTable);
+    if (dateFilter) dateFilter.addEventListener('change', renderTable);
 
-    // 5. Export to CSV Logic
     if (exportBtn) {
         exportBtn.addEventListener('click', () => {
             let csvContent = "data:text/csv;charset=utf-8,Order ID,Date,Customer Name,Mobile,Status\n";
@@ -149,75 +134,89 @@
         });
     }
 
-    // --- GLOBAL FUNCTIONS (Modals, Toggle, Delete & QR) ---
-
-    // Toggle Status in Firebase
     window.toggleCustomerStatus = async (id, status) => {
         try {
-            await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, {
+            const adminToken = localStorage.getItem('adminToken');
+            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json?auth=${adminToken}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_enabled: status })
             });
-            // Update local array seamlessly
+            if(!res.ok) throw new Error("Auth failed");
             const orderIndex = allOrders.findIndex(o => o.id === id);
             if(orderIndex > -1) allOrders[orderIndex].is_enabled = status;
         } catch (e) {
             alert("Error updating status.");
-            loadOrders(); // Revert toggle visually if failed
+            window.loadOrdersData(); 
         }
     };
 
     window.openResetModal = (id) => {
         window.currentResetId = id;
-        document.getElementById('reset-memory-id').innerText = id;
-        resetModal.classList.remove('hidden');
+        const resetText = document.getElementById('reset-memory-id');
+        if(resetText) resetText.innerText = id;
+        if(resetModal) resetModal.classList.remove('hidden');
     };
 
-    document.getElementById('close-reset-modal').addEventListener('click', () => { 
-        resetModal.classList.add('hidden'); 
-    });
+    const closeResetModalBtn = document.getElementById('close-reset-modal');
+    if (closeResetModalBtn) {
+        closeResetModalBtn.addEventListener('click', () => { 
+            if(resetModal) resetModal.classList.add('hidden'); 
+        });
+    }
 
     async function resetData(payload) {
         try {
-            await fetch(`${firebaseConfig.databaseURL}/memories/${window.currentResetId}.json`, { 
+            const adminToken = localStorage.getItem('adminToken');
+            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${window.currentResetId}.json?auth=${adminToken}`, { 
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
             });
+            if(!res.ok) throw new Error("Auth failed");
             alert("Reset Successful!");
-            resetModal.classList.add('hidden');
-            loadOrders(); // Table Refresh
+            if(resetModal) resetModal.classList.add('hidden');
+            window.loadOrdersData(); 
         } catch(e) { alert("Error resetting."); }
     }
 
-    document.getElementById('btn-reset-full').addEventListener('click', async () => {
-        if(confirm("Full reset? ALL data will be lost.")) {
-            await resetData({ status: "empty", occasion: null, passcode: null, music_id: null, message_text: null, girlfriend_name: null, open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null, open_when_hug: null, open_when_sorry: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null, image_1_url: null, caption_1: null, image_2_url: null, caption_2: null, image_3_url: null, caption_3: null, image_4_url: null, caption_4: null, image_5_url: null, caption_5: null });
-        }
-    });
+    const btnResetFull = document.getElementById('btn-reset-full');
+    if (btnResetFull) {
+        btnResetFull.addEventListener('click', async () => {
+            if(confirm("Full reset? ALL data will be lost.")) {
+                await resetData({ status: "empty", occasion: null, passcode: null, music_id: null, message_text: null, girlfriend_name: null, open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null, open_when_hug: null, open_when_sorry: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null, image_1_url: null, caption_1: null, image_2_url: null, caption_2: null, image_3_url: null, caption_3: null, image_4_url: null, caption_4: null, image_5_url: null, caption_5: null });
+            }
+        });
+    }
 
-    document.getElementById('btn-reset-text').addEventListener('click', async () => {
-        if(confirm("Reset Text only? Photos will be safe.")) {
-            await resetData({ status: "empty", occasion: null, passcode: null, message_text: null, girlfriend_name: null, open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null, open_when_hug: null, open_when_sorry: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null });
-        }
-    });
+    const btnResetText = document.getElementById('btn-reset-text');
+    if (btnResetText) {
+        btnResetText.addEventListener('click', async () => {
+            if(confirm("Reset Text only? Photos will be safe.")) {
+                await resetData({ status: "empty", occasion: null, passcode: null, message_text: null, girlfriend_name: null, open_when_happy: null, open_when_sad: null, open_when_miss_me: null, open_when_cant_sleep: null, open_when_hug: null, open_when_sorry: null, locked_at: null, scanned_at: null, proposal_accepted_at: null, chat: null, message_count: null });
+            }
+        });
+    }
 
-    document.getElementById('btn-reset-images').addEventListener('click', async () => {
-        if(confirm("Reset Images only? Text will be safe.")) {
-            await resetData({ status: "empty", image_1_url: null, caption_1: null, image_2_url: null, caption_2: null, image_3_url: null, caption_3: null, image_4_url: null, caption_4: null, image_5_url: null, caption_5: null });
-        }
-    });
+    const btnResetImages = document.getElementById('btn-reset-images');
+    if (btnResetImages) {
+        btnResetImages.addEventListener('click', async () => {
+            if(confirm("Reset Images only? Text will be safe.")) {
+                await resetData({ status: "empty", image_1_url: null, caption_1: null, image_2_url: null, caption_2: null, image_3_url: null, caption_3: null, image_4_url: null, caption_4: null, image_5_url: null, caption_5: null });
+            }
+        });
+    }
 
     window.deleteMemory = async (id) => {
         if(confirm(`DANGER! Delete ID: ${id} forever?`)) {
             try {
-                await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json`, { method: 'DELETE' });
+                const adminToken = localStorage.getItem('adminToken');
+                const res = await fetch(`${firebaseConfig.databaseURL}/memories/${id}.json?auth=${adminToken}`, { method: 'DELETE' });
+                if(!res.ok) throw new Error("Auth failed");
                 alert("Deleted successfully.");
-                loadOrders();
+                window.loadOrdersData();
             } catch(e) { alert("Error deleting."); }
         }
     };
 
-    // Premium QR Downloader from Table
     window.downloadTableQR = (url, id) => {
         const hiddenContainer = document.getElementById('hidden-qr-container');
         if(!hiddenContainer) return;
@@ -225,61 +224,42 @@
         new QRCode(hiddenContainer, { 
             text: url, width: 300, height: 300, colorDark : "#cc0033", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H 
         });
-        
+
         setTimeout(() => { 
             const qrCanvas = hiddenContainer.querySelector('canvas');
             const qrImg = hiddenContainer.querySelector('img');
             let sourceImageSrc = '';
-            
+
             if (qrImg && qrImg.src && qrImg.src.startsWith('data:image')) { sourceImageSrc = qrImg.src; } 
             else if (qrCanvas) { sourceImageSrc = qrCanvas.toDataURL("image/png"); } 
             else { alert("Error generating QR"); return; }
 
             const finalCanvas = document.createElement('canvas');
             const ctx = finalCanvas.getContext('2d');
-            const qrSize = 300;
-            const padding = 50; 
-            
+            const qrSize = 300, padding = 50; 
+
             finalCanvas.width = qrSize + (padding * 2);
             finalCanvas.height = qrSize + (padding * 2) + 60; 
-            
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-            
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+            const img = new Image(); img.crossOrigin = "Anonymous";
             img.onload = () => {
                 ctx.drawImage(img, padding, padding, qrSize, qrSize);
-                
-                const centerX = finalCanvas.width / 2;
-                const centerY = padding + (qrSize / 2);
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
-                ctx.fillStyle = "#ffffff";
-                ctx.fill();
-                
-                ctx.font = "40px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("❤️", centerX, centerY + 2);
-                
-                ctx.fillStyle = "#cc0033";
-                ctx.font = "bold 26px 'Poppins', sans-serif";
-                ctx.textBaseline = "alphabetic";
-                ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
-                
+                const centerX = finalCanvas.width / 2, centerY = padding + (qrSize / 2);
+                ctx.beginPath(); ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI); ctx.fillStyle = "#ffffff"; ctx.fill();
+                ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("❤️", centerX, centerY + 2);
+                ctx.fillStyle = "#cc0033"; ctx.font = "bold 26px 'Poppins', sans-serif"; ctx.textBaseline = "alphabetic"; ctx.fillText("Scan Me 👉 🔗", finalCanvas.width / 2, finalCanvas.height - 30);
+
                 const link = document.createElement('a');
                 link.download = `Premium_MemoryGift_QR_${id}.png`;
                 link.href = finalCanvas.toDataURL("image/png");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
             };
             img.src = sourceImageSrc;
         }, 400); 
     };
 
-    // Initialize module
-    loadOrders();
+    window.loadOrdersData();
+};
 
-})();
+window.initAdminorders();
