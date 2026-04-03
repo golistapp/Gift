@@ -49,7 +49,7 @@
         }
     };
 
-    const ChatUI = {
+        const ChatUI = {
         formatTime: function(isoString) {
             if(!isoString) return '';
             return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -115,11 +115,33 @@
                 if (new Date(currentLastMsg.timestamp).getTime() > gfReadTime) ChatNetwork.updateReadReceipt();
             }
 
-            if(isNewMessage && currentLastMsg.sender === 'bf') {
-                if(DOM.soundReceive) { DOM.soundReceive.currentTime = 0; DOM.soundReceive.play().catch(()=>{}); }
+            const bfReadTime = memoryData.bf_last_read ? new Date(memoryData.bf_last_read).getTime() : 0;
+
+            // 🔴 FLY AWAY ANIMATION LOGIC
+            if (isNewMessage && !DOM.chatArea.classList.contains('history-mode')) {
+                if(DOM.soundReceive && currentLastMsg.sender === 'bf') { DOM.soundReceive.currentTime = 0; DOM.soundReceive.play().catch(()=>{}); }
+
+                const oldLiveMsg = DOM.chatArea.querySelector(`.msg-wrapper.${currentLastMsg.sender}.live-active`);
+                if (oldLiveMsg) {
+                    const rect = oldLiveMsg.getBoundingClientRect();
+                    const clone = oldLiveMsg.cloneNode(true);
+                    clone.classList.remove('live-active');
+                    clone.classList.add('fly-away');
+                    clone.style.position = 'fixed';
+                    clone.style.left = rect.left + 'px';
+                    clone.style.top = rect.top + 'px';
+                    clone.style.margin = '0';
+                    document.body.appendChild(clone);
+                    setTimeout(() => clone.remove(), 850);
+                }
             }
 
-            const bfReadTime = memoryData.bf_last_read ? new Date(memoryData.bf_last_read).getTime() : 0;
+            // 🔴 FIND LATEST MESSAGES FOR 'LIVE MODE'
+            let lastBfIdx = -1, lastGfIdx = -1;
+            for (let i = 0; i < chatList.length; i++) {
+                if (chatList[i].sender === 'bf') lastBfIdx = i;
+                if (chatList[i].sender === 'gf') lastGfIdx = i;
+            }
 
             let newHtml = '';
             chatList.forEach((msgObj, index) => {
@@ -156,11 +178,13 @@
                     tickHtml = `<span class="msg-tick ${isRead ? 'tick-blue' : 'tick-grey'}"><i class="fa-solid fa-check-double"></i></span>`;
                 }
 
-                const animStyle = ((index === chatList.length - 1) && isNewMessage) ? '' : 'style="animation: none;"';
                 const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
 
+                // 🔴 ADD 'live-active' TO LATEST 2 MESSAGES ONLY
+                let liveClass = (index === lastBfIdx || index === lastGfIdx) ? ' live-active' : '';
+
                 newHtml += `
-                    <div class="msg-wrapper ${isGf ? 'gf' : 'bf'}" ${animStyle}>
+                    <div class="msg-wrapper ${isGf ? 'gf' : 'bf'}${liveClass}">
                         <div class="msg-bubble" style="${bubblePadding}">
                             ${quoteHtml}
                             ${imageHtml}
@@ -174,8 +198,14 @@
             });
 
             if (DOM.chatArea.innerHTML !== newHtml) {
+                const oldScrollHeight = DOM.chatArea.scrollHeight;
                 DOM.chatArea.innerHTML = newHtml;
-                if (isNewMessage || lastMsgTime === "") DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
+
+                if (DOM.chatArea.classList.contains('history-mode')) {
+                    DOM.chatArea.scrollTop += (DOM.chatArea.scrollHeight - oldScrollHeight);
+                } else if (isNewMessage || lastMsgTime === "") {
+                    DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
+                }
             }
             lastMsgTime = currentLastMsg.timestamp;
         }
@@ -248,9 +278,14 @@
 
                 // 🚀 FAST UI UPDATE: Turant screen se input hat jayega
                 if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
-                currentReplyQuote = "";
+                                currentReplyQuote = "";
                 if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
+
+                // 🔴 NEW: Bhejte waqt History Mode hata do
+                if (DOM.chatArea) DOM.chatArea.classList.remove('history-mode');
+
                 this.updateStatus('online'); 
+
 
                 // 🚀 SUPERFAST POST: Firebase seedha naya push karega
                 fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
@@ -321,16 +356,45 @@
         });
     }
 
-    let scrollTimeout;
+      let scrollTimeout;
+    let lastScrollTop = 0;
+
     if(DOM.chatArea && DOM.scrollArrows) {
         DOM.chatArea.addEventListener('scroll', () => {
             DOM.scrollArrows.classList.remove('hidden');
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => DOM.scrollArrows.classList.add('hidden'), 1500);
+
+            // 🔴 HISTORY MODE TOGGLE LOGIC
+            const currentScrollTop = DOM.chatArea.scrollTop;
+            const isScrollingUp = currentScrollTop < lastScrollTop;
+            const isAtBottom = DOM.chatArea.scrollHeight - currentScrollTop - DOM.chatArea.clientHeight <= 10;
+
+            if (isScrollingUp && !DOM.chatArea.classList.contains('history-mode') && currentScrollTop > 0) {
+                // Upar Scroll karne par purani chat dikhao
+                const oldHeight = DOM.chatArea.scrollHeight;
+                DOM.chatArea.classList.add('history-mode');
+                const newHeight = DOM.chatArea.scrollHeight;
+                DOM.chatArea.scrollTop = currentScrollTop + (newHeight - oldHeight); 
+            } else if (isAtBottom && DOM.chatArea.classList.contains('history-mode')) {
+                // Niche aane par History mode band kardo
+                DOM.chatArea.classList.remove('history-mode');
+            }
+
+            lastScrollTop = currentScrollTop;
         });
-        DOM.scrollTopBtn.addEventListener('click', () => DOM.chatArea.scrollTo({top: 0, behavior: 'smooth'}));
-        DOM.scrollBottomBtn.addEventListener('click', () => DOM.chatArea.scrollTo({top: DOM.chatArea.scrollHeight, behavior: 'smooth'}));
+
+        DOM.scrollTopBtn.addEventListener('click', () => {
+            DOM.chatArea.classList.add('history-mode');
+            setTimeout(() => DOM.chatArea.scrollTo({top: 0, behavior: 'smooth'}), 50);
+        });
+
+        DOM.scrollBottomBtn.addEventListener('click', () => {
+            DOM.chatArea.scrollTo({top: DOM.chatArea.scrollHeight, behavior: 'smooth'});
+            setTimeout(() => DOM.chatArea.classList.remove('history-mode'), 300);
+        });
     }
+
 
     function initApp() {
         if (state.mode === 'admin_preview') {
