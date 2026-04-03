@@ -201,96 +201,77 @@
             }).catch(e => {});
         },
 
-                startRealtime: function() {
+                        startRealtime: function() {
             if (window.gfChatStream) window.gfChatStream.close();
             if (window.bfStatusStream) window.bfStatusStream.close();
             if (window.bfReadStream) window.bfReadStream.close();
 
-            // 1. Chat Stream
             window.gfChatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
-            window.gfChatStream.addEventListener('put', (e) => {
+            const handleChatData = (e) => {
                 try {
                     const payload = JSON.parse(e.data);
-                    if (payload.path === "/") { state.memoryData.chat = payload.data; } 
-                    else {
-                        const idx = parseInt(payload.path.split('/')[1]);
-                        if (!state.memoryData.chat) state.memoryData.chat = [];
-                        state.memoryData.chat[idx] = payload.data;
-                    }
-                    ChatUI.renderMessages();
-                } catch(err) {}
-            });
-
-            // 2. BF Status Stream
-            window.bfStatusStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/bf_status.json`);
-            window.bfStatusStream.addEventListener('put', (e) => {
-                try {
-                    const payload = JSON.parse(e.data);
-                    if (payload.data !== undefined) {
-                        state.memoryData.bf_status = payload.data;
-                        ChatUI.updateHeader();
-                    }
-                } catch(err) {}
-            });
-
-            // 3. BF Last Read Stream
-            window.bfReadStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/bf_last_read.json`);
-            window.bfReadStream.addEventListener('put', (e) => {
-                try {
-                    const payload = JSON.parse(e.data);
-                    if (payload.data !== undefined) {
-                        state.memoryData.bf_last_read = payload.data;
+                    if (payload && payload.data !== null) {
+                        if (payload.path === "/") { 
+                            state.memoryData.chat = payload.data; 
+                        } else {
+                            const idx = parseInt(payload.path.replace(/[^0-9]/g, ''));
+                            if (!state.memoryData.chat) state.memoryData.chat = [];
+                            if (!isNaN(idx)) state.memoryData.chat[idx] = payload.data;
+                        }
                         ChatUI.renderMessages();
                     }
                 } catch(err) {}
+            };
+            window.gfChatStream.addEventListener('put', handleChatData);
+            window.gfChatStream.addEventListener('patch', handleChatData);
+
+            window.bfStatusStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/bf_status.json`);
+            window.bfStatusStream.addEventListener('put', (e) => {
+                try { const p = JSON.parse(e.data); if (p.data !== null) { state.memoryData.bf_status = p.data; ChatUI.updateHeader(); } } catch(err) {}
+            });
+
+            window.bfReadStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/bf_last_read.json`);
+            window.bfReadStream.addEventListener('put', (e) => {
+                try { const p = JSON.parse(e.data); if (p.data !== null) { state.memoryData.bf_last_read = p.data; ChatUI.renderMessages(); } } catch(err) {}
             });
         },
 
-
-                sendMessage: async function(rawText) {
+        sendMessage: async function(rawText) {
             if(!rawText && !currentReplyQuote) return false;
 
             let finalMsgText = rawText;
-            if(currentReplyQuote) {
-                finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
-            }
+            if(currentReplyQuote) { finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`; }
 
             if(DOM.soundSend) { DOM.soundSend.currentTime = 0; DOM.soundSend.play().catch(()=>{}); }
             if(navigator.vibrate) navigator.vibrate(40); 
-            if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; DOM.sendBtn.disabled = true; }
 
             try {
                 const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
                 const newMsgObj = { sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() };
 
-                // 🚀 1. SUPERFAST UI: Turant message clear karo
+                // 🚀 1. INSTANT UI UPDATE
+                if (!state.memoryData.chat) state.memoryData.chat = [];
+                const newIndex = state.memoryData.chat.length;
+                state.memoryData.chat.push(newMsgObj);
+                ChatUI.renderMessages();
+
+                // 🚀 2. UI CLEAR
                 if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
                 currentReplyQuote = "";
                 if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
-                if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; DOM.sendBtn.disabled = false; }
                 this.updateStatus('online'); 
 
-                // 🚀 2. FIREBASE PUSH: Direct upload
-                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify(newMsgObj)
+                // 🚀 3. BACKGROUND UPLOAD
+                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat/${newIndex}.json`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMsgObj)
                 });
-
-                // 3. Background Count Update
-                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`)
-                    .then(res => res.json())
-                    .then(count => {
-                        fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
-                            method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify((count || 0) + 1)
-                        });
-                    });
+                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newIndex + 1)
+                });
 
                 return true;
             } catch(err) { 
                 console.error(err);
-                if(DOM.sendBtn) { DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; DOM.sendBtn.disabled = false; }
                 return false; 
             }
         }
