@@ -1,6 +1,12 @@
 (function() {
     const state = window.formState;
-    if (!state || !state.memoryData) return;
+    if (!state) return; // 🔴 FIXED: Firebase restrictions ki wajah se memoryData yahan incomplete ho sakta hai, toh check hata diya
+
+    // --- FIREBASE INITIALIZATION ---
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
 
     // 🔴 Global variables for logic
     let currentReplyQuote = ""; 
@@ -13,7 +19,7 @@
     const unlockBtn = document.getElementById('verify-passcode-btn');
     const errorMsg = document.getElementById('passcode-error');
 
-    // Naye DOM Elements
+    // DOM Elements
     const chatArea = document.getElementById('bf-chat-area');
     const inputEl = document.getElementById('bf-chat-input');
     const sendBtn = document.getElementById('bf-send-btn');
@@ -53,21 +59,16 @@
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // --- FIREBASE REALTIME WRITES ---
     function updateBFStatus(statusStr) {
-        if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_status: statusStr })
-            }).catch(e => {});
+        if (state.memoryId) {
+            db.ref(`memories/${state.memoryId}/bf_status`).set(statusStr).catch(e=>{});
         }
     }
 
     function updateBFReadReceipt() {
-        if (document.hidden) return; 
-        if (typeof firebaseConfig !== 'undefined' && state.memoryId) {
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bf_last_read: new Date().toISOString() })
-            }).catch(e => {});
-        }
+        if (document.hidden || !state.memoryId) return; 
+        db.ref(`memories/${state.memoryId}/bf_last_read`).set(new Date().toISOString()).catch(e=>{});
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -76,26 +77,61 @@
     });
     window.addEventListener('beforeunload', () => updateBFStatus(new Date().toISOString()));
 
-        unlockBtn.addEventListener('click', () => {
-        const storedPass = state.memoryData.passcode || "";
+    // 🔴🔴🔴 VERCEL API SECURE VERIFICATION 🔴🔴🔴
+    unlockBtn.addEventListener('click', async () => {
         const enteredPass = passInput.value.trim();
 
-        // NAYA LOGIC: Check karega ki database ka password (e.g. GX-01-123456)
-        // user ke enter kiye hue 6 digits (e.g. 123456) se match ya end karta hai ya nahi.
-        if (storedPass === enteredPass || (enteredPass !== "" && storedPass.endsWith(enteredPass))) {
-            state.userPasscode = enteredPass;
-            lockScreen.classList.add('hidden');
-            dashMain.classList.remove('hidden');
-            // NAYA: Header mein Gift Person ka naam set karna
-            document.getElementById('chat-person-name').innerText = state.memoryData.girlfriend_name || "My Love ❤️";
-
-            updateBFStatus('online'); updateBFReadReceipt(); 
-            renderDashboardUI(); startRealtimeDashboard(); 
-        } else {
+        if (enteredPass === "") {
+            errorMsg.innerText = "Please enter passcode";
             errorMsg.classList.remove('hidden');
+            return;
+        }
+
+        unlockBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+        unlockBtn.disabled = true;
+        errorMsg.classList.add('hidden');
+
+        try {
+            // Vercel Backend se check karwa rahe hain (Bypasses Firebase Rules securely)
+            const response = await fetch('/api/verify-passcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    memoryId: state.memoryId, 
+                    enteredPasscode: enteredPass, 
+                    requestType: 'unlock' 
+                })
+            });
+            
+            const resData = await response.json();
+
+            if (resData.success) {
+                // ✅ Passcode Sahi Hai!
+                state.memoryData = resData.memoryData; // Backend se poora data le liya
+                state.userPasscode = enteredPass;
+                
+                lockScreen.classList.add('hidden');
+                dashMain.classList.remove('hidden');
+                document.getElementById('chat-person-name').innerText = state.memoryData.girlfriend_name || "My Love ❤️";
+
+                updateBFStatus('online'); 
+                updateBFReadReceipt(); 
+                renderDashboardUI(); 
+                startRealtimeDashboard(); // Firebase WebSockets start
+            } else {
+                // ❌ Passcode Galat Hai
+                errorMsg.innerText = "Incorrect Passcode!";
+                errorMsg.classList.remove('hidden');
+                if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+            }
+        } catch (e) {
+            errorMsg.innerText = "Network Error! Please try again.";
+            errorMsg.classList.remove('hidden');
+        } finally {
+            unlockBtn.innerHTML = 'Unlock';
+            unlockBtn.disabled = false;
         }
     });
-
 
     function updateHeaderStatus() {
         const statusEl = document.getElementById('live-status');
@@ -135,39 +171,32 @@
         return combinedChat;
     }
 
+    // --- FIREBASE NATIVE LISTENERS (WEBSOCKETS) ---
     function startRealtimeDashboard() {
-        const chatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
-        chatStream.addEventListener('put', (e) => {
-            try {
-                const payload = JSON.parse(e.data);
-                let needChatRender = true;
-                if (payload.path === "/") { if (payload.data) state.memoryData = payload.data; } 
-                else if (payload.path === "/chat") { state.memoryData.chat = payload.data; } 
-                else if (payload.path.startsWith("/chat/")) {
-                    const index = parseInt(payload.path.split('/')[2]);
-                    if (!state.memoryData.chat) state.memoryData.chat = [];
-                    state.memoryData.chat[index] = payload.data;
-                } 
-                else if (payload.path === "/message_count") state.memoryData.message_count = payload.data;
-                else if (payload.path === "/gf_last_read") state.memoryData.gf_last_read = payload.data;
-                else if (payload.path === "/gf_status") { state.memoryData.gf_status = payload.data; needChatRender = false; } 
-                else { needChatRender = false; }
+        const memRef = db.ref(`memories/${state.memoryId}`);
 
-                if (needChatRender) renderDashboardUI();
-                updateHeaderStatus();
-            } catch(err) {}
+        // Listen for Chat Array Updates
+        memRef.child('chat').on('value', (snapshot) => {
+            state.memoryData.chat = snapshot.val() || [];
+            renderDashboardUI();
         });
-        chatStream.addEventListener('patch', (e) => {
-            try {
-                const payload = JSON.parse(e.data);
-                if (payload.path === "/") { 
-                    state.memoryData = { ...state.memoryData, ...payload.data }; 
-                    const keys = Object.keys(payload.data);
-                    const onlyStatus = keys.every(k => k === 'gf_status' || k === 'bf_status');
-                    if (!onlyStatus) renderDashboardUI();
-                    updateHeaderStatus();
-                }
-            } catch(err) {}
+
+        // Listen for GF Status Updates
+        memRef.child('gf_status').on('value', (snapshot) => {
+            state.memoryData.gf_status = snapshot.val();
+            updateHeaderStatus();
+        });
+
+        // Listen for GF Read Receipt
+        memRef.child('gf_last_read').on('value', (snapshot) => {
+            state.memoryData.gf_last_read = snapshot.val();
+            renderDashboardUI(); // Update Blue Ticks
+        });
+
+        // Listen for message counts
+        memRef.child('message_count').on('value', (snapshot) => {
+            state.memoryData.message_count = snapshot.val() || 0;
+            renderDashboardUI();
         });
     }
 
@@ -214,7 +243,6 @@
                 decryptedText = bytes.toString(CryptoJS.enc.Utf8);
             } catch(e) { decryptedText = ""; }
 
-            // 🔴 NAYA: Parse Quote Text
             let quoteHtml = "";
             const quoteRegex = /\[QUOTE\](.*?)\[\/QUOTE\]/s;
             const match = decryptedText.match(quoteRegex);
@@ -271,10 +299,10 @@
         dashLastMsgTime = currentLastMsg.timestamp;
     }
 
-    async function sendMessageToFirebase(rawText) {
+    // --- FIREBASE NATIVE PUSH (Transaction for Safety) ---
+    function sendMessageToFirebase(rawText) {
         if(!rawText && !currentReplyQuote) return;
 
-        // 🔴 NAYA: Add quote wrapper if reply is active
         let finalMsgText = rawText;
         if(currentReplyQuote) {
             finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`;
@@ -286,37 +314,31 @@
         sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
         sendBtn.disabled = true;
 
-        try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`);
-            const latestData = await res.json();
+        const memRef = db.ref(`memories/${state.memoryId}`);
+        const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
+        const newMsgObj = { sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() };
 
-            let rawChat = latestData.chat || [];
-            let chatList = Array.isArray(rawChat) ? rawChat : Object.values(rawChat);
-            chatList = chatList.filter(msg => msg !== null && msg.sender);
+        // Use transaction to safely append message
+        memRef.child('chat').transaction((currentChat) => {
+            let chatList = currentChat || [];
+            if (!Array.isArray(chatList)) chatList = Object.values(chatList);
+            chatList.push(newMsgObj);
+            if (chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
+            return chatList;
+        }, (error, committed) => {
+            if (error) {
+                alert("Error sending message. Check connection.");
+            } else if (committed) {
+                memRef.child('message_count').transaction(c => (c || 0) + 1);
 
-            let newCount = (latestData.message_count || 0) + 1;
-
-            const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
-            chatList.push({ sender: 'bf', text: encryptedMsg, timestamp: new Date().toISOString() });
-
-            if(chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
-
-            await fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat: chatList, message_count: newCount })
-            });
-
-            inputEl.value = ''; inputEl.style.height = 'auto'; 
-
-            // Clear Reply state
-            currentReplyQuote = "";
-            if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
-
-            updateBFStatus('online'); 
-        } catch(err) { alert("Error sending message."); }
-
-        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
-        sendBtn.disabled = false;
+                inputEl.value = ''; inputEl.style.height = 'auto'; 
+                currentReplyQuote = "";
+                if(replyPreviewBox) replyPreviewBox.classList.add('hidden');
+                updateBFStatus('online'); 
+            }
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
+            sendBtn.disabled = false;
+        });
     }
 
     // Gallery Popup Logic
@@ -360,7 +382,6 @@
         inputEl.addEventListener('focus', () => { updateBFReadReceipt(); updateBFStatus('online'); });
     }
 
-    // 🔴 NAYA: Scroll Arrows Logic
     let scrollTimeout;
     if(chatArea && scrollArrows) {
         chatArea.addEventListener('scroll', () => {
@@ -372,7 +393,6 @@
         if(scrollBottomBtn) scrollBottomBtn.addEventListener('click', () => chatArea.scrollTo({top: chatArea.scrollHeight, behavior: 'smooth'}));
     }
 
-    // 🔴 NAYA: Swipe To Reply Logic
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
     if(chatArea) {
         chatArea.addEventListener('touchstart', e => {
