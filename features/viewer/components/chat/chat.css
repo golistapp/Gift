@@ -125,8 +125,8 @@
 }
 
 /* 🔴 FIX 2: 'top' ki value kam kar di hai taaki messages aur upar (phones ke paas) dikhein */
-.whatsapp-bg:not(.history-mode) .msg-wrapper.bf.live-active { top: 10vh; top: 10lvh; left: 25vw; }
-.whatsapp-bg:not(.history-mode) .msg-wrapper.gf.live-active { top: 18vh; top: 18lvh; right: 25vw; }
+.whatsapp-bg:not(.history-mode) .msg-wrapper.bf.live-active { top: 24vh; top: 24lvh; left: 25vw; }
+.whatsapp-bg:not(.history-mode) .msg-wrapper.gf.live-active { top: 23vh; top: 23lvh; right: 25vw; }
 
 /* HISTORY MODE: Normal Scroll List ki tarah dikhao */
 .whatsapp-bg.history-mode .msg-wrapper {
