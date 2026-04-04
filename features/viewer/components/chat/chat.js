@@ -55,18 +55,24 @@
             return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         },
 
-        initViewportFix: function() {
+                initViewportFix: function() {
             if (window.visualViewport && DOM.wrapper) {
                 window.visualViewport.addEventListener('resize', () => {
-                    if (window.visualViewport.height < window.innerHeight - 50) {
+                    // Pata lagana ki keyboard khula hai ya nahi (Focus check karna sabse safe hai)
+                    const isKeyboardActive = document.activeElement === DOM.inputEl;
+
+                    if (isKeyboardActive || window.visualViewport.height < window.screen.height - 100) {
+                        // 🔴 KEYBOARD OPEN: Poori screen le lo (100%), 70px ki gap hata do
                         DOM.wrapper.style.height = `${window.visualViewport.height}px`;
                     } else {
+                        // 🔴 KEYBOARD CLOSED: Wapas 70px gap chhod do footer ke liye
                         DOM.wrapper.style.height = `calc(100dvh - 70px)`; 
                     }
                     if(DOM.chatArea) DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
                 });
             }
         },
+
 
         updateHeader: function() {
             if (!DOM.statusEl) return;
@@ -180,11 +186,16 @@
 
                 const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
 
-                // 🔴 ADD 'live-active' TO LATEST 2 MESSAGES ONLY
+                               // 🔴 ADD 'live-active' TO LATEST 2 MESSAGES ONLY
                 let liveClass = (index === lastBfIdx || index === lastGfIdx) ? ' live-active' : '';
 
+                // 🔴 ONLY ANIMATE THE NEWLY ARRIVED MESSAGE
+                let animClass = (isNewMessage && index === chatList.length - 1) ? ' animate-pop' : '';
+
                 newHtml += `
-                    <div class="msg-wrapper ${isGf ? 'gf' : 'bf'}${liveClass}">
+                    <div class="msg-wrapper ${isGf ? 'gf' : 'bf'}${liveClass}${animClass}">
+
+
                         <div class="msg-bubble" style="${bubblePadding}">
                             ${quoteHtml}
                             ${imageHtml}
@@ -211,10 +222,10 @@
         }
     };
 
-    const ChatNetwork = {
+        const ChatNetwork = {
         // 🔴 BUG FIXED: Status direct gf_status file mein update hoga
         updateStatus: function(statusStr) {
-            if (state.mode === 'admin_preview' || !state.memoryId || typeof firebaseConfig === 'undefined') return;
+            if (!state.memoryId || typeof firebaseConfig === 'undefined') return;
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_status.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(statusStr)
             }).catch(e => {});
@@ -222,11 +233,12 @@
 
         // 🔴 BUG FIXED: Read receipt direct file mein update hoga
         updateReadReceipt: function() {
-            if (state.mode === 'admin_preview' || document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
+            if (document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_last_read.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(new Date().toISOString())
             }).catch(e => {});
         },
+
 
         startRealtime: function() {
             if (window.gfChatStream) window.gfChatStream.close();
@@ -370,11 +382,15 @@
             const isScrollingUp = currentScrollTop < lastScrollTop;
             const isAtBottom = DOM.chatArea.scrollHeight - currentScrollTop - DOM.chatArea.clientHeight <= 10;
 
-            if (isScrollingUp && !DOM.chatArea.classList.contains('history-mode') && currentScrollTop > 0) {
+                        if (isScrollingUp && !DOM.chatArea.classList.contains('history-mode') && currentScrollTop > 0) {
                 // Upar Scroll karne par purani chat dikhao
                 const oldHeight = DOM.chatArea.scrollHeight;
                 DOM.chatArea.classList.add('history-mode');
+                // 🔴 Scroll karte hi animation class hata do taaki wapas niche aane par dubara popup na ho
+                DOM.chatArea.querySelectorAll('.animate-pop').forEach(el => el.classList.remove('animate-pop'));
                 const newHeight = DOM.chatArea.scrollHeight;
+
+
                 DOM.chatArea.scrollTop = currentScrollTop + (newHeight - oldHeight); 
             } else if (isAtBottom && DOM.chatArea.classList.contains('history-mode')) {
                 // Niche aane par History mode band kardo
@@ -396,17 +412,9 @@
     }
 
 
-    function initApp() {
-        if (state.mode === 'admin_preview') {
-            if(DOM.inputEl) { 
-                DOM.inputEl.disabled = true; 
-                DOM.inputEl.placeholder = "Admin Preview (Read Only)"; 
-            }
-            if(DOM.sendBtn) DOM.sendBtn.disabled = true;
-            if(DOM.galleryBtn) DOM.galleryBtn.disabled = true;
-        }
-
+        function initApp() {
         ChatUI.initViewportFix();
+
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) { 
@@ -416,13 +424,36 @@
                 ChatNetwork.updateStatus(new Date().toISOString()); 
             }
         });
-        window.addEventListener('beforeunload', () => ChatNetwork.updateStatus(new Date().toISOString()));
-        if(DOM.inputEl) DOM.inputEl.addEventListener('focus', () => ChatNetwork.updateReadReceipt());
+                        window.addEventListener('beforeunload', () => ChatNetwork.updateStatus(new Date().toISOString()));
+
+        if(DOM.inputEl) {
+            DOM.inputEl.addEventListener('focus', () => {
+                ChatNetwork.updateReadReceipt();
+                const bottomNav = document.querySelector('.bottom-nav-bar');
+                if(bottomNav) bottomNav.style.display = 'none';
+
+                // 🔴 GAP FIX: Jaise hi keyboard khule, chat wrapper ko poora faila do (gap khatam)
+                if (DOM.wrapper) {
+                    DOM.wrapper.style.height = window.visualViewport ? `${window.visualViewport.height}px` : '100dvh';
+                }
+            });
+
+            DOM.inputEl.addEventListener('blur', () => {
+                const bottomNav = document.querySelector('.bottom-nav-bar');
+                if(bottomNav) bottomNav.style.display = 'flex';
+
+                // 🔴 KEYBOARD CLOSE: Wapas 70px gap chhod do taaki footer dikh sake
+                if (DOM.wrapper) {
+                    DOM.wrapper.style.height = 'calc(100dvh - 70px)';
+                }
+            });
+        }
 
         if(DOM.galleryBtn) {
+
+
             DOM.galleryBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                if(state.mode === 'admin_preview') return; 
 
                 DOM.imgGrid.innerHTML = '';
                 let found = false;
@@ -449,15 +480,14 @@
             DOM.sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
             DOM.sendBtn.addEventListener('touchstart', (e) => { 
                 e.preventDefault(); 
-                if(!DOM.sendBtn.disabled && state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim()); 
+                if(!DOM.sendBtn.disabled) ChatNetwork.sendMessage(DOM.inputEl.value.trim()); 
             });
 
             DOM.sendBtn.addEventListener('click', () => {
-                if(state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim());
+                ChatNetwork.sendMessage(DOM.inputEl.value.trim());
             });
 
             DOM.inputEl.addEventListener('input', function() {
-                if(state.mode === 'admin_preview') return;
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
                 ChatNetwork.updateStatus('typing...');
@@ -465,6 +495,7 @@
                 typingTimer = setTimeout(() => ChatNetwork.updateStatus('online'), 1500);
             });
         }
+
 
         ChatNetwork.updateStatus('online');
         ChatNetwork.updateReadReceipt();
