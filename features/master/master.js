@@ -73,11 +73,11 @@
                 return; 
             }
 
-            // Agar ID '3' dali, toh 'GX-03' banayega, agar '100' dali toh 'GX-100' banayega
+                    // Agar ID '3' dali, toh 'GX-03' banayega, agar '100' dali toh 'GX-100' banayega
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
             
-                        openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
+            openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
 
             try {
                 // 🔴 SECURE API CALL (Bypasses Firebase Read Block via Admin SDK)
@@ -100,7 +100,7 @@
                     }, 50);
                     return;
                 } else {
-                    // Password ya ID galat hai, ya Rate Limit exceed ho gaya
+                    // Password ya ID galat hai, ya rate limit active hai
                     showError(resData.error || "Incorrect Details.");
                 }
             } catch (err) { 
@@ -112,6 +112,7 @@
             }
         });
     }
+          
 
     function showError(customMsg) {
         errorMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${customMsg || "Incorrect Details."}`;
