@@ -17,12 +17,18 @@
         imgGrid: document.getElementById('gf-img-grid'),
         closePopup: document.getElementById('gf-close-popup'),
         replyPreviewBox: document.getElementById('reply-preview-box'),
-        replyTextPreview: document.getElementById('reply-text-preview'),
+                replyTextPreview: document.getElementById('reply-text-preview'),
         cancelReplyBtn: document.getElementById('cancel-reply-btn'),
         scrollArrows: document.getElementById('scroll-arrows'),
         scrollTopBtn: document.getElementById('scroll-top-btn'),
-        scrollBottomBtn: document.getElementById('scroll-bottom-btn')
+        scrollBottomBtn: document.getElementById('scroll-bottom-btn'),
+
+        // 🔴 NAYA: Full screen modal ke elements
+        fullImgModal: document.getElementById('full-image-modal'),
+        fullImgDisplay: document.getElementById('full-image-display'),
+        closeFullImgBtn: document.getElementById('close-full-image')
     };
+
 
     let currentReplyQuote = ""; 
     let lastMsgTime = "";
@@ -344,13 +350,33 @@
             swipedMsg = null;
         });
 
-        DOM.cancelReplyBtn.addEventListener('click', () => {
+                DOM.cancelReplyBtn.addEventListener('click', () => {
             currentReplyQuote = "";
             DOM.replyPreviewBox.classList.add('hidden');
         });
     }
 
+    // 🔴 IMAGE FULL SCREEN LOGIC (Click karke image badi karna)
+    if(DOM.chatArea) {
+        DOM.chatArea.addEventListener('click', (e) => {
+            if(e.target.classList.contains('chat-img-msg')) {
+                if(DOM.fullImgDisplay && DOM.fullImgModal) {
+                    DOM.fullImgDisplay.src = e.target.src;
+                    DOM.fullImgModal.classList.add('show');
+                }
+            }
+        });
+    }
+
+    // Cut button (X) click karne par waapas chhota karna
+    if(DOM.closeFullImgBtn) {
+        DOM.closeFullImgBtn.addEventListener('click', () => {
+            if(DOM.fullImgModal) DOM.fullImgModal.classList.remove('show');
+        });
+    }
+
       let scrollTimeout;
+
     let lastScrollTop = 0;
 
     if(DOM.chatArea && DOM.scrollArrows) {
