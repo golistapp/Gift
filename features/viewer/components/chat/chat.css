@@ -58,25 +58,30 @@
 .whatsapp-bg { 
     flex: 1; 
     overflow-y: auto; 
-    /* 🔴 PADDING BADHA DI: Ab chat ekdum patle raste par chalegi */
-    padding: 10px 28vw; 
+    padding: 10px 28vw 20px 28vw; /* Normal padding */
     display: flex; 
     flex-direction: column; 
     gap: 4px; 
-    
     background-color: #fdf2f5; 
     background-image: url("../../../../assets/image/wallpaper.png"); 
     background-size: cover; 
     background-position: center bottom;
     background-attachment: fixed; 
-    
     scroll-behavior: smooth; 
     position: relative;
+    transition: padding-bottom 0.3s ease; /* Smooth keyboard transition */
+}
+
+/* 🔴 PUSH UP LOGIC: Jab keyboard on hoga to niche khali jagah ban jayegi */
+.keyboard-open .whatsapp-bg {
+    padding-bottom: 35vh; /* Ise kam-zyada karke tum height perfectly match kar sakte ho */
 }
 
 @media (max-width: 450px) {
-    .whatsapp-bg { padding: 10px 26vw; } 
+    .whatsapp-bg { padding: 10px 26vw 20px 26vw; } 
+    .keyboard-open .whatsapp-bg { padding-bottom: 35vh; }
 }
+
 
 .chat-empty-text { 
     text-align: center; color: #D81B60; font-size: 11px; margin-top: 50px; 
@@ -107,20 +112,15 @@
     max-width: 100%; 
     position: relative; 
     margin-bottom: 3px; 
-    transition: transform 0.2s ease-out; 
 }
 
-/* Boyfriend Messages (Left side phone animation) */
-.msg-wrapper.bf { 
-    align-self: flex-start; 
-    animation: popFromLeftPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+.msg-wrapper.bf { align-self: flex-start; }
+.msg-wrapper.gf { align-self: flex-end; }
 
-/* Girlfriend Messages (Right side phone animation) */
-.msg-wrapper.gf { 
-    align-self: flex-end; 
-    animation: popFromRightPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+/* 🔴 ANIMATION FIX: Sirf naye message par pop-up apply hoga */
+.msg-wrapper.bf.is-new { animation: popFromLeftPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.msg-wrapper.gf.is-new { animation: popFromRightPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
 
 .msg-bubble { 
     padding: 4px 8px 12px 8px; 
