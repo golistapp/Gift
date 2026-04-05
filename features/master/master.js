@@ -60,7 +60,7 @@
         });
     }
 
-       // 4. Main Login Logic (Naya Dual Box System)
+    // 4. Main Login Logic (Naya Dual Box System)
     if (masterForm) {
         masterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -73,51 +73,35 @@
                 return; 
             }
 
+            // Agar ID '3' dali, toh 'GX-03' banayega, agar '100' dali toh 'GX-100' banayega
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
             
             openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
 
             try {
-                // 🔴 FIX: Direct Firebase DB nahi, Secure Backend API ko JSON headers ke sath call karein
-                const res = await fetch('/api/verify-passcode', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json' // Yeh header bahut zaroori tha!
-                    },
-                    body: JSON.stringify({
-                        memoryId: memoryId,
-                        enteredPasscode: enteredPasscode
-                    })
-                });
-                
-                const responseData = await res.json();
+                const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
+                if (!res.ok) throw new Error("Fetch failed");
+                const data = await res.json();
 
-                if (responseData.success) {
-                    // ✅ SUCCESS: Passcode Verified
-                    if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
-                    lightBurst.classList.remove('hidden');
-                    setTimeout(() => {
-                        lightBurst.classList.add('active');
-                        sessionStorage.setItem(`auth_${memoryId}`, "true"); 
-                        setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
-                    }, 50);
-                } else {
-                    // ❌ FAILED: Show attempts error message from backend
-                    showError(responseData.error);
+                if (data && data.status === "locked" && data.is_enabled !== false) {
+                    const storedPass = data.passcode || "";
+                    if (storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode))) {
+                        if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
+                        lightBurst.classList.remove('hidden');
+                        setTimeout(() => {
+                            lightBurst.classList.add('active');
+                            sessionStorage.setItem(`auth_${memoryId}`, "true"); 
+                            setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
+                        }, 50);
+                        return;
+                    }
                 }
-            } catch (err) { 
-                console.error(err);
-                showError("Network error. Please try again."); 
-            } 
-            finally { 
-                openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; 
-                openBtn.disabled = false; 
-            }
+                showError();
+            } catch (err) { showError("Network error. Please try again."); } 
+            finally { openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; openBtn.disabled = false; }
         });
     }
-
-          
 
     function showError(customMsg) {
         errorMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${customMsg || "Incorrect Details."}`;
