@@ -223,7 +223,7 @@
     transform: scale(1);
 }
 .close-full-image {
-    position: absolute;
+    position: fixed;
     top: 20px; right: 20px;
     background: rgba(255,255,255,0.15);
     border: 1px solid rgba(255,255,255,0.3);
@@ -234,6 +234,7 @@
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: 0.2s;
+    z-index: 2001;
 }
 .close-full-image:active { 
     transform: scale(0.9); 
@@ -241,10 +242,8 @@
 }
 
 /* ==========================================
-   🚀 NORMAL CHAT ANIMATIONS (KEYFRAMES)
+   🚀 ANIMATIONS (KEYFRAMES)
    ========================================== */
-
-
 
 
 /* 🔴 LIVE CHAT POSITIONING (Half Screen Setup) */
