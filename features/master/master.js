@@ -3,7 +3,7 @@
     // Naye dono inputs fetch kiye
     const masterIdInput = document.getElementById('master-id-input');
     const masterPassInput = document.getElementById('master-pass-input');
-
+    
     const masterCard = document.getElementById('master-card');
     const errorMsg = document.getElementById('master-error');
     const openBtn = document.getElementById('master-open-btn');
@@ -64,10 +64,10 @@
     if (masterForm) {
         masterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
             const idVal = masterIdInput.value.trim(); 
             const passVal = masterPassInput.value.trim();
-
+            
             if (!idVal || !passVal) { 
                 showError("Please fill both ID and Password."); 
                 return; 
@@ -75,7 +75,7 @@
 
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
-
+            
             openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
 
             try {
@@ -90,7 +90,7 @@
                         enteredPasscode: enteredPasscode
                     })
                 });
-
+                
                 const responseData = await res.json();
 
                 if (responseData.success) {
@@ -117,7 +117,7 @@
         });
     }
 
-
+          
 
     function showError(customMsg) {
         errorMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${customMsg || "Incorrect Details."}`;
@@ -139,7 +139,7 @@
         document.getElementById('search-mobile-input').value = '';
         forgotIdModal.classList.remove('hidden');
     });
-
+    
     if(closeForgotId) {
         closeForgotId.addEventListener('click', () => forgotIdModal.classList.add('hidden'));
         forgotIdModal.addEventListener('click', (e) => { if(e.target === forgotIdModal) forgotIdModal.classList.add('hidden'); });
@@ -148,7 +148,7 @@
     if(searchBtn) searchBtn.addEventListener('click', async () => {
         const nameInput = document.getElementById('search-name-input').value.trim().toLowerCase();
         const mobInput = document.getElementById('search-mobile-input').value.trim().replace(/\D/g,'');
-
+        
         if (!nameInput || mobInput.length < 8) {
             searchResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Fill both details correctly.</span>';
             return;
@@ -161,7 +161,7 @@
             const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
             const data = await res.json();
             let foundId = null;
-
+            
             if (data) {
                 Object.keys(data).forEach(id => {
                     const dbMob = (data[id].mobile_number || "").replace(/\D/g,'');
@@ -184,7 +184,7 @@
                     customer_email: custEmail,
                     secure_message: `Hello ${nameInput},\n\nYour verified Gift ID is: ${foundId}\n\nYou can now use this ID to open your gift or reset your passcode.`
                 });
-
+                
                 let displayEmail = custEmail;
                 if(custEmail.includes('@')) {
                     let parts = custEmail.split('@');
@@ -219,7 +219,7 @@
         passSearchResult.innerHTML = '';
         forgotPassModal.classList.remove('hidden');
     });
-
+    
     if(closeForgotPass) {
         closeForgotPass.addEventListener('click', () => forgotPassModal.classList.add('hidden'));
         forgotPassModal.addEventListener('click', (e) => { if(e.target === forgotPassModal) forgotPassModal.classList.add('hidden'); });
@@ -233,27 +233,27 @@
         let askId = recoverIdInput.value.trim();
         const nameInput = document.getElementById('recover-name-input').value.trim().toLowerCase();
         const mobInput = document.getElementById('recover-mobile-input').value.trim().replace(/\D/g,'');
-
+        
         if (!askId || !nameInput || mobInput.length < 8) {
             passSearchResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Fill all fields correctly.</span>';
             return;
         }
 
         if (!askId.startsWith('GX-') && askId.length <= 2) askId = `GX-${askId.padStart(2, '0')}`;
-
+        
         sendWaBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
         sendWaBtn.disabled = true;
 
         try {
             const res = await fetch(`${firebaseConfig.databaseURL}/memories/${askId}.json`);
             const data = await res.json();
-
+            
             if (data) {
                 const dbMob = (data.mobile_number || "").replace(/\D/g,'');
                 const dbName = (data.customer_name || "").toLowerCase();
 
                 if (dbMob === mobInput && dbName.includes(nameInput)) {
-
+                    
                     const custEmail = data.customer_email || "giftoraxofficial@gmail.com"; 
 
                     await emailjs.send("service_qardvzx", "template_plwxp0k", {
@@ -265,7 +265,7 @@
                         customer_email: custEmail,
                         secure_message: `Hello ${nameInput},\n\nYour Gift ID is: ${askId}\nYour Secret Passcode is: ${data.passcode}\n\nKeep this code safe and do not share it with anyone.`
                     });
-
+                    
                     let displayEmail = custEmail;
                     if(custEmail.includes('@')) {
                         let parts = custEmail.split('@');
