@@ -48,7 +48,7 @@
                 const adminToken = localStorage.getItem('adminToken');
                 const response = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json?auth=${adminToken}`);
                 window.formState.memoryData = await response.json();
-
+                
                 if (!window.formState.memoryData || window.formState.memoryData.error) {
                     alert("Order not found or permission denied!");
                     window.location.href = "?mode=login";

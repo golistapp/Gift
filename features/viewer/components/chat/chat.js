@@ -44,7 +44,7 @@
             let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
             try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
-
+            
             return combinedChat;
         }
     };
@@ -55,17 +55,12 @@
             return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         },
 
-                initViewportFix: function() {
+        initViewportFix: function() {
             if (window.visualViewport && DOM.wrapper) {
                 window.visualViewport.addEventListener('resize', () => {
-                    // Pata lagana ki keyboard khula hai ya nahi (Focus check karna sabse safe hai)
-                    const isKeyboardActive = document.activeElement === DOM.inputEl;
-
-                    if (isKeyboardActive || window.visualViewport.height < window.screen.height - 100) {
-                        // 🔴 KEYBOARD OPEN: Poori screen le lo (100%), 70px ki gap hata do
+                    if (window.visualViewport.height < window.innerHeight - 50) {
                         DOM.wrapper.style.height = `${window.visualViewport.height}px`;
                     } else {
-                        // 🔴 KEYBOARD CLOSED: Wapas 70px gap chhod do footer ke liye
                         DOM.wrapper.style.height = `calc(100dvh - 70px)`; 
                     }
                     if(DOM.chatArea) DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
@@ -73,11 +68,10 @@
             }
         },
 
-
         updateHeader: function() {
             if (!DOM.statusEl) return;
             const bfStatus = (state.memoryData || {}).bf_status;
-
+            
             if(DOM.userNameEl && state.memoryData) {
                 DOM.userNameEl.innerText = state.memoryData.customer_name || "My Love ❤️";
             }
@@ -97,12 +91,12 @@
 
             const memoryData = state.memoryData || {};
             const count = memoryData.message_count || 0;
-
+            
             let firebaseChat = Array.isArray(memoryData.chat) ? memoryData.chat : Object.values(memoryData.chat || []);
             firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
-
+            
             const chatList = ChatStorage.sync(firebaseChat);
-
+            
             if(DOM.countDisplay) DOM.countDisplay.innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted SMS: ${firebaseChat.length}/100 (Total: ${count})`;
 
             if(chatList.length === 0) {
@@ -126,7 +120,7 @@
             // 🔴 FLY AWAY ANIMATION LOGIC
             if (isNewMessage && !DOM.chatArea.classList.contains('history-mode')) {
                 if(DOM.soundReceive && currentLastMsg.sender === 'bf') { DOM.soundReceive.currentTime = 0; DOM.soundReceive.play().catch(()=>{}); }
-
+                
                 const oldLiveMsg = DOM.chatArea.querySelector(`.msg-wrapper.${currentLastMsg.sender}.live-active`);
                 if (oldLiveMsg) {
                     const rect = oldLiveMsg.getBoundingClientRect();
@@ -150,13 +144,14 @@
             }
 
             let newHtml = '';
+
             chatList.forEach((msgObj, index) => {
                 let decryptedText = "";
                 try {
                     const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                     decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 } catch(e) { decryptedText = ""; }
-
+                
                 let quoteHtml = "";
                 const quoteRegex = /\[QUOTE\](.*?)\[\/QUOTE\]/s;
                 const match = decryptedText.match(quoteRegex);
@@ -185,18 +180,12 @@
                 }
 
                 const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
-
-                               // 🔴 ADD 'live-active' TO LATEST 2 MESSAGES ONLY
-                let liveClass = (index === lastBfIdx || index === lastGfIdx) ? ' live-active' : '';
-
-                // 🔴 ONLY ANIMATE THE NEWLY ARRIVED MESSAGE
-                let animClass = (isNewMessage && index === chatList.length - 1) ? ' animate-pop' : '';
-
+                
+                             // 🔴 NORMAL MESSAGE WRAPPER
                 newHtml += `
-                    <div class="msg-wrapper ${isGf ? 'gf' : 'bf'}${liveClass}${animClass}">
+                    <div class="msg-wrapper ${isGf ? 'gf' : 'bf'}">
 
-
-                        <div class="msg-bubble" style="${bubblePadding}">
+                      <div class="msg-bubble" style="${bubblePadding}">
                             ${quoteHtml}
                             ${imageHtml}
                             <span class="msg-raw-text">${decryptedText}</span>
@@ -207,11 +196,11 @@
                         </div>
                     </div>`;
             });
-
+            
             if (DOM.chatArea.innerHTML !== newHtml) {
                 const oldScrollHeight = DOM.chatArea.scrollHeight;
                 DOM.chatArea.innerHTML = newHtml;
-
+                
                 if (DOM.chatArea.classList.contains('history-mode')) {
                     DOM.chatArea.scrollTop += (DOM.chatArea.scrollHeight - oldScrollHeight);
                 } else if (isNewMessage || lastMsgTime === "") {
@@ -222,10 +211,10 @@
         }
     };
 
-        const ChatNetwork = {
+    const ChatNetwork = {
         // 🔴 BUG FIXED: Status direct gf_status file mein update hoga
         updateStatus: function(statusStr) {
-            if (!state.memoryId || typeof firebaseConfig === 'undefined') return;
+            if (state.mode === 'admin_preview' || !state.memoryId || typeof firebaseConfig === 'undefined') return;
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_status.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(statusStr)
             }).catch(e => {});
@@ -233,12 +222,11 @@
 
         // 🔴 BUG FIXED: Read receipt direct file mein update hoga
         updateReadReceipt: function() {
-            if (document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
+            if (state.mode === 'admin_preview' || document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
             fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_last_read.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(new Date().toISOString())
             }).catch(e => {});
         },
-
 
         startRealtime: function() {
             if (window.gfChatStream) window.gfChatStream.close();
@@ -277,7 +265,7 @@
 
         sendMessage: async function(rawText) {
             if(!rawText && !currentReplyQuote) return false;
-
+            
             let finalMsgText = rawText;
             if(currentReplyQuote) { finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`; }
 
@@ -292,10 +280,10 @@
                 if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
                                 currentReplyQuote = "";
                 if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
-
+                
                 // 🔴 NEW: Bhejte waqt History Mode hata do
                 if (DOM.chatArea) DOM.chatArea.classList.remove('history-mode');
-
+                
                 this.updateStatus('online'); 
 
 
@@ -346,10 +334,10 @@
             if(diffX > 40) {
                 let rawTextEl = swipedMsg.querySelector('.msg-raw-text');
                 let imgEl = swipedMsg.querySelector('.chat-img-msg');
-
+                
                 let quoteText = rawTextEl ? rawTextEl.innerText : "";
                 if(imgEl) quoteText = "📷 Photo";
-
+                
                 if(quoteText) {
                     currentReplyQuote = quoteText.substring(0, 40) + (quoteText.length > 40 ? "..." : "");
                     DOM.replyTextPreview.innerText = currentReplyQuote;
@@ -382,15 +370,11 @@
             const isScrollingUp = currentScrollTop < lastScrollTop;
             const isAtBottom = DOM.chatArea.scrollHeight - currentScrollTop - DOM.chatArea.clientHeight <= 10;
 
-                        if (isScrollingUp && !DOM.chatArea.classList.contains('history-mode') && currentScrollTop > 0) {
+            if (isScrollingUp && !DOM.chatArea.classList.contains('history-mode') && currentScrollTop > 0) {
                 // Upar Scroll karne par purani chat dikhao
                 const oldHeight = DOM.chatArea.scrollHeight;
                 DOM.chatArea.classList.add('history-mode');
-                // 🔴 Scroll karte hi animation class hata do taaki wapas niche aane par dubara popup na ho
-                DOM.chatArea.querySelectorAll('.animate-pop').forEach(el => el.classList.remove('animate-pop'));
                 const newHeight = DOM.chatArea.scrollHeight;
-
-
                 DOM.chatArea.scrollTop = currentScrollTop + (newHeight - oldHeight); 
             } else if (isAtBottom && DOM.chatArea.classList.contains('history-mode')) {
                 // Niche aane par History mode band kardo
@@ -404,7 +388,7 @@
             DOM.chatArea.classList.add('history-mode');
             setTimeout(() => DOM.chatArea.scrollTo({top: 0, behavior: 'smooth'}), 50);
         });
-
+        
         DOM.scrollBottomBtn.addEventListener('click', () => {
             DOM.chatArea.scrollTo({top: DOM.chatArea.scrollHeight, behavior: 'smooth'});
             setTimeout(() => DOM.chatArea.classList.remove('history-mode'), 300);
@@ -412,9 +396,17 @@
     }
 
 
-        function initApp() {
-        ChatUI.initViewportFix();
+    function initApp() {
+        if (state.mode === 'admin_preview') {
+            if(DOM.inputEl) { 
+                DOM.inputEl.disabled = true; 
+                DOM.inputEl.placeholder = "Admin Preview (Read Only)"; 
+            }
+            if(DOM.sendBtn) DOM.sendBtn.disabled = true;
+            if(DOM.galleryBtn) DOM.galleryBtn.disabled = true;
+        }
 
+        ChatUI.initViewportFix();
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) { 
@@ -424,41 +416,18 @@
                 ChatNetwork.updateStatus(new Date().toISOString()); 
             }
         });
-                        window.addEventListener('beforeunload', () => ChatNetwork.updateStatus(new Date().toISOString()));
-
-        if(DOM.inputEl) {
-            DOM.inputEl.addEventListener('focus', () => {
-                ChatNetwork.updateReadReceipt();
-                const bottomNav = document.querySelector('.bottom-nav-bar');
-                if(bottomNav) bottomNav.style.display = 'none';
-
-                // 🔴 GAP FIX: Jaise hi keyboard khule, chat wrapper ko poora faila do (gap khatam)
-                if (DOM.wrapper) {
-                    DOM.wrapper.style.height = window.visualViewport ? `${window.visualViewport.height}px` : '100dvh';
-                }
-            });
-
-            DOM.inputEl.addEventListener('blur', () => {
-                const bottomNav = document.querySelector('.bottom-nav-bar');
-                if(bottomNav) bottomNav.style.display = 'flex';
-
-                // 🔴 KEYBOARD CLOSE: Wapas 70px gap chhod do taaki footer dikh sake
-                if (DOM.wrapper) {
-                    DOM.wrapper.style.height = 'calc(100dvh - 70px)';
-                }
-            });
-        }
+        window.addEventListener('beforeunload', () => ChatNetwork.updateStatus(new Date().toISOString()));
+        if(DOM.inputEl) DOM.inputEl.addEventListener('focus', () => ChatNetwork.updateReadReceipt());
 
         if(DOM.galleryBtn) {
-
-
             DOM.galleryBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                if(state.mode === 'admin_preview') return; 
 
                 DOM.imgGrid.innerHTML = '';
                 let found = false;
                 const memoryData = state.memoryData || {};
-
+                
                 for(let i=1; i<=5; i++) {
                     let imgUrl = memoryData[`image_${i}_url`];
                     if(imgUrl) {
@@ -480,14 +449,15 @@
             DOM.sendBtn.addEventListener('mousedown', (e) => e.preventDefault());
             DOM.sendBtn.addEventListener('touchstart', (e) => { 
                 e.preventDefault(); 
-                if(!DOM.sendBtn.disabled) ChatNetwork.sendMessage(DOM.inputEl.value.trim()); 
+                if(!DOM.sendBtn.disabled && state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim()); 
             });
-
+            
             DOM.sendBtn.addEventListener('click', () => {
-                ChatNetwork.sendMessage(DOM.inputEl.value.trim());
+                if(state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim());
             });
 
             DOM.inputEl.addEventListener('input', function() {
+                if(state.mode === 'admin_preview') return;
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
                 ChatNetwork.updateStatus('typing...');
@@ -495,7 +465,6 @@
                 typingTimer = setTimeout(() => ChatNetwork.updateStatus('online'), 1500);
             });
         }
-
 
         ChatNetwork.updateStatus('online');
         ChatNetwork.updateReadReceipt();

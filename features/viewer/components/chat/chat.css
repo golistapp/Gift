@@ -1,64 +1,82 @@
-/* ==========================================
-   1. FULL SCREEN CHAT & BACKGROUND SETUP
-   ========================================== */
+/* 🔴 FULL SCREEN CHAT: Ye top:0 hone se GiftoraX global header ko hide kar dega */
 .chat-app-wrapper { 
     display: flex; 
     flex-direction: column; 
     position: fixed; 
     top: 0; left: 0; 
     width: 100%; 
-    height: 100dvh; 
+    height: calc(100dvh - 70px); 
     z-index: 1000; 
+    background: #fff; 
     border-radius: 0; 
-    background: transparent; 
 }
 
-/* 🔴 NAYA FIX: Keyboard se na hilne wala fixed background (100lvh) */
-.chat-app-wrapper::before {
-    content: "";
-    position: fixed;
-    top: 0; 
-    left: 0;
-    width: 100vw;
-    height: 100vh; /* Fallback for older browsers */
-    height: 100lvh; /* 🔴 Ye keyboard aane par bhi height kam nahi hone dega */
-    z-index: -1;
-    background-color: #fdf2f5; 
-    background-image: url("../../../../assets/image/wallpaper.png"); 
-    background-size: cover; 
-    background-position: center center; 
-    background-repeat: no-repeat;
-}
-
+/* 🔴 NATIVE STICKY HEADER: Glassmorphism Blur Effect */
 .native-chat-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 15px; background: rgba(255, 255, 255, 0.85); 
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(216, 27, 96, 0.15); z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(216, 27, 96, 0.15);
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .chat-header-left { display: flex; align-items: center; gap: 12px; }
-.chat-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: #ffe4ec; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(216, 27, 96, 0.2); }
+
+.chat-avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ffe4ec;
+    display: flex; justify-content: center; align-items: center;
+    border: 1px solid rgba(216, 27, 96, 0.2);
+}
+
 .chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .fallback-avatar { color: #D81B60; font-size: 18px; }
+
 .chat-user-info { display: flex; flex-direction: column; justify-content: center; }
-.chat-user-info h2 { margin: 0; font-size: 16px; color: #1a1a1a; font-family: var(--font-heading); font-weight: 700; }
+
+.chat-user-info h2 {
+    margin: 0; font-size: 16px; color: #1a1a1a;
+    font-family: var(--font-heading); font-weight: 700;
+}
+
 #live-status { font-size: 11.5px; color: #666; font-family: var(--font-ui); margin-top: 2px;}
+
 .chat-header-right { display: flex; gap: 18px; color: #D81B60; font-size: 18px; align-items: center;}
 .header-icon { cursor: pointer; transition: transform 0.2s; }
 .header-icon:active { transform: scale(0.9); }
 
 /* ==========================================
-   2. SCROLL AREA & INPUT CONTAINER
+   🚀 COMPACT WALLPAPER & CENTERED CHAT SCROLL
    ========================================== */
 .whatsapp-bg { 
-    flex: 1; overflow-y: auto; 
+    flex: 1; 
+    overflow-y: auto; 
+    /* 🔴 PADDING BADHA DI: Ab chat ekdum patle raste par chalegi */
     padding: 10px 28vw; 
-    display: flex; flex-direction: column; gap: 4px; 
-    background: transparent; scroll-behavior: smooth; position: relative;
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+    
+    background-color: #fdf2f5; 
+    background-image: url("../../../../assets/image/wallpaper.png"); 
+    background-size: cover; 
+    background-position: center bottom;
+    background-attachment: fixed; 
+    
+    scroll-behavior: smooth; 
+    position: relative;
 }
 
-@media (max-width: 450px) { .whatsapp-bg { padding: 10px 26vw; } }
+@media (max-width: 450px) {
+    .whatsapp-bg { padding: 10px 26vw; } 
+}
 
 .chat-empty-text { 
     text-align: center; color: #D81B60; font-size: 11px; margin-top: 50px; 
@@ -67,6 +85,7 @@
     border: 1px solid rgba(216, 27, 96, 0.2); box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
 
+/* Input Area */
 .chat-input-wrapper { background: #ffffff; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; position: relative; border-top: 1px solid #fce4ec; padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 10;}
 .chat-input-inner { display: flex; gap: 5px; align-items: flex-end; }
 .action-btn { background: transparent; color: #8b9bb4; border: none; font-size: 22px; padding: 0 4px 8px 2px; cursor: pointer; transition: 0.2s; }
@@ -80,66 +99,74 @@
 .msg-count-display { text-align: center; font-size: 10px; color: #94a3b8; font-weight: 500; margin-top: 5px; }
 
 /* ==========================================
-   3. COMPACT MESSAGES & BUBBLES
+   🚀 5x SMALLER: COMPACT GLASSMORPHISM CHAT BUBBLES
    ========================================== */
 .msg-wrapper { 
-    display: flex; flex-direction: column; max-width: 100%; position: relative; margin-bottom: 3px; 
+    display: flex; 
+    flex-direction: column; 
+    max-width: 100%; 
+    position: relative; 
+    margin-bottom: 3px; 
+    transition: transform 0.2s ease-out; 
 }
-.msg-wrapper.gf { align-self: flex-end; }
-.msg-wrapper.bf { align-self: flex-start; }
+
+/* Boyfriend Messages (Left side phone animation) */
+.msg-wrapper.bf { 
+    align-self: flex-start; 
+    animation: popFromLeftPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Girlfriend Messages (Right side phone animation) */
+.msg-wrapper.gf { 
+    align-self: flex-end; 
+    animation: popFromRightPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
 .msg-bubble { 
-    padding: 4px 8px 12px 8px; border-radius: 8px; font-size: 8.5px; 
-    position: relative; word-wrap: break-word; min-width: 40px; line-height: 1.2; 
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    padding: 4px 8px 12px 8px; 
+    border-radius: 8px; 
+    font-size: 8.5px; 
+    position: relative; 
+    word-wrap: break-word; 
+    min-width: 40px; 
+    line-height: 1.2; 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
-.msg-wrapper.gf .msg-bubble { background: rgba(216, 27, 96, 0.85); color: white; border-bottom-right-radius: 2px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 2px 8px rgba(216, 27, 96, 0.3); }
-.msg-wrapper.bf .msg-bubble { background: rgba(255, 255, 255, 0.85); color: #333; border-bottom-left-radius: 2px; border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+/* Girlfriend Messages (Right Side) */
+.msg-wrapper.gf .msg-bubble { 
+    background: rgba(216, 27, 96, 0.85); 
+    color: white; 
+    border-bottom-right-radius: 2px; 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(216, 27, 96, 0.3); 
+}
 
-.msg-wrapper.gf .msg-bubble::after, .msg-wrapper.bf .msg-bubble::after { display: none; }
+/* Boyfriend Messages (Left Side) */
+.msg-wrapper.bf .msg-bubble { 
+    background: rgba(255, 255, 255, 0.85); 
+    color: #333; 
+    border-bottom-left-radius: 2px; 
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); 
+}
 
-/* TAILS (Noak) */
-.msg-wrapper.bf .msg-bubble::before { content: ''; position: absolute; bottom: 6px; left: -4px; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-right: 5px solid rgba(255, 255, 255, 0.85); }
-.msg-wrapper.gf .msg-bubble::before { content: ''; position: absolute; bottom: 6px; right: -4px; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid rgba(216, 27, 96, 0.85); }
+.msg-wrapper.gf .msg-bubble::after,
+.msg-wrapper.bf .msg-bubble::after { 
+    display: none; 
+}
 
-/* Timestamps & Meta */
+/* Timestamps & Meta (Extremely Compact) */
 .msg-meta { display: flex; align-items: center; gap: 1px; position: absolute; bottom: 2px; right: 6px; white-space: nowrap; }
 .msg-time { font-size: 6.5px; font-family: sans-serif; margin-top: 0;}
 .msg-wrapper.gf .msg-time { color: rgba(255,255,255,0.85); }
 .msg-wrapper.bf .msg-time { color: rgba(0,0,0,0.5); }
 .msg-tick { font-size: 8px; display: flex; align-items: center; margin-left: 1px;}
-.tick-grey { color: rgba(255,255,255,0.6); } .tick-blue { color: #40c4ff; } 
+.tick-grey { color: rgba(255,255,255,0.6); } 
+.tick-blue { color: #40c4ff; } 
 
-/* ==========================================
-   4. LIVE MODE VS HISTORY MODE LOGIC
-   ========================================== */
-
-/* LIVE MODE: Sab chupao, sirf latest 2 fixed dikhao */
-.whatsapp-bg:not(.history-mode) .msg-wrapper { display: none !important; }
-
-.whatsapp-bg:not(.history-mode) .msg-wrapper.live-active { 
-    display: flex !important; 
-    position: fixed !important; 
-    z-index: 50; 
-}
-
-/* 🔴 FIX 2: 'top' ki value kam kar di hai taaki messages aur upar (phones ke paas) dikhein */
-.whatsapp-bg:not(.history-mode) .msg-wrapper.bf.live-active { top: 24vh; top: 24lvh; left: 25vw; }
-.whatsapp-bg:not(.history-mode) .msg-wrapper.gf.live-active { top: 23vh; top: 23lvh; right: 25vw; }
-
-/* HISTORY MODE: Normal Scroll List ki tarah dikhao */
-.whatsapp-bg.history-mode .msg-wrapper {
-    display: flex !important;
-    position: relative !important;
-    bottom: auto !important; left: auto !important; right: auto !important;
-    top: auto !important;
-    animation: none !important; 
-}
-
-/* ==========================================
-   5. POPUPS & ATTACHMENTS
-   ========================================== */
+/* Reply Quote Box (Compact Size) */
 .quote-box { background: rgba(0,0,0,0.15); border-left: 3px solid #fff; padding: 4px 6px; border-radius: 4px; font-size: 9.5px; margin-bottom: 4px; opacity: 0.9; max-height: 40px; overflow: hidden; text-overflow: ellipsis; }
 .msg-wrapper.bf .quote-box { border-left: 3px solid #D81B60; background: rgba(216,27,96,0.1); }
 .reply-preview-box { background: #fdf2f5; padding: 8px 12px; border-radius: 8px; border-left: 4px solid #D81B60; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; animation: slideUpMsg 0.2s ease-out; border: 1px solid #fce4ec;}
@@ -147,6 +174,7 @@
 .reply-content { font-size: 12px; color: #D81B60; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%; font-weight: 500;}
 .cancel-reply { cursor: pointer; color: #64748b; font-size: 16px; }
 
+/* Image Popups & Attachments */
 .img-popup { position: absolute; bottom: 75px; left: 10px; right: 10px; background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); padding: 15px; z-index: 100; border: 1px solid #fce4ec; animation: slideUpMsg 0.2s ease-out; }
 .img-popup.hidden { display: none; }
 .img-popup-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #D81B60; margin-bottom: 12px; font-size: 14px; font-family: var(--font-ui); }
@@ -157,42 +185,54 @@
 .img-grid img:active { transform: scale(0.95); border-color: #D81B60; }
 .chat-img-msg { width: 100%; max-width: 140px; border-radius: 6px; margin-bottom: 3px; display: block; border: 1px solid rgba(255,255,255,0.3);}
 
+/* Floating Scroll Arrows */
 .scroll-arrows { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 20; transition: opacity 0.3s; }
 .scroll-arrows.hidden { opacity: 0; pointer-events: none; }
 .scroll-arrows button { background: rgba(255,255,255,0.9); border: 1px solid #fce4ec; color: #D81B60; width: 35px; height: 35px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
-/* ==========================================
-   6. ANIMATIONS (KEYFRAMES)
-   ========================================== */
-@keyframes slideUpMsg { 
-    0% { opacity: 0; transform: translateY(10px); } 
-    100% { opacity: 1; transform: translateY(0); } 
+
+
+
+/* 🔴 LIVE CHAT POSITIONING (Half Screen Setup) */
+.whatsapp-bg:not(.history-mode) .msg-wrapper.live-active {
+    position: absolute !important;
+    z-index: 100;
 }
 
-/* ENVELOPE FLY ANIMATION (Uses lvh) */
-.fly-away { animation: envelopeFly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards !important; pointer-events: none; z-index: 1000; position: fixed !important;}
-
-@keyframes envelopeFly {
-    0% { transform: scale(1) translateY(0); opacity: 1; }
-    40% { transform: scale(0.7) translateY(-10vh); transform: scale(0.7) translateY(-10lvh); opacity: 0.9; filter: brightness(1.2); }
-    100% { transform: scale(0) translateY(-60vh); transform: scale(0) translateY(-60lvh); rotate(25deg); opacity: 0; }
+.whatsapp-bg:not(.history-mode) .msg-wrapper.bf.live-active { 
+    top: 24vh; 
+    top: 24lvh; 
+    left: 25vw; 
 }
 
-/* POP ANIMATIONS (Sirf naye aane wale messages ke liye) */
-.whatsapp-bg:not(.history-mode) .msg-wrapper.bf.live-active.animate-pop { 
-    animation: popFromLeftPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.whatsapp-bg:not(.history-mode) .msg-wrapper.gf.live-active { 
+    top: 23vh; 
+    top: 23lvh; 
+    right: 25vw; 
 }
 
-.whatsapp-bg:not(.history-mode) .msg-wrapper.gf.live-active.animate-pop { 
-    animation: popFromRightPhone 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
 
+/* Chat Bubbles ke liye 3D Phone animations */
 @keyframes popFromLeftPhone { 
-    0% { opacity: 0; transform: translate(-38vw, -38vh) scale(0); transform: translate(-38vw, -38lvh) scale(0); } 
+    0% { opacity: 0; transform: translate(-38vw, -45vh) scale(0); } 
     100% { opacity: 1; transform: translate(0, 0) scale(1); } 
 }
 
 @keyframes popFromRightPhone { 
-    0% { opacity: 0; transform: translate(38vw, -38vh) scale(0); transform: translate(38vw, -38lvh) scale(0); } 
+    0% { opacity: 0; transform: translate(38vw, -45vh) scale(0); } 
+    100% { opacity: 1; transform: translate(0, 0) scale(1); } 
+}
+
+
+@keyframes popFromRightPhone { 
+    0% { opacity: 0; transform: translate(38vw, -35vh) scale(0); } 
+
+/* --- END POINT (In 2 lines tak replace karna hai) --- */
+    100% { opacity: 1; transform: translate(0, 0) scale(1); } 
+}
+
+
+@keyframes popFromRightPhone { 
+    0% { opacity: 0; transform: translate(35vw, -30px) scale(0.1); } 
     100% { opacity: 1; transform: translate(0, 0) scale(1); } 
 }
