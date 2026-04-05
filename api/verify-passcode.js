@@ -110,7 +110,7 @@ export default async function handler(req, res) {
 
         const storedPass = data.passcode || "";
         const isMatch = storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode));
-
+        
         if (isMatch) {
             await rateLimitRef.remove();
             return res.status(200).json({ success: true, memoryData: data });
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
             if (newAttempts >= 5) return res.status(429).json({ success: false, error: "Account locked. Try again in 10 minutes." });
             else return res.status(401).json({ success: false, error: `Incorrect Passcode! ${5 - newAttempts} attempts left.` });
         }
-
+        
     } catch (error) {
         console.error("Firebase Admin Error:", error);
         return res.status(500).json({ success: false, error: "Internal Server Error" });

@@ -2,7 +2,7 @@
     const masterForm = document.getElementById('master-login-form');
     const masterIdInput = document.getElementById('master-id-input');
     const masterPassInput = document.getElementById('master-pass-input');
-
+    
     const masterCard = document.getElementById('master-card');
     const errorMsg = document.getElementById('master-error');
     const openBtn = document.getElementById('master-open-btn');
@@ -34,13 +34,11 @@
         }
     }
 
-    let tapCount = 0, tapTimeout;
+    // 🔴 NAYA UPDATE: Logo par single click karne se wapas index.html (Home) par jayega
     const logoArea = document.getElementById('secret-admin-trigger');
     if(logoArea) {
         logoArea.addEventListener('click', () => {
-            tapCount++;
-            if (tapCount >= 3) { window.location.href = '?mode=login'; } 
-            else { clearTimeout(tapTimeout); tapTimeout = setTimeout(() => tapCount = 0, 1000); }
+            window.location.href = 'index.html'; 
         });
     }
 
@@ -72,7 +70,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ memoryId: memoryId, enteredPasscode: enteredPasscode, requestType: 'unlock' })
                 });
-
+                
                 const resData = await response.json();
 
                 if (resData.success && resData.memoryData.status === "locked" && resData.memoryData.is_enabled !== false) {
@@ -98,7 +96,7 @@
         if(masterPassInput) { masterPassInput.value = ''; masterPassInput.focus(); }
     }
 
-    // --- 5. 2-BOX RECOVERY SYSTEM WITH SECURE BACKEND VERIFICATION ---
+    // --- 2-BOX RECOVERY SYSTEM WITH SECURE BACKEND VERIFICATION ---
     const forgotBtn = document.getElementById('btn-forgot-recovery');
     const recoveryModal = document.getElementById('recovery-modal');
     const closeRecovery = document.getElementById('close-recovery');
@@ -111,7 +109,7 @@
         document.getElementById('rec-secondary').value = '';
         recoveryModal.classList.remove('hidden');
     });
-
+    
     if(closeRecovery) {
         closeRecovery.addEventListener('click', () => recoveryModal.classList.add('hidden'));
         recoveryModal.addEventListener('click', (e) => { if(e.target === recoveryModal) recoveryModal.classList.add('hidden'); });
@@ -120,9 +118,9 @@
     if(recoverBtn) recoverBtn.addEventListener('click', async () => {
         const recPrimaryRaw = document.getElementById('rec-primary').value.trim().toLowerCase();
         const recSecRaw = document.getElementById('rec-secondary').value.trim().toLowerCase();
-
+        
         const recSecClean = recSecRaw.replace(/[^a-z0-9]/g, ''); 
-
+        
         if (!recPrimaryRaw || !recSecClean) {
             recoveryResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Please fill both fields correctly.</span>';
             return;
@@ -146,7 +144,6 @@
         recoverBtn.disabled = true;
 
         try {
-            // 🔴 NAYA: API ko call karenge Database fetch karne ki jagah
             const response = await fetch('/api/verify-passcode', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -171,7 +168,7 @@
                     customer_email: customerEmail,
                     secure_message: `Hello ${customerName},\n\nYour account has been successfully verified.\n\nYour Gift ID is: ${foundId}\nYour Secret Passcode is: ${passcode}\n\nKeep these details safe and do not share them with anyone.`
                 });
-
+                
                 limitData.count += 1;
                 limitData.timestamp = now;
                 localStorage.setItem(limitKey, JSON.stringify(limitData));
