@@ -22,7 +22,7 @@
         scrollArrows: document.getElementById('scroll-arrows'),
         scrollTopBtn: document.getElementById('scroll-top-btn'),
         scrollBottomBtn: document.getElementById('scroll-bottom-btn'),
-
+        
         // 🔴 NAYA: Full screen modal ke elements
         fullImgModal: document.getElementById('full-image-modal'),
         fullImgDisplay: document.getElementById('full-image-display'),
@@ -50,7 +50,7 @@
             let combinedChat = Array.from(chatMap.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             if (combinedChat.length > 2000) combinedChat = combinedChat.slice(combinedChat.length - 2000);
             try { localStorage.setItem(localKey, JSON.stringify(combinedChat)); } catch(e) {}
-
+            
             return combinedChat;
         }
     };
@@ -80,7 +80,7 @@
         updateHeader: function() {
             if (!DOM.statusEl) return;
             const bfStatus = (state.memoryData || {}).bf_status;
-
+            
             if(DOM.userNameEl && state.memoryData) {
                 DOM.userNameEl.innerText = state.memoryData.customer_name || "My Love ❤️";
             }
@@ -100,12 +100,12 @@
 
             const memoryData = state.memoryData || {};
             const count = memoryData.message_count || 0;
-
+            
             let firebaseChat = Array.isArray(memoryData.chat) ? memoryData.chat : Object.values(memoryData.chat || []);
             firebaseChat = firebaseChat.filter(msg => msg !== null && msg.sender);
-
+            
             const chatList = ChatStorage.sync(firebaseChat);
-
+            
             if(DOM.countDisplay) DOM.countDisplay.innerHTML = `<i class="fa-solid fa-lock" style="font-size:9px;"></i> End-to-End Encrypted SMS: ${firebaseChat.length}/100 (Total: ${count})`;
 
             if(chatList.length === 0) {
@@ -135,7 +135,7 @@
             }
 
 
-
+           
 
             let newHtml = '';
 
@@ -145,7 +145,7 @@
                     const bytes = CryptoJS.AES.decrypt(msgObj.text, state.userPasscode);
                     decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 } catch(e) { decryptedText = ""; }
-
+                
                 let quoteHtml = "";
                 const quoteRegex = /\[QUOTE\](.*?)\[\/QUOTE\]/s;
                 const match = decryptedText.match(quoteRegex);
@@ -174,7 +174,7 @@
                 }
 
                                 const bubblePadding = imageHtml ? 'padding: 4px 4px 20px 4px;' : '';
-
+                
                 // 🔴 ANIMATION FIX: Sirf naya message animate hoga
                 let animClass = '';
                 if (isNewMessage && index === chatList.length - 1) {
@@ -196,11 +196,11 @@
                         </div>
                     </div>`;
             });
-
+            
             if (DOM.chatArea.innerHTML !== newHtml) {
                 const oldScrollHeight = DOM.chatArea.scrollHeight;
                 DOM.chatArea.innerHTML = newHtml;
-
+                
                 if (DOM.chatArea.classList.contains('history-mode')) {
                     DOM.chatArea.scrollTop += (DOM.chatArea.scrollHeight - oldScrollHeight);
                 } else if (isNewMessage || lastMsgTime === "") {
@@ -265,7 +265,7 @@
 
         sendMessage: async function(rawText) {
             if(!rawText && !currentReplyQuote) return false;
-
+            
             let finalMsgText = rawText;
             if(currentReplyQuote) { finalMsgText = `[QUOTE]${currentReplyQuote}[/QUOTE] ${rawText}`; }
 
@@ -280,10 +280,10 @@
                 if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
                                 currentReplyQuote = "";
                 if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
-
+                
                 // 🔴 NEW: Bhejte waqt History Mode hata do
                 if (DOM.chatArea) DOM.chatArea.classList.remove('history-mode');
-
+                
                 this.updateStatus('online'); 
 
 
@@ -334,10 +334,10 @@
             if(diffX > 40) {
                 let rawTextEl = swipedMsg.querySelector('.msg-raw-text');
                 let imgEl = swipedMsg.querySelector('.chat-img-msg');
-
+                
                 let quoteText = rawTextEl ? rawTextEl.innerText : "";
                 if(imgEl) quoteText = "📷 Photo";
-
+                
                 if(quoteText) {
                     currentReplyQuote = quoteText.substring(0, 40) + (quoteText.length > 40 ? "..." : "");
                     DOM.replyTextPreview.innerText = currentReplyQuote;
@@ -408,7 +408,7 @@
             DOM.chatArea.classList.add('history-mode');
             setTimeout(() => DOM.chatArea.scrollTo({top: 0, behavior: 'smooth'}), 50);
         });
-
+        
         DOM.scrollBottomBtn.addEventListener('click', () => {
             DOM.chatArea.scrollTo({top: DOM.chatArea.scrollHeight, behavior: 'smooth'});
             setTimeout(() => DOM.chatArea.classList.remove('history-mode'), 300);
@@ -447,7 +447,7 @@
                 DOM.imgGrid.innerHTML = '';
                 let found = false;
                 const memoryData = state.memoryData || {};
-
+                
                 for(let i=1; i<=5; i++) {
                     let imgUrl = memoryData[`image_${i}_url`];
                     if(imgUrl) {
@@ -471,7 +471,7 @@
                 e.preventDefault(); 
                 if(!DOM.sendBtn.disabled && state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim()); 
             });
-
+            
             DOM.sendBtn.addEventListener('click', () => {
                 if(state.mode !== 'admin_preview') ChatNetwork.sendMessage(DOM.inputEl.value.trim());
             });

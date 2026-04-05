@@ -63,11 +63,14 @@
             <div class="hero__background-effects" aria-hidden="true"></div>
 
             <div class="hero__content text-center">
-                <h1 class="hero__heading" id="hero-heading">Not Just a Gift… A Feeling ❤️</h1>
+              <h1 class="hero__heading">
+Not Just a Gift…<br> A Feeling ❤️
+</h1>
 
-                <p class="hero__story">
-                    “She opens your message… reads it slowly… and suddenly… she smiles… then cries ❤️”
-                </p>
+<p class="hero__story">
+A 2-in-1 surprise — where a real gift meets a secret digital world of love, memories & music.
+</p>
+
 
                 <div class="hero__buttons">
                     <a href="lead-form.html" class="btn btn--primary btn--large">Create Surprise</a>
@@ -81,7 +84,7 @@
                <section class="experience-section" id="what-you-get" aria-labelledby="experience-heading">
             <div class="experience__container text-center">
                 <h2 class="section-heading" id="experience-heading">What They’ll Experience ❤️</h2>
-                <p class="section-subtext">A magical journey crafted to make them smile, cry, and feel truly loved.</p>
+                <p class="section-subtext">A magical 2-in-1 journey — where a real gift meets a digital world, filled with music, memories, and emotions.</p>
 
                 <div class="experience__grid">
                     <div class="experience-card experience-reveal">
@@ -108,13 +111,27 @@
                         </div>
                     </div>
 
-                    <div class="experience-card experience-reveal">
-                        <div class="experience-card__icon">🔗</div>
-                        <div class="experience-card__content">
-                            <h3 class="experience-card__title">Private & Secure</h3>
-                            <p class="experience-card__desc">A private, secret link made exclusively for their eyes only.</p>
-                        </div>
-                    </div>
+                 
+
+<div class="experience-card experience-reveal">
+    
+    <div class="experience-card__icon">🔐</div>
+
+    <div class="experience-card__content">
+        <h3 class="experience-card__title">Private & Secure + Scan</h3>
+        
+        <p class="experience-card__desc">
+            Just scan the QR card and unlock your private surprise ❤️
+        </p>
+
+        <!-- SVG ADD HERE -->
+        <div class="qr-preview">
+            <img src="assets/image/GiftoraX-Premium-QR.svg" alt="QR Code" class="qr-image">
+        </div>
+
+    </div>
+
+</div>
 
                     <div class="experience-card experience-reveal">
                         <div class="experience-card__icon">💌</div>
@@ -163,7 +180,11 @@
         <p class="section-subtext">A preview of the magical journey you are about to send.</p>
     </div>
 
-    <div class="demo__mockup-container">
+    <div class="demo__mockup-container" style="position: relative;">
+        <button id="expand-demo-btn" class="expand-demo-btn" style="display: none;">
+            <i class="fa-solid fa-expand"></i> Full View
+        </button>
+        
         <div class="mobile-mockup" aria-label="Interactive preview of the digital gift">
             <div class="mobile-mockup__screen">
 
@@ -197,41 +218,19 @@
 </section>
 
 
-        <section class="features" id="features" aria-labelledby="features-heading">
-            <div class="features__header text-center">
-                <h2 class="section-heading" id="features-heading">Crafted for Emotion</h2>
-            </div>
+      <section>
+    <div class="section-container text-center">
 
-            <div class="features__grid">
-                <article class="feature-card">
-                    <div class="feature-card__icon" aria-hidden="true">💌</div>
-                    <h3 class="feature-card__title">Heartfelt Messages 💌</h3>
-                    <p class="feature-card__desc">Express your deepest feelings with customized text, audio, and video
-                        memories that speak directly to their heart.</p>
-                </article>
+        <h2 class="section-heading">
+            Why It Feels So Special ❤️
+        </h2>
 
-                <article class="feature-card">
-                    <div class="feature-card__icon" aria-hidden="true">✨</div>
-                    <h3 class="feature-card__title">Cinematic Surprise Experience ✨</h3>
-                    <p class="feature-card__desc">Beautiful reveals and gentle, premium interactions designed to build
-                        anticipation and awe.</p>
-                </article>
+        <p class="section-subtext">
+            Because it’s not just a gift… it’s a moment they’ll remember forever.
+        </p>
 
-                <article class="feature-card">
-                    <div class="feature-card__icon" aria-hidden="true">🚀</div>
-                    <h3 class="feature-card__title">Instant Love Delivery 🚀</h3>
-                    <p class="feature-card__desc">Send magic instantly via a secure, personalized link across WhatsApp,
-                        iMessage, or any platform.</p>
-                </article>
-
-                <article class="feature-card">
-                    <div class="feature-card__icon" aria-hidden="true">🔒</div>
-                    <h3 class="feature-card__title">Private Memories 🔒</h3>
-                    <p class="feature-card__desc">Your intimate memories are locked and visible only to the specific
-                        person you choose to share them with.</p>
-                </article>
-            </div>
-        </section>
+    </div>
+</section>
 
         <section class="use-cases" id="use-cases" aria-labelledby="use-cases-heading">
             <div class="use-cases__header text-center">
@@ -349,7 +348,13 @@
         </div>
     </footer>
 
+    <div id="fullscreen-demo-modal" class="fullscreen-demo-modal">
+        <button id="close-fs-demo-btn" class="close-fs-btn"><i class="fa-solid fa-xmark"></i></button>
+        <div id="fs-iframe-container" class="fs-iframe-container"></div>
+    </div>
+
     <script src="landing-assets/main.js" defer></script>
 </body>
+
 
 </html>

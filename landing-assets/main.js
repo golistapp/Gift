@@ -367,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    // ==========================================
+      // ==========================================
     // INITIALIZATION
     // ==========================================
     initScrollSystem();
@@ -378,37 +378,255 @@ document.addEventListener("DOMContentLoaded", () => {
     initActionButtons();
 
     // ==========================================
-    // 8. LIVE DEMO IFRAME LOGIC (NAYA JADOO)
+    // 8. LIVE DEMO (BOT + FULL SCREEN PREVIEW)
     // ==========================================
     const initLiveDemo = () => {
         const demoBtn = document.getElementById('start-live-demo-btn');
         const overlay = document.getElementById('demo-overlay');
         const iframe = document.getElementById('live-demo-frame');
+        
+        // Full Screen Elements
+        const expandBtn = document.getElementById('expand-demo-btn');
+        const fsModal = document.getElementById('fullscreen-demo-modal');
+        const closeFsBtn = document.getElementById('close-fs-demo-btn');
+        const fsIframeContainer = document.getElementById('fs-iframe-container');
+        const originalIframeParent = document.getElementById('demo-iframe-container'); 
 
         if (demoBtn && overlay && iframe) {
             demoBtn.addEventListener('click', () => {
-                // Button dabate hi animation dikhao
                 demoBtn.innerHTML = 'Unlocking Magic... <i class="fa-solid fa-spinner fa-spin"></i>';
                 demoBtn.style.opacity = '0.7';
 
-                // 1. VIP Pass create karo 'GX-01' ke liye (Taaki vault password na maange)
-                sessionStorage.setItem('auth_GX-01', 'true');
+                const demoGiftData = {
+                    status: "locked", is_enabled: true, occasion: "A Special Surprise", girlfriend_name: "Priya",
+                    message_text: "Hi Priya ❤️,\n\nI made this special digital space just for you. Every moment with you is a beautiful dream come true. You are my everything!",
+                    // 🔴 FIX: Tumhari original images wapas set kar di hain
+                    image_1_url: "assets/image/album1.1.jpg", caption_1: "Sweet Memory",
+                    image_2_url: "assets/image/album2.jpg", caption_2: "Cutie Pie 🥰",
+                    image_3_url: "assets/image/album3.jpg", caption_3: "Golden Moments",
+                    image_4_url: "assets/image/album4.jpg", caption_4: "Precious ❤️",
+                    image_5_url: "assets/image/album5.jpg", caption_5: "Unforgettable"
+                };
 
-                // 2. Iframe ke andar aapki app load karo 
-                // (Note: Yahan humne 'portal.html' likha hai, aapki main file ka jo bhi naam ho wo yahan daal dijiyega)
-                iframe.src = 'portal.html?id=GX-01';
+                localStorage.setItem('gx_preview_data', JSON.stringify(demoGiftData));
+                iframe.src = 'portal.html?mode=preview';
 
-                // 3. 1 second baad nakli design hata kar asli app dikha do
+                   // 🔴 SMART BOT INJECTOR (Works from outside, keeps your real app safe!)
+                iframe.onload = () => {
+                    try {
+                        const doc = iframe.contentDocument || iframe.contentWindow.document;
+                        const style = doc.createElement('style');
+                        style.innerHTML = '.native-chat-header { z-index: 2000 !important; }';
+                        doc.head.appendChild(style);
+
+                        const botScript = doc.createElement('script');
+                        botScript.innerHTML = `
+                            const checkChat = setInterval(() => {
+                                const sendBtn = document.getElementById('send-msg-btn');
+                                const inputEl = document.getElementById('live-msg-input');
+                                
+                                if (sendBtn && inputEl && window.viewerState) {
+                                    clearInterval(checkChat); 
+                                    
+                                    let lastTypedText = "";
+                                    let sequenceTriggered = false; // 🔴 FUNNEL TRACKER
+                                    
+                                    inputEl.addEventListener('input', (e) => { 
+                                        lastTypedText = e.target.value.trim(); // Capitalization maintain rakhne ke liye lowerCase nahi kiya yahan
+                                    });
+
+                                    const triggerBot = () => {
+                                        const userTextOriginal = lastTypedText;
+                                        const userText = userTextOriginal.toLowerCase();
+                                        if(!userText) return;
+                                        lastTypedText = ""; 
+                                        
+                                        setTimeout(() => {
+                                            fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
+                                                method: 'PUT', body: JSON.stringify('typing...')
+                                            });
+                                            
+                                            setTimeout(() => {
+                                                let botReply = "";
+                                                let isMatched = false;
+                                                
+                                                // 1. SPECIFIC MATCHES
+                                               if (userText.match(/hi|hello|hey|hii|hy/)) 
+botReply = "Hii my love! Kaisa raha din? 💖";
+
+else if (userText.match(/morning|good morning/)) 
+botReply = "Good morning! Aaj ka din sirf tumhare liye special ho ✨❤️";
+
+else if (userText.match(/night|good night/)) 
+botReply = "Good night babu! Sapno mein milte hain 🌙❤️";
+
+else if (userText.match(/love|luv u|i love you/)) 
+botReply = "I love you more than you can imagine 💖🌹";
+
+else if (userText.match(/miss|missing you/)) 
+botReply = "I miss you sooo much 🥺❤️ Jaldi milo na...";
+
+else if (userText.match(/kaise ho|how are you|kya haal/)) 
+botReply = "Main theek hu... par tumhare bina thoda incomplete lagta hai ❤️";
+
+else if (userText.match(/kya kar rahe|doing|kya kar rahe ho/)) 
+botReply = "Bas tumhare baare mein soch raha tha 🥰";
+
+else if (userText.match(/khana|khaya|eat/)) 
+botReply = "Tumne khana khaya? Apna khayal rakho na ❤️";
+
+else if (userText.match(/sad|cry|rona|dukhi/)) 
+botReply = "Aww mera babu udaas hai? Aao hug de doon 🥺🤗";
+
+else if (userText.match(/angry|gussa/)) 
+botReply = "Gussa mat ho na... tum haste hue zyada cute lagte ho 😘";
+
+else if (userText.match(/kiss|hug/)) 
+botReply = "Yeh lo ek tight hug aur ek pyara sa kiss 😘🤗";
+
+else if (userText.match(/yaad|remember/)) 
+botReply = "Tumhari har choti baat yaad hai mujhe ❤️";
+
+else if (userText.match(/busy|kaam/)) 
+botReply = "Busy ho kya? Thoda sa time mujhe bhi de do na 🥺❤️";
+
+else if (userText.match(/bored|boring/)) 
+botReply = "Chalo kuch fun karte hain... ek surprise hai tumhare liye 😉🎁";
+
+else if (userText.match(/thank/)) 
+botReply = "Tumhare liye to kuch bhi ❤️";
+
+else if (userText.match(/sorry/)) 
+botReply = "Sorry kis baat ka... tum ho hi itne cute 😘";
+
+else if (userText.match(/acha|hmm/)) 
+botReply = "Itna short reply? Mujhe ignore kar rahe ho kya 😏❤️";
+
+else if (userText.match(/kya|kyun|why/)) 
+botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
+
+                                                // 2. 🔴 DYNAMIC QUOTE FALLBACK (Agar kuch match nahi hua)
+                                                if(!isMatched) {
+                                                    // User ke text ko thoda chota karna (taaki lamba text UI na tode)
+                                                    let shortQuote = userTextOriginal.length > 30 ? userTextOriginal.substring(0, 30) + "..." : userTextOriginal;
+                                                    
+                                                    // Random Cute Replies
+                                                    const fallbacks = [
+                                                        "Aww, you're the sweetest! 🥰",
+                                                        "Hehe, I love talking to you ❤️",
+                                                        "Tumhari baatein hamesha kitni cute hoti hain ✨",
+                                                        "You always know how to make me smile 😘"
+                                                    ];
+                                                    const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+                                                    
+                                                    // Quote format banaya: [QUOTE]User Text[/QUOTE] Reply
+                                                    botReply = \`[QUOTE]\${shortQuote}[/QUOTE] \${randomFallback}\`;
+                                                }
+
+                                                const encryptedMsg1 = CryptoJS.AES.encrypt(botReply, window.viewerState.userPasscode || '').toString();
+                                                
+                                                fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/chat.json', {
+                                                    method: 'POST', body: JSON.stringify({ sender: 'bf', text: encryptedMsg1, timestamp: new Date().toISOString() })
+                                                }).then(() => {
+                                                    fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
+                                                        method: 'PUT', body: JSON.stringify('online')
+                                                    });
+
+                                                    // 🔴 GAME CHANGER FUNNEL LOGIC STARTS HERE
+                                                    if (!sequenceTriggered) {
+                                                        sequenceTriggered = true; // Ek baar hi chalega
+
+                                                        setTimeout(() => {
+                                                            fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
+                                                                method: 'PUT', body: JSON.stringify('typing...')
+                                                            });
+
+                                                            setTimeout(() => {
+                                                                const msg2 = "Waise... maine tumhare liye kuch banaya hai ❤️";
+                                                                const encryptedMsg2 = CryptoJS.AES.encrypt(msg2, window.viewerState.userPasscode || '').toString();
+                                                                
+                                                                fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/chat.json', {
+                                                                    method: 'POST', body: JSON.stringify({ sender: 'bf', text: encryptedMsg2, timestamp: new Date().toISOString() })
+                                                                }).then(() => {
+                                                                    fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
+                                                                        method: 'PUT', body: JSON.stringify('online')
+                                                                    });
+
+                                                                    setTimeout(() => {
+                                                                        fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
+                                                                            method: 'PUT', body: JSON.stringify('typing...')
+                                                                        });
+
+                                                                        setTimeout(() => {
+                                                                            const msg3 = "Dekhna hai? Yahan click karo 👉 <br><br> <a href='lead-form.html' target='_parent' style='background: linear-gradient(135deg, #ff4d79, #cc0033); color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 10px rgba(255, 77, 121, 0.4); font-size: 14px;'>Tap to Open 🎁</a>";
+                                                                            const encryptedMsg3 = CryptoJS.AES.encrypt(msg3, window.viewerState.userPasscode || '').toString();
+                                                                            
+                                                                            fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/chat.json', {
+                                                                                method: 'POST', body: JSON.stringify({ sender: 'bf', text: encryptedMsg3, timestamp: new Date().toISOString() })
+                                                                            }).then(() => {
+                                                                                fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
+                                                                                    method: 'PUT', body: JSON.stringify('online')
+                                                                                });
+                                                                            });
+
+                                                                        }, 1500); 
+                                                                    }, 1500); 
+                                                                });
+
+                                                            }, 2000); 
+                                                        }, 2000); 
+                                                    }
+                                                });
+                                            }, 2000); 
+                                        }, 1000);
+                                    };
+
+                                    sendBtn.addEventListener('click', triggerBot);
+                                    sendBtn.addEventListener('touchstart', triggerBot, {passive: true});
+                                }
+                            }, 1000);
+                        `;
+                        doc.body.appendChild(botScript);
+                    } catch(e) { console.warn("Bot injected skipped due to cross-origin restriction"); }
+                };
+
+
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     iframe.style.display = 'block';
+                    if (expandBtn) expandBtn.style.display = 'flex'; 
                 }, 1000); 
+            });
+        }
+
+        if (expandBtn && fsModal && closeFsBtn && iframe) {
+            expandBtn.addEventListener('click', () => {
+                fsIframeContainer.appendChild(iframe);
+                // 🔴 FIX: CSS !important ko override karna
+                iframe.style.setProperty('transform', 'scale(1)', 'important'); 
+                iframe.style.setProperty('width', '100%', 'important');
+                iframe.style.setProperty('height', '100%', 'important');
+                iframe.style.setProperty('border-radius', '20px', 'important');
+                
+                fsModal.classList.add('active'); 
+                document.body.style.overflow = 'hidden'; 
+            });
+
+            closeFsBtn.addEventListener('click', () => {
+                originalIframeParent.appendChild(iframe);
+                
+                iframe.style.setProperty('width', '375px', 'important');
+                iframe.style.setProperty('height', '812px', 'important');
+                iframe.style.setProperty('transform', 'scale(0.76)', 'important');
+                iframe.style.setProperty('border-radius', '16px', 'important');
+
+                fsModal.classList.remove('active'); 
+                document.body.style.overflow = ''; 
             });
         }
     };
 
-        initLiveDemo(); // Naye function ko chalne ke liye command
-
+    initLiveDemo();
 
     // ==========================================
     // 9. MOBILE SIDEBAR MENU LOGIC (FINAL)
@@ -424,7 +642,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const openMenu = (e) => {
             e.preventDefault();
-            // Yahan se alert hata diya gaya hai ✅
             sidebar.classList.add('active');
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden'; 
@@ -436,7 +653,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.style.overflow = ''; 
         };
 
-        // Button click event
         menuBtn.addEventListener('click', openMenu);
         closeBtn.addEventListener('click', closeMenu);
         overlay.addEventListener('click', closeMenu);

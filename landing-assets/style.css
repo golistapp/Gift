@@ -1,3 +1,20 @@
+.qr-image {
+    width: 80px;
+    height: 80px;
+    margin-top: 10px;
+}
+
+section {
+    padding: var(--section-padding-desktop);
+    width: 100%;
+}
+
+.section-container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
 /* =========================================
    PRO-LEVEL FIX: PURE IFRAME SCALING (SHRINK) 🔴
    This fixes the large header issue proportionate style.
@@ -1089,4 +1106,85 @@ section {
     28% { transform: scale(1); }
     42% { transform: scale(1.3); }
     70% { transform: scale(1); }
+}
+
+
+/* =========================================
+   10. FULL SCREEN PREVIEW & BOT
+   ========================================= */
+
+/* Expand Button */
+.expand-demo-btn {
+    position: absolute;
+    bottom: -60px; /* Mockup ke theek niche */
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255, 77, 166, 0.4);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.expand-demo-btn:hover { 
+    transform: translateX(-50%) scale(1.08); 
+    box-shadow: 0 12px 25px rgba(255, 77, 166, 0.6);
+}
+
+/* Full Screen Modal Background */
+.fullscreen-demo-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(5, 2, 10, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: 0.4s ease;
+}
+.fullscreen-demo-modal.active { 
+    opacity: 1; visibility: visible; 
+}
+
+/* Modal ke andar Iframe ka Box */
+.fs-iframe-container {
+    width: 100%; max-width: 450px;
+    height: 90vh; /* Pura lamba khulega */
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255, 77, 166, 0.2);
+    overflow: hidden;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.fullscreen-demo-modal.active .fs-iframe-container {
+    transform: scale(1);
+}
+
+/* Close Button (X) */
+.close-fs-btn {
+    position: absolute;
+    top: 25px; right: 25px;
+    background: rgba(255,255,255,0.1);
+    color: white; border: 1px solid rgba(255,255,255,0.2);
+    width: 45px; height: 45px; border-radius: 50%;
+    font-size: 22px; cursor: pointer; transition: 0.3s;
+}
+.close-fs-btn:hover { 
+    background: var(--primary); 
+    border-color: var(--primary); 
+    transform: scale(1.1); 
 }
