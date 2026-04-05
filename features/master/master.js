@@ -2,7 +2,7 @@
     const masterForm = document.getElementById('master-login-form');
     const masterIdInput = document.getElementById('master-id-input');
     const masterPassInput = document.getElementById('master-pass-input');
-    
+
     const masterCard = document.getElementById('master-card');
     const errorMsg = document.getElementById('master-error');
     const openBtn = document.getElementById('master-open-btn');
@@ -72,7 +72,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ memoryId: memoryId, enteredPasscode: enteredPasscode, requestType: 'unlock' })
                 });
-                
+
                 const resData = await response.json();
 
                 if (resData.success && resData.memoryData.status === "locked" && resData.memoryData.is_enabled !== false) {
@@ -98,7 +98,7 @@
         if(masterPassInput) { masterPassInput.value = ''; masterPassInput.focus(); }
     }
 
-    // --- 5. 2-BOX RECOVERY SYSTEM WITH 24-HOUR LIMIT ---
+    // --- 5. 2-BOX RECOVERY SYSTEM WITH SECURE BACKEND VERIFICATION ---
     const forgotBtn = document.getElementById('btn-forgot-recovery');
     const recoveryModal = document.getElementById('recovery-modal');
     const closeRecovery = document.getElementById('close-recovery');
@@ -111,7 +111,7 @@
         document.getElementById('rec-secondary').value = '';
         recoveryModal.classList.remove('hidden');
     });
-    
+
     if(closeRecovery) {
         closeRecovery.addEventListener('click', () => recoveryModal.classList.add('hidden'));
         recoveryModal.addEventListener('click', (e) => { if(e.target === recoveryModal) recoveryModal.classList.add('hidden'); });
@@ -120,22 +120,18 @@
     if(recoverBtn) recoverBtn.addEventListener('click', async () => {
         const recPrimaryRaw = document.getElementById('rec-primary').value.trim().toLowerCase();
         const recSecRaw = document.getElementById('rec-secondary').value.trim().toLowerCase();
-        
-        // Clean inputs
-        const recPrimaryMobileOnly = recPrimaryRaw.replace(/\D/g, ''); 
+
         const recSecClean = recSecRaw.replace(/[^a-z0-9]/g, ''); 
-        
+
         if (!recPrimaryRaw || !recSecClean) {
             recoveryResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Please fill both fields correctly.</span>';
             return;
         }
 
-        // --- SPAM PROTECTION: Check 24-hour Limit ---
         const limitKey = `recovery_req_${recPrimaryRaw}`;
         let limitData = JSON.parse(localStorage.getItem(limitKey) || '{"count": 0, "timestamp": 0}');
         const now = new Date().getTime();
 
-        // Agar 24 ghante (86400000 ms) poore ho gaye hain, toh reset kar do
         if (now - limitData.timestamp > 86400000) {
             limitData.count = 0;
             limitData.timestamp = now;
@@ -145,58 +141,26 @@
             recoveryResult.innerHTML = '<br><span style="color:#e53935; font-weight:bold;"><i class="fa-solid fa-clock"></i> Already sent!</span><br><span style="color:#666; font-size:13px;">Please check your email. You can try again after 24 hours.</span>';
             return;
         }
-        // ---------------------------------------------
 
         recoverBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
         recoverBtn.disabled = true;
 
         try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
-            const data = await res.json();
-            let foundId = null;
-            let foundData = null;
-            
-            if (data) {
-                for (const id in data) {
-                    if(id === "error" || typeof data[id] !== 'object') continue;
+            // 🔴 NAYA: API ko call karenge Database fetch karne ki jagah
+            const response = await fetch('/api/verify-passcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    requestType: 'recover', 
+                    recPrimary: recPrimaryRaw, 
+                    recSecondary: recSecRaw 
+                })
+            });
 
-                    const db = data[id];
-                    const dbEmail = (db.customer_email || "").trim().toLowerCase();
-                    const dbMob = (db.mobile_number || "").replace(/\D/g, '');
+            const resData = await response.json();
 
-                    // BOX 1 Check (Email ya Mobile dono mein se koi ek match hona chahiye)
-                    let primaryMatch = false;
-                    if (recPrimaryRaw.includes('@') && dbEmail === recPrimaryRaw) primaryMatch = true;
-                    else if (!recPrimaryRaw.includes('@') && dbMob === recPrimaryMobileOnly && dbMob.length >= 8) primaryMatch = true;
-
-                    if (primaryMatch) {
-                        let secMatch = false;
-
-                        // BOX 2 Check (Name, ID, ya Password)
-                        const dbName = (db.customer_name || "").toLowerCase().replace(/[^a-z0-9]/g, '');
-                        if (dbName && recSecClean && dbName.includes(recSecClean)) secMatch = true;
-
-                        const idNum = id.replace(/[^0-9]/g, ''); 
-                        const idNumInt = parseInt(idNum, 10).toString(); 
-                        const idNorm = id.toLowerCase().replace(/[^a-z0-9]/g, ''); 
-                        if (recSecClean === idNorm || recSecClean === idNum || recSecClean === idNumInt) secMatch = true;
-
-                        const dbPass = (db.passcode || "").toLowerCase().replace(/[^a-z0-9]/g, '');
-                        if (dbPass && recSecClean && dbPass === recSecClean) secMatch = true;
-
-                        if (secMatch) {
-                            foundId = id;
-                            foundData = db;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (foundId && foundData) {
-                const customerName = foundData.customer_name || "Valued Customer";
-                const secretPasscode = foundData.passcode || "Not set";
-                const customerEmail = foundData.customer_email || "giftoraxofficial@gmail.com"; 
+            if (resData.success) {
+                const { foundId, customerName, customerEmail, passcode } = resData;
 
                 await emailjs.send("service_qardvzx", "template_plwxp0k", {
                     subject: `Your GiftoraX Recovery Details`,
@@ -205,10 +169,9 @@
                     user_mobile: "Verified",
                     gift_id: foundId,
                     customer_email: customerEmail,
-                    secure_message: `Hello ${customerName},\n\nYour account has been successfully verified.\n\nYour Gift ID is: ${foundId}\nYour Secret Passcode is: ${secretPasscode}\n\nKeep these details safe and do not share them with anyone.`
+                    secure_message: `Hello ${customerName},\n\nYour account has been successfully verified.\n\nYour Gift ID is: ${foundId}\nYour Secret Passcode is: ${passcode}\n\nKeep these details safe and do not share them with anyone.`
                 });
-                
-                // Update 24-hour limit count only on success
+
                 limitData.count += 1;
                 limitData.timestamp = now;
                 localStorage.setItem(limitKey, JSON.stringify(limitData));
@@ -222,7 +185,7 @@
 
                 recoveryResult.innerHTML = `<br><span style="color:#10b981; font-weight:bold;">✅ Verification Successful!</span><br><span style="color:#666; font-size:13px; margin-top:5px; display:inline-block;">Details sent securely to: <br><strong style="color:#d81b60; font-size:15px; letter-spacing:0.5px;">${displayEmail}</strong></span>`;
             } else {
-                recoveryResult.innerHTML = '<br><span style="color:#e53935;">❌ Verification Failed. Details do not match.</span>';
+                recoveryResult.innerHTML = `<br><span style="color:#e53935;">❌ ${resData.error || "Verification Failed. Details do not match."}</span>`;
             }
         } catch (e) {
             recoveryResult.innerHTML = '<br><span style="color:#e53935;">System error. Try again.</span>';
