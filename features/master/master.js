@@ -1,6 +1,5 @@
 (function() {
     const masterForm = document.getElementById('master-login-form');
-    // Naye dono inputs fetch kiye
     const masterIdInput = document.getElementById('master-id-input');
     const masterPassInput = document.getElementById('master-pass-input');
     
@@ -60,7 +59,7 @@
         });
     }
 
-    // 4. Main Login Logic (Naya Dual Box System)
+    // 4. Main Login Logic (Updated with Backend API)
     if (masterForm) {
         masterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -73,33 +72,49 @@
                 return; 
             }
 
-            // Agar ID '3' dali, toh 'GX-03' banayega, agar '100' dali toh 'GX-100' banayega
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
             
-            openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
+            openBtn.innerHTML = 'Unlocking...'; 
+            openBtn.disabled = true;
 
             try {
-                const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
-                if (!res.ok) throw new Error("Fetch failed");
-                const data = await res.json();
+                // 🔴 FIX: Direct Firebase ki jagah Vercel Backend API call karenge
+                const response = await fetch('/api/verify-passcode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        memoryId: memoryId, 
+                        enteredPasscode: enteredPasscode, 
+                        requestType: 'unlock' 
+                    })
+                });
+                
+                const resData = await response.json();
 
-                if (data && data.status === "locked" && data.is_enabled !== false) {
-                    const storedPass = data.passcode || "";
-                    if (storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode))) {
-                        if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
-                        lightBurst.classList.remove('hidden');
-                        setTimeout(() => {
-                            lightBurst.classList.add('active');
-                            sessionStorage.setItem(`auth_${memoryId}`, "true"); 
-                            setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
-                        }, 50);
-                        return;
-                    }
+                // 🔴 FIX: Backend se verified data aayega, usko check karenge
+                if (resData.success && resData.memoryData.status === "locked" && resData.memoryData.is_enabled !== false) {
+                    if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
+                    lightBurst.classList.remove('hidden');
+                    setTimeout(() => {
+                        lightBurst.classList.add('active');
+                        // 🔴 FIX: Password ko session mein save karenge, "true" nahi, taaki viewer bypass kar sake
+                        sessionStorage.setItem(`auth_${memoryId}`, enteredPasscode); 
+                        setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
+                    }, 50);
+                    return;
                 }
-                showError();
-            } catch (err) { showError("Network error. Please try again."); } 
-            finally { openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; openBtn.disabled = false; }
+                
+                // Backend ne success nahi bheja (galat password ya locked nahi hai)
+                showError(resData.error || "Incorrect details.");
+                
+            } catch (err) { 
+                showError("Network error. Please try again."); 
+            } 
+            finally { 
+                openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; 
+                openBtn.disabled = false; 
+            }
         });
     }
 
