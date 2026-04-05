@@ -207,63 +207,55 @@
                     DOM.chatArea.scrollTop = DOM.chatArea.scrollHeight;
                 }
             }
-            lastMsgTime = currentLastMsg.timestamp;
+
+
+               lastMsgTime = currentLastMsg.timestamp;
         }
     };
 
+    // --- FIREBASE INITIALIZATION (Dashboard Jaisa Same To Same) ---
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
     const ChatNetwork = {
-        // 🔴 BUG FIXED: Status direct gf_status file mein update hoga
         updateStatus: function(statusStr) {
-            if (state.mode === 'admin_preview' || !state.memoryId || typeof firebaseConfig === 'undefined') return;
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_status.json`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(statusStr)
-            }).catch(e => {});
+            if (state.mode === 'admin_preview' || !state.memoryId) return;
+            db.ref(`memories/${state.memoryId}/gf_status`).set(statusStr).catch(e=>{});
         },
 
-        // 🔴 BUG FIXED: Read receipt direct file mein update hoga
         updateReadReceipt: function() {
-            if (state.mode === 'admin_preview' || document.hidden || typeof firebaseConfig === 'undefined' || !state.memoryId) return; 
-            fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/gf_last_read.json`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(new Date().toISOString())
-            }).catch(e => {});
+            if (state.mode === 'admin_preview' || document.hidden || !state.memoryId) return; 
+            db.ref(`memories/${state.memoryId}/gf_last_read`).set(new Date().toISOString()).catch(e=>{});
         },
 
         startRealtime: function() {
-            if (window.gfChatStream) window.gfChatStream.close();
-            if (window.bfStatusStream) window.bfStatusStream.close();
-            if (window.bfReadStream) window.bfReadStream.close();
+            const memRef = db.ref(`memories/${state.memoryId}`);
 
-            // 🚀 SUPERFAST SSE STREAMING
-            window.gfChatStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`);
-            const handleChatData = (e) => {
-                try {
-                    const payload = JSON.parse(e.data);
-                    if (payload && payload.data !== null) {
-                        if (payload.path === "/") { 
-                            state.memoryData.chat = Array.isArray(payload.data) ? payload.data : Object.values(payload.data);
-                        } else {
-                            if (!state.memoryData.chat) state.memoryData.chat = [];
-                            state.memoryData.chat.push(payload.data);
-                        }
-                        ChatUI.renderMessages();
-                    }
-                } catch(err) {}
-            };
-            window.gfChatStream.addEventListener('put', handleChatData);
-            window.gfChatStream.addEventListener('patch', handleChatData);
-
-            window.bfStatusStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/bf_status.json`);
-            window.bfStatusStream.addEventListener('put', (e) => {
-                try { const p = JSON.parse(e.data); if (p.data !== null) { state.memoryData.bf_status = p.data; ChatUI.updateHeader(); } } catch(err) {}
+            // 🚀 FIREBASE NATIVE LISTENERS (Zero Delay)
+            memRef.child('chat').on('value', (snapshot) => {
+                state.memoryData.chat = snapshot.val() || [];
+                ChatUI.renderMessages();
             });
 
-            window.bfReadStream = new EventSource(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/bf_last_read.json`);
-            window.bfReadStream.addEventListener('put', (e) => {
-                try { const p = JSON.parse(e.data); if (p.data !== null) { state.memoryData.bf_last_read = p.data; ChatUI.renderMessages(); } } catch(err) {}
+            memRef.child('bf_status').on('value', (snapshot) => {
+                state.memoryData.bf_status = snapshot.val();
+                ChatUI.updateHeader();
+            });
+
+            memRef.child('bf_last_read').on('value', (snapshot) => {
+                state.memoryData.bf_last_read = snapshot.val();
+                ChatUI.renderMessages();
+            });
+
+            memRef.child('message_count').on('value', (snapshot) => {
+                state.memoryData.message_count = snapshot.val() || 0;
+                ChatUI.renderMessages();
             });
         },
 
-        sendMessage: async function(rawText) {
+        sendMessage: function(rawText) {
             if(!rawText && !currentReplyQuote) return false;
             
             let finalMsgText = rawText;
@@ -272,44 +264,46 @@
             if(DOM.soundSend) { DOM.soundSend.currentTime = 0; DOM.soundSend.play().catch(()=>{}); }
             if(navigator.vibrate) navigator.vibrate(40); 
 
-            try {
-                const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
-                const newMsgObj = { sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() };
+            DOM.sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            DOM.sendBtn.disabled = true;
 
-                // 🚀 FAST UI UPDATE: Turant screen se input hat jayega
-                if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
-                                currentReplyQuote = "";
-                if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
-                
-                // 🔴 NEW: Bhejte waqt History Mode hata do
-                if (DOM.chatArea) DOM.chatArea.classList.remove('history-mode');
-                
-                this.updateStatus('online'); 
+            const encryptedMsg = CryptoJS.AES.encrypt(finalMsgText, state.userPasscode).toString();
+            const newMsgObj = { sender: 'gf', text: encryptedMsg, timestamp: new Date().toISOString() };
 
+            // 🚀 FAST UI UPDATE: Turant screen se input hat jayega
+            if(DOM.inputEl) { DOM.inputEl.value = ''; DOM.inputEl.style.height = 'auto'; }
+            currentReplyQuote = "";
+            if(DOM.replyPreviewBox) DOM.replyPreviewBox.classList.add('hidden');
+            
+            if (DOM.chatArea) DOM.chatArea.classList.remove('history-mode');
+            
+            this.updateStatus('online'); 
 
-                // 🚀 SUPERFAST POST: Firebase seedha naya push karega
-                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/chat.json`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMsgObj)
-                });
+            // 🔴 EXACT DASHBOARD LOGIC (Transaction for 100% Safety and Instant Local Update)
+            const memRef = db.ref(`memories/${state.memoryId}`);
+            memRef.child('chat').transaction((currentChat) => {
+                let chatList = currentChat || [];
+                if (!Array.isArray(chatList)) chatList = Object.values(chatList);
+                chatList.push(newMsgObj);
+                if (chatList.length > 100) chatList = chatList.slice(chatList.length - 100);
+                return chatList;
+            }, (error, committed) => {
+                if (error) {
+                    console.error("Error sending message", error);
+                } else if (committed) {
+                    memRef.child('message_count').transaction(c => (c || 0) + 1);
+                }
+                DOM.sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; 
+                DOM.sendBtn.disabled = false;
+            });
 
-                // Message count update
-                fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`)
-                    .then(res => res.json())
-                    .then(count => {
-                        fetch(`${firebaseConfig.databaseURL}/memories/${state.memoryId}/message_count.json`, {
-                            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify((count || 0) + 1)
-                        });
-                    });
-
-                return true;
-            } catch(err) { 
-                console.error(err);
-                return false; 
-            }
+            return true;
         }
     };
 
     let touchStartX = 0, touchStartY = 0, swipedMsg = null;
+
+
     if(DOM.chatArea) {
         DOM.chatArea.addEventListener('touchstart', e => {
             const msg = e.target.closest('.msg-wrapper');
