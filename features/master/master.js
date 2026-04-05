@@ -8,7 +8,6 @@
     const openBtn = document.getElementById('master-open-btn');
     const lightBurst = document.getElementById('light-burst-overlay');
 
-    // 1. Background Particles
     function createParticles() {
         const container = document.getElementById('particles-container');
         if(!container) return;
@@ -25,7 +24,6 @@
     }
     createParticles();
 
-    // Type karte hi error gayab ho jaye
     if(masterIdInput) masterIdInput.addEventListener('input', hideError);
     if(masterPassInput) masterPassInput.addEventListener('input', hideError);
 
@@ -36,7 +34,6 @@
         }
     }
 
-    // 2. Secret Admin Access (3 Tap)
     let tapCount = 0, tapTimeout;
     const logoArea = document.getElementById('secret-admin-trigger');
     if(logoArea) {
@@ -47,7 +44,6 @@
         });
     }
 
-    // 3. Auto Format (Sirf numbers accept karega)
     if(masterIdInput) {
         masterIdInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^0-9A-Z]/gi, '').toUpperCase(); 
@@ -59,62 +55,39 @@
         });
     }
 
-    // 4. Main Login Logic (Updated with Backend API)
     if (masterForm) {
         masterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const idVal = masterIdInput.value.trim(); 
             const passVal = masterPassInput.value.trim();
-            
-            if (!idVal || !passVal) { 
-                showError("Please fill both ID and Password."); 
-                return; 
-            }
+            if (!idVal || !passVal) { showError("Please fill both ID and Password."); return; }
 
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
-            
-            openBtn.innerHTML = 'Unlocking...'; 
-            openBtn.disabled = true;
+            openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
 
             try {
-                // 🔴 FIX: Direct Firebase ki jagah Vercel Backend API call karenge
                 const response = await fetch('/api/verify-passcode', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        memoryId: memoryId, 
-                        enteredPasscode: enteredPasscode, 
-                        requestType: 'unlock' 
-                    })
+                    body: JSON.stringify({ memoryId: memoryId, enteredPasscode: enteredPasscode, requestType: 'unlock' })
                 });
                 
                 const resData = await response.json();
 
-                // 🔴 FIX: Backend se verified data aayega, usko check karenge
                 if (resData.success && resData.memoryData.status === "locked" && resData.memoryData.is_enabled !== false) {
                     if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
                     lightBurst.classList.remove('hidden');
                     setTimeout(() => {
                         lightBurst.classList.add('active');
-                        // 🔴 FIX: Password ko session mein save karenge, "true" nahi, taaki viewer bypass kar sake
                         sessionStorage.setItem(`auth_${memoryId}`, enteredPasscode); 
                         setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
                     }, 50);
                     return;
                 }
-                
-                // Backend ne success nahi bheja (galat password ya locked nahi hai)
                 showError(resData.error || "Incorrect details.");
-                
-            } catch (err) { 
-                showError("Network error. Please try again."); 
-            } 
-            finally { 
-                openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; 
-                openBtn.disabled = false; 
-            }
+            } catch (err) { showError("Network error. Please try again."); } 
+            finally { openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; openBtn.disabled = false; }
         });
     }
 
@@ -125,165 +98,137 @@
         if(masterPassInput) { masterPassInput.value = ''; masterPassInput.focus(); }
     }
 
-    // --- 5. FORGOT ID SYSTEM ---
-    const forgotIdBtn = document.getElementById('btn-forgot-id');
-    const forgotIdModal = document.getElementById('forgot-id-modal');
-    const closeForgotId = document.getElementById('close-forgot-id');
-    const searchBtn = document.getElementById('search-id-btn');
-    const searchResult = document.getElementById('search-result');
+    // --- 5. 2-BOX RECOVERY SYSTEM WITH 24-HOUR LIMIT ---
+    const forgotBtn = document.getElementById('btn-forgot-recovery');
+    const recoveryModal = document.getElementById('recovery-modal');
+    const closeRecovery = document.getElementById('close-recovery');
+    const recoverBtn = document.getElementById('btn-recover-secure');
+    const recoveryResult = document.getElementById('recovery-result');
 
-    if(forgotIdBtn) forgotIdBtn.addEventListener('click', () => {
-        searchResult.innerHTML = ''; 
-        document.getElementById('search-name-input').value = '';
-        document.getElementById('search-mobile-input').value = '';
-        forgotIdModal.classList.remove('hidden');
+    if(forgotBtn) forgotBtn.addEventListener('click', () => {
+        recoveryResult.innerHTML = ''; 
+        document.getElementById('rec-primary').value = '';
+        document.getElementById('rec-secondary').value = '';
+        recoveryModal.classList.remove('hidden');
     });
     
-    if(closeForgotId) {
-        closeForgotId.addEventListener('click', () => forgotIdModal.classList.add('hidden'));
-        forgotIdModal.addEventListener('click', (e) => { if(e.target === forgotIdModal) forgotIdModal.classList.add('hidden'); });
+    if(closeRecovery) {
+        closeRecovery.addEventListener('click', () => recoveryModal.classList.add('hidden'));
+        recoveryModal.addEventListener('click', (e) => { if(e.target === recoveryModal) recoveryModal.classList.add('hidden'); });
     }
 
-    if(searchBtn) searchBtn.addEventListener('click', async () => {
-        const nameInput = document.getElementById('search-name-input').value.trim().toLowerCase();
-        const mobInput = document.getElementById('search-mobile-input').value.trim().replace(/\D/g,'');
+    if(recoverBtn) recoverBtn.addEventListener('click', async () => {
+        const recPrimaryRaw = document.getElementById('rec-primary').value.trim().toLowerCase();
+        const recSecRaw = document.getElementById('rec-secondary').value.trim().toLowerCase();
         
-        if (!nameInput || mobInput.length < 8) {
-            searchResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Fill both details correctly.</span>';
+        // Clean inputs
+        const recPrimaryMobileOnly = recPrimaryRaw.replace(/\D/g, ''); 
+        const recSecClean = recSecRaw.replace(/[^a-z0-9]/g, ''); 
+        
+        if (!recPrimaryRaw || !recSecClean) {
+            recoveryResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Please fill both fields correctly.</span>';
             return;
         }
 
-        searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
-        searchBtn.disabled = true;
+        // --- SPAM PROTECTION: Check 24-hour Limit ---
+        const limitKey = `recovery_req_${recPrimaryRaw}`;
+        let limitData = JSON.parse(localStorage.getItem(limitKey) || '{"count": 0, "timestamp": 0}');
+        const now = new Date().getTime();
+
+        // Agar 24 ghante (86400000 ms) poore ho gaye hain, toh reset kar do
+        if (now - limitData.timestamp > 86400000) {
+            limitData.count = 0;
+            limitData.timestamp = now;
+        }
+
+        if (limitData.count >= 2) {
+            recoveryResult.innerHTML = '<br><span style="color:#e53935; font-weight:bold;"><i class="fa-solid fa-clock"></i> Already sent!</span><br><span style="color:#666; font-size:13px;">Please check your email. You can try again after 24 hours.</span>';
+            return;
+        }
+        // ---------------------------------------------
+
+        recoverBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+        recoverBtn.disabled = true;
 
         try {
             const res = await fetch(`${firebaseConfig.databaseURL}/memories.json`);
             const data = await res.json();
             let foundId = null;
+            let foundData = null;
             
             if (data) {
-                Object.keys(data).forEach(id => {
-                    const dbMob = (data[id].mobile_number || "").replace(/\D/g,'');
-                    const dbName = (data[id].customer_name || "").toLowerCase();
-                    if (dbMob === mobInput && dbName.includes(nameInput)) {
-                        foundId = id;
+                for (const id in data) {
+                    if(id === "error" || typeof data[id] !== 'object') continue;
+
+                    const db = data[id];
+                    const dbEmail = (db.customer_email || "").trim().toLowerCase();
+                    const dbMob = (db.mobile_number || "").replace(/\D/g, '');
+
+                    // BOX 1 Check (Email ya Mobile dono mein se koi ek match hona chahiye)
+                    let primaryMatch = false;
+                    if (recPrimaryRaw.includes('@') && dbEmail === recPrimaryRaw) primaryMatch = true;
+                    else if (!recPrimaryRaw.includes('@') && dbMob === recPrimaryMobileOnly && dbMob.length >= 8) primaryMatch = true;
+
+                    if (primaryMatch) {
+                        let secMatch = false;
+
+                        // BOX 2 Check (Name, ID, ya Password)
+                        const dbName = (db.customer_name || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+                        if (dbName && recSecClean && dbName.includes(recSecClean)) secMatch = true;
+
+                        const idNum = id.replace(/[^0-9]/g, ''); 
+                        const idNumInt = parseInt(idNum, 10).toString(); 
+                        const idNorm = id.toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                        if (recSecClean === idNorm || recSecClean === idNum || recSecClean === idNumInt) secMatch = true;
+
+                        const dbPass = (db.passcode || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+                        if (dbPass && recSecClean && dbPass === recSecClean) secMatch = true;
+
+                        if (secMatch) {
+                            foundId = id;
+                            foundData = db;
+                            break;
+                        }
                     }
-                });
+                }
             }
 
-            if (foundId) {
-                const custEmail = data[foundId].customer_email || "giftoraxofficial@gmail.com"; 
+            if (foundId && foundData) {
+                const customerName = foundData.customer_name || "Valued Customer";
+                const secretPasscode = foundData.passcode || "Not set";
+                const customerEmail = foundData.customer_email || "giftoraxofficial@gmail.com"; 
 
                 await emailjs.send("service_qardvzx", "template_plwxp0k", {
-                    subject: `Your Gift ID Request`,
-                    request_type: "Forgot ID Request",
-                    user_name: nameInput,
-                    user_mobile: mobInput,
-                    gift_id: "Unknown",
-                    customer_email: custEmail,
-                    secure_message: `Hello ${nameInput},\n\nYour verified Gift ID is: ${foundId}\n\nYou can now use this ID to open your gift or reset your passcode.`
+                    subject: `Your GiftoraX Recovery Details`,
+                    request_type: "Account Recovery Request",
+                    user_name: customerName,
+                    user_mobile: "Verified",
+                    gift_id: foundId,
+                    customer_email: customerEmail,
+                    secure_message: `Hello ${customerName},\n\nYour account has been successfully verified.\n\nYour Gift ID is: ${foundId}\nYour Secret Passcode is: ${secretPasscode}\n\nKeep these details safe and do not share them with anyone.`
                 });
                 
-                let displayEmail = custEmail;
-                if(custEmail.includes('@')) {
-                    let parts = custEmail.split('@');
-                    let visibleLen = Math.min(6, parts[0].length); 
-                    displayEmail = parts[0].substring(0, visibleLen) + '***@' + parts[1];
+                // Update 24-hour limit count only on success
+                limitData.count += 1;
+                limitData.timestamp = now;
+                localStorage.setItem(limitKey, JSON.stringify(limitData));
+
+                let displayEmail = customerEmail;
+                if(customerEmail.includes('@')) {
+                    let parts = customerEmail.split('@');
+                    let visibleLen = Math.min(4, parts[0].length); 
+                    displayEmail = parts[0].substring(0, visibleLen) + '****@' + parts[1];
                 }
 
-                searchResult.innerHTML = `<br><span style="color:#10b981; font-weight:bold;">✅ Verification Successful!</span><br><span style="color:#666; font-size:13px; margin-top:5px; display:inline-block;">Sent securely to: <br><strong style="color:#d81b60; font-size:15px; letter-spacing:0.5px;">${displayEmail}</strong></span>`;
+                recoveryResult.innerHTML = `<br><span style="color:#10b981; font-weight:bold;">✅ Verification Successful!</span><br><span style="color:#666; font-size:13px; margin-top:5px; display:inline-block;">Details sent securely to: <br><strong style="color:#d81b60; font-size:15px; letter-spacing:0.5px;">${displayEmail}</strong></span>`;
             } else {
-                searchResult.innerHTML = '<br><span style="color:#e53935;">❌ Verification Failed. No records matched.</span>';
+                recoveryResult.innerHTML = '<br><span style="color:#e53935;">❌ Verification Failed. Details do not match.</span>';
             }
         } catch (e) {
-            searchResult.innerHTML = '<br><span style="color:#e53935;">System error. Try again.</span>';
+            recoveryResult.innerHTML = '<br><span style="color:#e53935;">System error. Try again.</span>';
         } finally {
-            searchBtn.innerHTML = 'Secure Request';
-            searchBtn.disabled = false;
-        }
-    });
-
-    // --- 6. FORGOT PASSWORD SYSTEM ---
-    const forgotPassBtn = document.getElementById('btn-forgot-pass');
-    const forgotPassModal = document.getElementById('forgot-pass-modal');
-    const closeForgotPass = document.getElementById('close-forgot-pass');
-    const sendWaBtn = document.getElementById('send-wa-btn');
-    const recoverIdInput = document.getElementById('recover-id-input');
-    const passSearchResult = document.getElementById('pass-search-result');
-
-    if(forgotPassBtn) forgotPassBtn.addEventListener('click', () => {
-        recoverIdInput.value = '';
-        document.getElementById('recover-name-input').value = '';
-        document.getElementById('recover-mobile-input').value = '';
-        passSearchResult.innerHTML = '';
-        forgotPassModal.classList.remove('hidden');
-    });
-    
-    if(closeForgotPass) {
-        closeForgotPass.addEventListener('click', () => forgotPassModal.classList.add('hidden'));
-        forgotPassModal.addEventListener('click', (e) => { if(e.target === forgotPassModal) forgotPassModal.classList.add('hidden'); });
-    }
-
-    recoverIdInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/[^0-9A-Z]/gi, '').toUpperCase(); 
-    });
-
-    if(sendWaBtn) sendWaBtn.addEventListener('click', async () => {
-        let askId = recoverIdInput.value.trim();
-        const nameInput = document.getElementById('recover-name-input').value.trim().toLowerCase();
-        const mobInput = document.getElementById('recover-mobile-input').value.trim().replace(/\D/g,'');
-        
-        if (!askId || !nameInput || mobInput.length < 8) {
-            passSearchResult.innerHTML = '<span style="color:#e53935;"><i class="fa-solid fa-triangle-exclamation"></i> Fill all fields correctly.</span>';
-            return;
-        }
-
-        if (!askId.startsWith('GX-') && askId.length <= 2) askId = `GX-${askId.padStart(2, '0')}`;
-        
-        sendWaBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
-        sendWaBtn.disabled = true;
-
-        try {
-            const res = await fetch(`${firebaseConfig.databaseURL}/memories/${askId}.json`);
-            const data = await res.json();
-            
-            if (data) {
-                const dbMob = (data.mobile_number || "").replace(/\D/g,'');
-                const dbName = (data.customer_name || "").toLowerCase();
-
-                if (dbMob === mobInput && dbName.includes(nameInput)) {
-                    
-                    const custEmail = data.customer_email || "giftoraxofficial@gmail.com"; 
-
-                    await emailjs.send("service_qardvzx", "template_plwxp0k", {
-                        subject: `Your Password Recovery`,
-                        request_type: "Forgot Password Request",
-                        user_name: nameInput,
-                        user_mobile: mobInput,
-                        gift_id: askId,
-                        customer_email: custEmail,
-                        secure_message: `Hello ${nameInput},\n\nYour Gift ID is: ${askId}\nYour Secret Passcode is: ${data.passcode}\n\nKeep this code safe and do not share it with anyone.`
-                    });
-                    
-                    let displayEmail = custEmail;
-                    if(custEmail.includes('@')) {
-                        let parts = custEmail.split('@');
-                        let visibleLen = Math.min(6, parts[0].length); 
-                        displayEmail = parts[0].substring(0, visibleLen) + '***@' + parts[1];
-                    }
-
-                    passSearchResult.innerHTML = `<br><span style="color:#10b981; font-weight:bold;">✅ Secure Request Sent!</span><br><span style="color:#666; font-size:13px; margin-top:5px; display:inline-block;">Sent securely to: <br><strong style="color:#d81b60; font-size:15px; letter-spacing:0.5px;">${displayEmail}</strong></span>`;
-                } else {
-                    passSearchResult.innerHTML = '<br><span style="color:#e53935;">❌ Verification Failed. Details do not match.</span>';
-                }
-            } else {
-                passSearchResult.innerHTML = '<br><span style="color:#e53935;">❌ Invalid Gift ID.</span>';
-            }
-        } catch (e) {
-            passSearchResult.innerHTML = '<br><span style="color:#e53935;">System error. Try again.</span>';
-        } finally {
-            sendWaBtn.innerHTML = 'Send Secure Request <i class="fa-solid fa-shield-halved" style="margin-left: 5px;"></i>';
-            sendWaBtn.disabled = false;
+            recoverBtn.innerHTML = 'Secure Request <i class="fa-solid fa-shield-halved" style="margin-left: 5px;"></i>';
+            recoverBtn.disabled = false;
         }
     });
 

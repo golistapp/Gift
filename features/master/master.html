@@ -14,19 +14,18 @@
             <h2 class="romantic-heading">Something special for you ❤️</h2>
             
             <form id="master-login-form">
-                               <div class="input-section">
+                <div class="input-section">
                     <div class="split-input-container">
                         <div class="secret-input-wrapper id-box">
                             <span class="static-prefix">GX-</span>
                             <input type="number" id="master-id-input" class="secret-code-input" placeholder="ID" autocomplete="off" maxlength="4" required>
                         </div>
                         <div class="secret-input-wrapper pass-box">
-                            <input type="type" id="master-pass-input" class="secret-code-input" placeholder="Password" autocomplete="off" maxlength="6" required>
+                            <input type="password" id="master-pass-input" class="secret-code-input" placeholder="Password" autocomplete="off" maxlength="6" required>
                         </div>
                     </div>
                     <p id="master-error" class="error-text hidden"><i class="fa-solid fa-circle-exclamation"></i> Incorrect details.</p>
                 </div>
-
                 
                 <button type="submit" class="btn-gold-glow" id="master-open-btn">
                     Tap to Open <span class="spinning-gift">🎁</span>
@@ -34,9 +33,7 @@
             </form>
 
             <div class="minimal-help-links">
-                <button type="button" id="btn-forgot-id" class="minimal-link">Forgot ID?</button>
-                <span class="dot-separator">•</span>
-                <button type="button" id="btn-forgot-pass" class="minimal-link">Forgot Password?</button>
+                <button type="button" id="btn-forgot-recovery" class="minimal-link">Forgot ID or Password?</button>
             </div>
         </div>
     </div>
@@ -47,38 +44,18 @@
         </a>
     </div>
 
-    <div id="forgot-id-modal" class="hidden master-modal-overlay">
+    <div id="recovery-modal" class="hidden master-modal-overlay">
         <div class="glass-gift-card modal-card fade-in-scale">
-            <button class="close-master-modal" id="close-forgot-id"><i class="fa-solid fa-xmark"></i></button>
-            <h3 style="color: #4a154b; font-family: var(--font-heading); font-size: 26px; margin-bottom: 10px;">Find Your ID</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Securely request your Gift ID.</p>
+            <button class="close-master-modal" id="close-recovery"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color: #4a154b; font-family: var(--font-heading); font-size: 26px; margin-bottom: 10px;">Account Recovery</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Verify details to securely receive your ID & Password.</p>
             
-            <input type="text" id="search-name-input" class="secret-code-input" placeholder="Sender's Name (e.g. Rahul)" style="margin-bottom: 10px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
-            <input type="tel" id="search-mobile-input" class="secret-code-input" placeholder="Registered Mobile No." style="margin-bottom: 15px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
+            <input type="text" id="rec-primary" class="secret-code-input" placeholder="Registered Email or Mobile No." style="margin-bottom: 10px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
             
-            <button id="search-id-btn" class="btn-gold-glow" style="padding: 12px; font-size: 15px; margin-top: 0;">Secure Request</button>
-            <div id="search-result" class="search-result-area"></div>
-        </div>
-    </div>
-
-    <div id="forgot-pass-modal" class="hidden master-modal-overlay">
-        <div class="glass-gift-card modal-card fade-in-scale">
-            <button class="close-master-modal" id="close-forgot-pass"><i class="fa-solid fa-xmark"></i></button>
-            <h3 style="color: #4a154b; font-family: var(--font-heading); font-size: 26px; margin-bottom: 10px;">Reset Password</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Verify details to securely recover access.</p>
+            <input type="text" id="rec-secondary" class="secret-code-input" placeholder="Name, or Gift ID, or Password" style="margin-bottom: 15px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
             
-            <div class="secret-input-wrapper" style="margin-bottom: 10px; height: 50px;">
-                <span class="static-prefix">GX-</span>
-                <input type="text" id="recover-id-input" class="secret-code-input" placeholder="Gift ID (e.g. 02)" maxlength="6" style="text-align: left;">
-            </div>
-            
-            <input type="text" id="recover-name-input" class="secret-code-input" placeholder="Sender's Name (e.g. Rahul)" style="margin-bottom: 10px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
-            <input type="tel" id="recover-mobile-input" class="secret-code-input" placeholder="Registered Mobile No." style="margin-bottom: 15px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
-            
-            <button id="send-wa-btn" class="btn-gold-glow" style="padding: 12px; font-size: 15px; margin-top: 5px;">
-                Send Secure Request <i class="fa-solid fa-shield-halved" style="margin-left: 5px;"></i>
-            </button>
-            <div id="pass-search-result" class="search-result-area"></div>
+            <button id="btn-recover-secure" class="btn-gold-glow" style="padding: 12px; font-size: 15px; margin-top: 0;">Secure Request <i class="fa-solid fa-shield-halved" style="margin-left: 5px;"></i></button>
+            <div id="recovery-result" class="search-result-area"></div>
         </div>
     </div>
 </div>
