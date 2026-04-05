@@ -77,29 +77,39 @@
             const memoryId = `GX-${idVal.padStart(2, '0')}`; 
             const enteredPasscode = passVal;  
             
-            openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
+                        openBtn.innerHTML = 'Unlocking...'; openBtn.disabled = true;
 
             try {
-                const res = await fetch(`${firebaseConfig.databaseURL}/memories/${memoryId}.json`);
-                if (!res.ok) throw new Error("Fetch failed");
-                const data = await res.json();
+                // 🔴 SECURE API CALL (Bypasses Firebase Read Block via Admin SDK)
+                const response = await fetch('/api/verify-passcode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memoryId: memoryId, enteredPasscode: enteredPasscode, requestType: 'unlock' })
+                });
+                
+                const resData = await response.json();
 
-                if (data && data.status === "locked" && data.is_enabled !== false) {
-                    const storedPass = data.passcode || "";
-                    if (storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode))) {
-                        if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
-                        lightBurst.classList.remove('hidden');
-                        setTimeout(() => {
-                            lightBurst.classList.add('active');
-                            sessionStorage.setItem(`auth_${memoryId}`, "true"); 
-                            setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
-                        }, 50);
-                        return;
-                    }
+                if (resData.success) {
+                    // Password aur ID bilkul sahi hai
+                    if(navigator.vibrate) navigator.vibrate([50, 30, 50]); 
+                    lightBurst.classList.remove('hidden');
+                    setTimeout(() => {
+                        lightBurst.classList.add('active');
+                        sessionStorage.setItem(`auth_${memoryId}`, "true"); 
+                        setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
+                    }, 50);
+                    return;
+                } else {
+                    // Password ya ID galat hai, ya Rate Limit exceed ho gaya
+                    showError(resData.error || "Incorrect Details.");
                 }
-                showError();
-            } catch (err) { showError("Network error. Please try again."); } 
-            finally { openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; openBtn.disabled = false; }
+            } catch (err) { 
+                showError("Network error. Please try again."); 
+            } 
+            finally { 
+                openBtn.innerHTML = 'Tap to Open <span class="spinning-gift">🎁</span>'; 
+                openBtn.disabled = false; 
+            }
         });
     }
 
