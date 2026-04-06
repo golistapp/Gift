@@ -4,10 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Experience The Magic - GiftoraX ❤️</title>
-    
+        <link rel="icon" type="image/jpeg" href="https://ik.imagekit.io/hryqx2lst9/qr-memory-gift/1000198391-optimized.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="https://ik.imagekit.io/hryqx2lst9/qr-memory-gift/1000198391-optimized.jpg">
+
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+      <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.giftorax.in/experience.html">
+    <meta property="og:title" content="GiftoraX ❤️ | Not Just a Gift… A Feeling">
+    <meta property="og:description" content="A magical 2-in-1 journey where a real gift meets a secret digital world. Create unforgettable moments.">
+    <meta property="og:image" content="https://ik.imagekit.io/hryqx2lst9/qr-memory-gift/1000198391-optimized.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GiftoraX ❤️ | Not Just a Gift… A Feeling">
+    <meta name="twitter:description" content="A magical 2-in-1 journey where a real gift meets a secret digital world.">
+    <meta name="twitter:image" content="https://ik.imagekit.io/hryqx2lst9/qr-memory-gift/1000198391-optimized.jpg">
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="config/firebase.config.js"></script>
@@ -382,35 +394,45 @@
             document.getElementById('submit-review-form').reset();
         });
 
-        // Initialize Firebase if not already initialized
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        const db = firebase.database();
-
-        document.getElementById('submit-review-form').addEventListener('submit', (e) => {
+              // --- REVIEW SUBMISSION LOGIC (VIA API) ---
+        document.getElementById('submit-review-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('rev-btn');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
             btn.disabled = true;
 
             const newReview = {
+                requestType: 'submit_review', // API ko batane ke liye
                 name: document.getElementById('rev-name').value.trim(),
                 message: document.getElementById('rev-msg').value.trim(),
-                rating: document.getElementById('rev-rating').value,
-                status: "pending", // PRD Logic: Must be approved to show
-                date: new Date().toISOString()
+                rating: document.getElementById('rev-rating').value
             };
 
-            db.ref('public_reviews').push(newReview)
-            .then(() => {
-                document.getElementById('submit-review-form').style.display = 'none';
-                document.getElementById('rev-success').style.display = 'block';
-            })
-            .catch((err) => {
-                alert("Error submitting review. Please try again.");
+            try {
+                // Direct Firebase ki jagah secure Vercel API ko call kar rahe hain
+                const response = await fetch('/api/verify-passcode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newReview)
+                });
+
+                const resData = await response.json();
+
+                if (resData.success) {
+                    document.getElementById('submit-review-form').style.display = 'none';
+                    document.getElementById('rev-success').style.display = 'block';
+                } else {
+                    alert("Error: " + (resData.error || "Could not submit review."));
+                    btn.innerHTML = 'Submit Review ❤️';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Network error. Please try again.");
                 btn.innerHTML = 'Submit Review ❤️';
                 btn.disabled = false;
-            });
+            }
         });
+
     </script>
 </body>
 </html>

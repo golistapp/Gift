@@ -21,7 +21,54 @@ export default async function handler(req, res) {
     try {
         const db = admin.database();
 
-        // 🛡️ --- NAYA: RECOVERY LOGIC (Bypasses rules securely) ---
+        // 🚀 --- NAYA: LEAD FORM SUBMIT LOGIC ---
+        if (requestType === 'submit_lead') {
+            const { name, mobile, email } = req.body;
+            
+            if (!name || !mobile || !email) {
+                return res.status(400).json({ success: false, error: 'Missing details' });
+            }
+
+            try {
+                const newLeadRef = db.ref('leads').push();
+                await newLeadRef.set({
+                    name: name,
+                    mobile: mobile,
+                    email: email,
+                    createdAt: new Date().toISOString(),
+                    status: "New"
+                });
+                return res.status(200).json({ success: true });
+            } catch (err) {
+                return res.status(500).json({ success: false, error: 'Database save failed' });
+            }
+        }
+
+        // 🌟 --- NAYA: REVIEW SUBMIT LOGIC ---
+        if (requestType === 'submit_review') {
+            const { name, message, rating } = req.body;
+            
+            if (!name || !message) {
+                return res.status(400).json({ success: false, error: 'Missing details' });
+            }
+
+            try {
+                const newReviewRef = db.ref('public_reviews').push();
+                await newReviewRef.set({
+                    name: name,
+                    message: message,
+                    rating: rating || "5",
+                    status: "pending", // PRD ke hisaab se pending status
+                    date: new Date().toISOString()
+                });
+                return res.status(200).json({ success: true });
+            } catch (err) {
+                return res.status(500).json({ success: false, error: 'Database save failed' });
+            }
+        }
+
+
+        // 🛡️ --- RECOVERY LOGIC (Bypasses rules securely) ---
         if (requestType === 'recover') {
             if (!recPrimary || !recSecondary) return res.status(400).json({ success: false, error: 'Missing data' });
 
@@ -80,7 +127,7 @@ export default async function handler(req, res) {
             }
         }
 
-        // 🔐 --- PURANA: UNLOCK & STATUS CHECK LOGIC ---
+        // 🔐 --- UNLOCK & STATUS CHECK LOGIC ---
         if (!memoryId) return res.status(400).json({ success: false, error: 'Missing Memory ID' });
 
         let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
