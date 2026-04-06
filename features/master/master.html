@@ -14,6 +14,13 @@
             <h2 class="romantic-heading">Something special for you ❤️</h2>
             
             <form id="master-login-form">
+                
+                <div class="mode-toggle-container">
+                    <div class="mode-toggle-bg"></div>
+                    <button type="button" class="mode-btn active" data-mode="viewer">Open Surprise 🎁</button>
+                    <button type="button" class="mode-btn" data-mode="dashboard">Sender Chat 💬</button>
+                </div>
+
                 <div class="input-section">
                     <div class="split-input-container">
                         <div class="secret-input-wrapper id-box">
@@ -50,9 +57,9 @@
             <h3 style="color: #4a154b; font-family: var(--font-heading); font-size: 26px; margin-bottom: 10px;">Account Recovery</h3>
             <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Verify details to securely receive your ID & Password.</p>
             
-            <input type="text" id="rec-primary" class="secret-code-input" placeholder="Registered Email or Mobile No." style="margin-bottom: 10px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
+            <input type="text" id="rec-primary" class="secret-code-input" placeholder="Registered Email OR Mobile No." style="margin-bottom: 10px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
             
-            <input type="text" id="rec-secondary" class="secret-code-input" placeholder="Name, or Gift ID, or Password" style="margin-bottom: 15px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
+            <input type="text" id="rec-secondary" class="secret-code-input" placeholder="Sender Name, Gift ID, OR Password" style="margin-bottom: 15px; text-align: center; height: 50px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.9);">
             
             <button id="btn-recover-secure" class="btn-gold-glow" style="padding: 12px; font-size: 15px; margin-top: 0;">Secure Request <i class="fa-solid fa-shield-halved" style="margin-left: 5px;"></i></button>
             <div id="recovery-result" class="search-result-area"></div>

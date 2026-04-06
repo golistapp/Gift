@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact GiftoraX - We deliver feelings, not just gifts.">
+    <title>About & Contact - GiftoraX ❤️</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="landing-assets/style.css">
+
+    <style>
+        /* =========================================
+           PREMIUM ABOUT & CONTACT STYLES
+           ========================================= */
+        .about-hero { padding-top: 140px; padding-bottom: 40px; position: relative; }
+        
+        .romantic-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            background: linear-gradient(135deg, #ffffff 0%, #ffb5c8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .emotional-text {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 700px;
+            margin: 0 auto 30px;
+            line-height: 1.8;
+            font-weight: 300;
+        }
+
+        /* 🔴 1. CORE IDENTITY BADGE */
+        .premium-badge {
+            display: inline-block;
+            background: rgba(255, 77, 166, 0.1);
+            border: 1px solid rgba(255, 77, 166, 0.3);
+            color: #ffb5c8;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 77, 166, 0.1);
+        }
+
+        /* 🔴 2. WHY CHOOSE US (Conversion Trigger) */
+        .difference-list { display: flex; flex-direction: column; gap: 20px; max-width: 700px; margin: 40px auto; text-align: left; }
+        .diff-item { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 20px 25px; border-radius: 16px; display: flex; align-items: center; gap: 20px; transition: 0.3s ease; }
+        .diff-item:hover { transform: translateX(10px); background: rgba(255, 77, 166, 0.05); border-color: rgba(255, 77, 166, 0.3); box-shadow: 0 10px 25px rgba(255, 77, 166, 0.1); }
+        .diff-icon { font-size: 1.8rem; color: var(--primary); filter: drop-shadow(0 0 10px rgba(255, 77, 166, 0.4)); }
+        .diff-text { font-size: 1.1rem; font-weight: 500; color: #fff; }
+
+        /* 🔴 3. TRUST & PRIVACY SECTION (Very Important) */
+        .trust-banner {
+            background: linear-gradient(135deg, rgba(255, 77, 166, 0.08), rgba(157, 78, 221, 0.05));
+            border: 1px solid rgba(255, 77, 166, 0.2);
+            padding: 50px 30px;
+            border-radius: 24px;
+            margin: 60px auto;
+            max-width: 900px;
+            display: flex; flex-wrap: wrap; justify-content: space-around; gap: 30px;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        .trust-item { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 250px; }
+        .trust-item i { font-size: 2.5rem; color: var(--primary); filter: drop-shadow(0 0 10px rgba(255,77,166,0.4)); }
+        .trust-item h4 { font-size: 1.1rem; color: #fff; font-weight: 600; }
+        .trust-item p { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* 🔴 4. EXPERIENCE FLOW (High Impact) */
+        .journey-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        .journey-step {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 40px 25px 30px;
+            border-radius: 20px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .journey-step:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(255,77,166,0.15); }
+        .step-number {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.2rem; color: white;
+            box-shadow: 0 5px 15px rgba(255,77,166,0.4);
+        }
+
+        /* 🔴 5. SOCIAL PROOF (Game Changer) */
+        .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
+        .review-card { background: var(--glass-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--glass-border); text-align: left; position: relative; overflow: hidden;}
+        .review-card::before { content: '"'; position: absolute; top: -10px; right: 10px; font-size: 8rem; color: rgba(255, 255, 255, 0.03); font-family: serif; line-height: 1; }
+        .stars { color: #FFD700; font-size: 1.1rem; margin-bottom: 15px; letter-spacing: 2px;}
+        .review-text { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-style: italic; color: #fff; margin-bottom: 15px; }
+
+        /* 🔴 6. CONTACT SECTION */
+        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 900px; margin: 40px auto 0; }
+        .contact-card { padding: 40px 30px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .contact-card i { font-size: 3rem; margin-bottom: 20px; color: var(--primary); filter: drop-shadow(0 0 10px rgba(255,77,166,0.3));}
+        .contact-card h3 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
+        
+        .whatsapp-highlight {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .whatsapp-highlight::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg); animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%) rotate(30deg); } 100% { transform: translateX(100%) rotate(30deg); } }
+
+        /* Founder Signature */
+        .founder-signature-area { margin-top: 80px; margin-bottom: 40px; }
+        .founder-text { font-size: 1.1rem; color: #aaa; margin-bottom: 5px; }
+        .founder-sig { font-family: 'Dancing Script', cursive; font-size: 3rem; color: var(--primary); text-shadow: 0 0 15px rgba(255,77,166,0.3); }
+        
+        .cta-spacer { margin-top: 50px; }
+    </style>
+</head>
+
+<body class="theme-premium-dark">
+
+    <header class="navbar" id="navbar">
+        <div class="navbar__container">
+            <div class="navbar__logo">
+                <a href="index.html" aria-label="GiftoraX Home">Giftora<span class="navbar__highlight-x">X</span></a>
+            </div>
+
+            <nav class="navbar__links" aria-label="Main Navigation">
+                <ul class="navbar__list">
+                    <li class="navbar__item"><a href="index.html" class="navbar__link">Home</a></li>
+                    <li class="navbar__item"><a href="portal.html" class="navbar__link">Your Order 📦</a></li>
+                    <li class="navbar__item"><a href="index.html#our-gifts" class="navbar__link">Our Gifts 🎁</a></li>
+                    <li class="navbar__item"><a href="experience.html" class="navbar__link">Experience ❤️</a></li>                
+                    <li class="navbar__item"><a href="contact.html" class="navbar__link active" style="color: #fff;">About & Contact</a></li>
+                </ul>
+            </nav>
+
+            <div class="navbar__actions">
+                <a href="lead-form.html" class="btn btn--primary btn--large">Create Surprise</a>
+                <button class="mobile-menu-btn" aria-label="Open Mobile Menu" style="font-size: 28px; line-height: 1; padding-left: 10px;">
+                    &#9776;
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar__close" id="sidebar-close" aria-label="Close Menu">&times;</button>
+        <ul class="sidebar__list">
+            <li><a href="index.html" class="sidebar__link">Home</a></li>
+            <li><a href="portal.html" class="sidebar__link">Your Order 📦</a></li>
+            <li><a href="index.html#our-gifts" class="sidebar__link">Our Gifts 🎁</a></li>
+<li><a href="experience.html" class="sidebar__link">Experience ❤️</a></li>          
+            <li><a href="contact.html" class="sidebar__link" style="color: var(--primary);">About & Contact</a></li>
+        </ul>
+    </div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <main>
+        <section class="about-hero text-center experience-reveal">
+            <div class="hero__background-effects" aria-hidden="true" style="top: 30%;"></div>
+            
+            <div class="section-container">
+                <div class="premium-badge">Crafted for people who feel deeply ✨</div>
+                <h1 class="romantic-heading">Not Just a Gift… A Feeling. ❤️</h1>
+                <p class="section-subtext" style="font-size: 1.25rem;">A new way to express what words alone can’t.</p>
+
+                <p class="emotional-text" style="margin-top: 40px;">
+                    <strong>GiftoraX</strong> is built for moments that matter. Not just birthdays or anniversaries — but the quiet feelings you wish someone could feel.
+                </p>
+                <p class="emotional-text">
+                    We combine digital emotions with real-world surprises to create an experience that stays in the heart, not just in memory. From personalized messages, hidden "Open When" moments, to physical gifts delivered at the perfect time — every detail is crafted to make someone feel truly special.
+                </p>
+            </div>
+        </section>
+
+        <section class="text-center experience-reveal" style="padding-top: 20px;">
+            <div class="section-container">
+                <h2 class="section-heading">Why GiftoraX Feels Different ✨</h2>
+                
+                <div class="difference-list">
+                    <div class="diff-item">
+                        <span class="diff-icon">💖</span>
+                        <span class="diff-text">Not just a gift, a full emotional experience</span>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-icon">🎁</span>
+                        <span class="diff-text">Digital + Physical surprise combination</span>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-icon">✨</span>
+                        <span class="diff-text">Designed for real emotions & cinematic storytelling</span>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-icon">♾️</span>
+                        <span class="diff-text">Made to be remembered forever</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="text-center experience-reveal">
+            <div class="section-container">
+                <div class="trust-banner">
+                    <div style="width: 100%; margin-bottom: 10px;">
+                        <h2 class="romantic-heading" style="font-size: 2.2rem;">Your Moments Are Safe With Us 🔐</h2>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fa-solid fa-link"></i>
+                        <h4>Private & Secure Links</h4>
+                        <p>Only the person with the exact link and passcode can enter.</p>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fa-solid fa-eye-slash"></i>
+                        <h4>No Public Access</h4>
+                        <p>Your emotions are not for the world. They are 100% private.</p>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fa-solid fa-vault"></i>
+                        <h4>Your Memories Stay Yours</h4>
+                        <p>End-to-end encryption ensures your chat and photos are safe.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="text-center experience-reveal" style="padding-top: 0px;">
+            <div class="section-container">
+                <h2 class="section-heading">What Happens After You Send? 🎬</h2>
+                <p class="section-subtext">The beautiful journey of your surprise.</p>
+
+                <div class="journey-grid">
+                    <div class="journey-step">
+                        <div class="step-number">1</div>
+                        <i class="fa-solid fa-paper-plane diff-icon" style="margin-bottom:15px; font-size:2.2rem;"></i>
+                        <h3 style="margin-bottom:10px; color:#fff;">They Receive Link</h3>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">A mysterious message arrives, sparking curiosity.</p>
+                    </div>
+                    <div class="journey-step">
+                        <div class="step-number">2</div>
+                        <i class="fa-solid fa-unlock-keyhole diff-icon" style="margin-bottom:15px; font-size:2.2rem;"></i>
+                        <h3 style="margin-bottom:10px; color:#fff;">They Open It</h3>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">Entering the secret passcode to unlock the vault.</p>
+                    </div>
+                    <div class="journey-step">
+                        <div class="step-number">3</div>
+                        <i class="fa-solid fa-heart-pulse diff-icon" style="margin-bottom:15px; font-size:2.2rem;"></i>
+                        <h3 style="margin-bottom:10px; color:#fff;">Emotions Unfold</h3>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">Memories, music, and your love letter come alive.</p>
+                    </div>
+                    <div class="journey-step">
+                        <div class="step-number">4</div>
+                        <i class="fa-solid fa-box-open diff-icon" style="margin-bottom:15px; font-size:2.2rem;"></i>
+                        <h3 style="margin-bottom:10px; color:#fff;">Real Gift Arrives</h3>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">The physical reminder of your beautiful digital journey.</p>
+                    </div>
+                </div>
+                
+                <div class="cta-spacer">
+                    <a href="lead-form.html" class="btn btn--primary btn--large">Start Their Journey Now</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="text-center experience-reveal" style="padding-top: 80px;">
+            <div class="section-container">
+                <h2 class="section-heading">Loved by People Who Care Deeply ❤️</h2>
+                
+                <div class="reviews-grid">
+                    <div class="review-card">
+                        <div class="stars">★★★★★</div>
+                        <p class="review-text">"She cried... I couldn't find the words, but this surprise said everything. Thank you GiftoraX ❤️"</p>
+                        <span style="color:var(--text-muted); font-size:0.9rem; font-weight: 500;">- Rahul S.</span>
+                    </div>
+                    <div class="review-card">
+                        <div class="stars">★★★★★</div>
+                        <p class="review-text">"Best surprise ever! The way the music matched the memories... it felt like a beautiful movie."</p>
+                        <span style="color:var(--text-muted); font-size:0.9rem; font-weight: 500;">- Sneha M.</span>
+                    </div>
+                    <div class="review-card">
+                        <div class="stars">★★★★★</div>
+                        <p class="review-text">"I live in another city, but this made him feel like I was right there next to him. Absolutely priceless."</p>
+                        <span style="color:var(--text-muted); font-size:0.9rem; font-weight: 500;">- Aman T.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="text-center experience-reveal" style="padding-top: 100px; padding-bottom: 60px;">
+            <div class="section-container">
+                <h2 class="romantic-heading" style="font-size: clamp(2rem, 4vw, 3rem);">Let’s Create Something Special</h2>
+                <p class="section-subtext" style="color: #fff; font-size: 1.1rem;">
+                    Have a question, idea, or something emotional to share?<br>
+                    <strong style="color: var(--primary);">We’re not just support, we’re part of your surprise journey.</strong>
+                </p>
+
+                <div class="contact-grid">
+                    <div class="base-card contact-card">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <h3>WhatsApp Us</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 25px;">Fast & personal support for your emotional surprises.</p>
+                        <a href="https://wa.me/919876543210" target="_blank" class="btn btn--primary whatsapp-highlight" style="width: 100%;">Chat on WhatsApp</a>
+                    </div>
+                    
+                    <div class="base-card contact-card">
+                        <i class="fa-regular fa-envelope"></i>
+                        <h3>Email Us</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 25px;">Drop us a line anytime. We usually reply within 24 hours.</p>
+                        <a href="mailto:giftoraxofficial@gmail.com" class="btn btn--secondary" style="width: 100%;">giftoraxofficial@gmail.com</a>
+                    </div>
+                </div>
+
+                <div class="founder-signature-area">
+                    <p class="founder-text">Built with emotions, not just code.</p>
+                    <div class="founder-sig">GiftoraX</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer__container">
+            <div class="footer__social-links" aria-label="Social Media Links">
+                <a href="#" class="social-icon" aria-label="Follow us on Instagram"><i class="fa-brands fa-instagram" style="font-size: 24px;"></i></a>
+                <a href="#" class="social-icon" aria-label="Follow us on TikTok"><i class="fa-brands fa-tiktok" style="font-size: 24px;"></i></a>
+                <a href="#" class="social-icon" aria-label="Follow us on Twitter"><i class="fa-brands fa-x-twitter" style="font-size: 24px;"></i></a>
+            </div>
+
+            <div class="footer__legal">
+                <p class="copyright">&copy; 2026 GiftoraX. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="landing-assets/main.js" defer></script>
+</body>
+</html>

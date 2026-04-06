@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experience The Magic - GiftoraX ❤️</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="config/firebase.config.js"></script>
+
+    <style>
+        /* =========================================
+           1. CORE DESIGN RULES (Dark, Gold, Minimal Pink)
+           ========================================= */
+        :root {
+            --bg-dark: #07040a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --gold-primary: #D4AF37;
+            --gold-light: #FFD700;
+            --pink-accent: #ff4da6;
+            --pink-glow: rgba(255, 77, 166, 0.15);
+            --text-light: #f8f8f8;
+            --text-muted: #a0a0a0;
+            --font-ui: 'Poppins', sans-serif;
+            --font-head: 'Playfair Display', serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-ui); }
+        body { background-color: var(--bg-dark); color: var(--text-light); overflow-x: hidden; scroll-behavior: smooth; }
+        
+        .fade-in { animation: fadeInSmooth 1.2s ease-out forwards; }
+        @keyframes fadeInSmooth { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(212, 175, 55, 0.3); /* Gold border only */
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 30px;
+        }
+
+        .gold-heading {
+            font-family: var(--font-head);
+            background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 15px;
+            filter: drop-shadow(0 2px 10px rgba(212, 175, 55, 0.2));
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #2a2a2a, #111);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-light);
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.1);
+            display: inline-flex; align-items: center; gap: 10px;
+            text-decoration: none;
+        }
+        .btn-gold:hover { background: var(--gold-primary); color: #000; box-shadow: 0 5px 25px rgba(212, 175, 55, 0.3); transform: translateY(-3px); }
+
+     .btn-pink {
+    background: var(--pink-accent);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px var(--pink-glow);
+    text-decoration: none;
+    transition: all 0.3s;
+    
+    /* 👇 YAHAN YEH NAYI LINE ADD KAREIN 👇 */
+    display: inline-block; 
+}
+
+        .btn-pink:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+        /* =========================================
+           2. SECTIONS 
+           ========================================= */
+        .section-padding { padding: 100px 20px; max-width: 1100px; margin: 0 auto; text-align: center; }
+        
+        /* Hero */
+        .hero-section { min-height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .hero-bg-glow { position: absolute; width: 60vw; height: 60vw; background: radial-gradient(circle, var(--pink-glow) 0%, transparent 60%); z-index: -1; filter: blur(80px); }
+
+        /* Value & Who Is This For */
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 50px; }
+        .feature-box { text-align: left; padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; background: rgba(255,255,255,0.02);}
+        .feature-box:hover { border-color: rgba(212, 175, 55, 0.5); transform: translateY(-5px); }
+        .feature-box i { font-size: 2.5rem; color: var(--gold-primary); margin-bottom: 20px; }
+        .feature-box h3 { font-size: 1.4rem; color: #fff; margin-bottom: 10px; font-family: var(--font-head); }
+
+        /* Reviews */
+        .review-card { text-align: left; padding: 30px; border-left: 2px solid var(--gold-primary); background: linear-gradient(90deg, rgba(212,175,55,0.05), transparent); }
+        .stars { color: var(--gold-light); margin-bottom: 10px; letter-spacing: 2px; }
+        .review-text { font-family: var(--font-head); font-size: 1.2rem; font-style: italic; margin-bottom: 15px; color: #ddd; }
+
+        /* =========================================
+           3. INTERACTIVE SIMULATION MODAL (The Engine)
+           ========================================= */
+        .sim-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: 0.5s ease;
+        }
+        .sim-overlay.active { opacity: 1; visibility: visible; }
+        
+        .sim-screen {
+            width: 100%; max-width: 400px; height: 85vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        /* Simulation Scenes */
+        .scene { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.8s ease, transform 0.8s ease; transform: scale(0.95); text-align: center; padding: 20px;}
+        .scene.active { opacity: 1; visibility: visible; transform: scale(1); }
+
+        /* Scene 1: Chat */
+        .sim-chat-bubble { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 20px; border-bottom-left-radius: 0; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(20px); opacity: 0; animation: popUp 0.8s forwards 0.5s; }
+        @keyframes popUp { to { transform: translateY(0); opacity: 1; } }
+
+        /* Scene 2: Vault */
+        .sim-dots { display: flex; gap: 10px; margin: 20px 0; }
+        .sim-dot { width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--gold-primary); transition: 0.3s; }
+        .sim-dot.filled { background: var(--gold-primary); box-shadow: 0 0 10px var(--gold-primary); }
+
+        /* Scene 3: Card */
+        .sim-card { background: #fffdf9; color: #111; width: 280px; height: 350px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 20px 50px rgba(255,77,166,0.2); border: 4px solid var(--pink-accent); transform: rotateY(0deg); transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .sim-tap-hint { margin-top: 30px; font-size: 0.9rem; color: var(--gold-light); animation: pulse 1.5s infinite; letter-spacing: 1px; cursor: pointer; padding: 10px 20px; border: 1px solid var(--gold-primary); border-radius: 30px;}
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        
+        .close-sim { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 24px; background: none; border: none; cursor: pointer; z-index: 100;}
+
+        /* Navbar Basic */
+        .nav-top { position: absolute; top: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100;}
+        .nav-logo { font-family: var(--font-head); font-size: 1.8rem; color: #fff; text-decoration: none; font-weight: 700;}
+        .nav-logo span { color: var(--pink-accent); }
+
+        /* Review Modal */
+        #review-modal { background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); }
+        .review-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); color: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-family: var(--font-ui); outline: none;}
+        .review-input:focus { border-color: var(--gold-primary); }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-top">
+        <a href="index.html" class="nav-logo">Giftora<span>X</span></a>
+        <a href="index.html" style="color: #ccc; text-decoration: none; font-size: 0.9rem;">Back to Home</a>
+    </nav>
+
+    <section class="hero-section">
+        <div class="hero-bg-glow"></div>
+        <div class="fade-in" style="text-align: center; z-index: 10;">
+            <h1 class="gold-heading">Not Just a Gift…<br>Feel the Moment ❤️</h1>
+            <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; font-style: italic;">Tap below to experience what they will feel.</p>
+            <button id="start-demo-btn" class="btn-gold"><i class="fa-solid fa-play"></i> Start Experience</button>
+        </div>
+    </section>
+
+    <section class="section-padding">
+        <h2 class="gold-heading" style="font-size: 2.5rem;">What You Get ✨</h2>
+        <div class="grid-3">
+            <div class="feature-box">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <h3>Personalized Digital Experience</h3>
+                <p class="text-muted">A cinematic journey of your memories, music, and unspoken words.</p>
+            </div>
+            <div class="feature-box">
+                <i class="fa-solid fa-gift"></i>
+                <h3>Real Gift Delivery</h3>
+                <p class="text-muted">A premium physical gift delivered to their doorstep to complete the magic.</p>
+            </div>
+            <div class="feature-box">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <h3>Emotional Storytelling</h3>
+                <p class="text-muted">Every tap is designed to evoke tears of joy and pure happiness.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" style="background: rgba(255,255,255,0.01); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <h2 class="gold-heading" style="font-size: 2.5rem;">Who is this for?</h2>
+        <div class="grid-3" style="max-width: 900px; margin: 40px auto 0;">
+            <div class="glass-card" style="padding: 25px;">
+                <p style="font-size: 1.1rem; color: #fff;"><i class="fa-solid fa-check" style="color: var(--gold-primary); margin-right: 10px;"></i> For people who can’t express everything in words.</p>
+            </div>
+            <div class="glass-card" style="padding: 25px;">
+                <p style="font-size: 1.1rem; color: #fff;"><i class="fa-solid fa-check" style="color: var(--gold-primary); margin-right: 10px;"></i> For those who want to make someone feel deeply loved.</p>
+            </div>
+            <div class="glass-card" style="padding: 25px;">
+                <p style="font-size: 1.1rem; color: #fff;"><i class="fa-solid fa-check" style="color: var(--gold-primary); margin-right: 10px;"></i> For believers who know that memories > expensive gifts.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding">
+        <h2 class="gold-heading" style="font-size: 2.5rem;">Loved by Real People ❤️</h2>
+        <div class="grid-3">
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p class="review-text">"She cried immediately... Best surprise ever created."</p>
+                <p style="color: var(--gold-primary); font-weight: 600;">- Rahul S.</p>
+            </div>
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p class="review-text">"I couldn't find words to say sorry, this did magic."</p>
+                <p style="color: var(--gold-primary); font-weight: 600;">- Sneha M.</p>
+            </div>
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p class="review-text">"The way music matches the photos is cinematic."</p>
+                <p style="color: var(--gold-primary); font-weight: 600;">- Aman T.</p>
+            </div>
+        </div>
+
+        <button id="open-review-modal" class="btn-gold" style="margin-top: 40px; background: transparent; font-size: 0.9rem; padding: 10px 25px;"><i class="fa-regular fa-pen-to-square"></i> Share Your Experience</button>
+    </section>
+
+    <section class="section-padding" style="margin-bottom: 50px;">
+        <h2 class="gold-heading" style="font-size: 3rem;">Ready to create this feeling?</h2>
+        <p style="color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem;">Takes less than 2 minutes. No login required.</p>
+        <a href="lead-form.html" class="btn-pink" style="padding: 20px 60px; font-size: 1.3rem;">Create Your Surprise 💝</a>
+    </section>
+
+
+    <div id="sim-overlay" class="sim-overlay">
+        <button class="close-sim" id="close-sim"><i class="fa-solid fa-xmark"></i></button>
+        <div class="sim-screen">
+            
+            <div class="scene" id="scene-1">
+                <div class="sim-chat-bubble">
+                    <span style="color: #ffb5c8; font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 5px;">My Love ❤️</span>
+                    Someone left something special for you here... 🎁
+                </div>
+                <div class="sim-tap-hint" onclick="simEngine.next()" style="margin-top: 50px;">Tap to open link</div>
+            </div>
+
+            <div class="scene" id="scene-2">
+                <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--gold-primary); margin-bottom: 15px;"></i>
+                <h2 style="font-family: var(--font-head); color: #fff; margin-bottom: 10px;">The Vault</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Enter your special code</p>
+                <div class="sim-dots" id="sim-dots">
+                    <div class="sim-dot"></div><div class="sim-dot"></div><div class="sim-dot"></div>
+                    <div class="sim-dot"></div><div class="sim-dot"></div><div class="sim-dot"></div>
+                </div>
+                <p id="sim-typing-hint" style="color: var(--pink-accent); font-size: 0.8rem; opacity: 0;">Entering passcode...</p>
+            </div>
+
+            <div class="scene" id="scene-3">
+                <div class="sim-card" id="sim-card">
+                    <i class="fa-solid fa-envelope-open-text" style="font-size: 3rem; color: var(--pink-accent); margin-bottom: 20px;"></i>
+                    <h3 style="font-family: var(--font-head); font-size: 1.5rem;">Open When...</h3>
+                    <p style="color: #666; margin-top: 5px;">You miss me ❤️</p>
+                </div>
+                <div class="sim-tap-hint" onclick="simEngine.next()">Tap to open card</div>
+            </div>
+
+            <div class="scene" id="scene-4">
+                <h2 style="font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: var(--pink-accent); margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,77,166,0.3);">Hi My Love ❤️</h2>
+                <p style="font-family: var(--font-head); font-size: 1.3rem; font-style: italic; color: #fff; line-height: 1.6; margin-bottom: 30px;">
+                    "Every moment with you is a beautiful dream come true..."
+                </p>
+                <i class="fa-solid fa-box-open" style="font-size: 4rem; color: var(--gold-primary); animation: popUp 1s ease-out infinite alternate;"></i>
+                <p style="color: var(--gold-light); margin-top: 15px; font-weight: 600;">And a real gift is on its way... 🎁</p>
+                
+                <a href="lead-form.html" class="btn-pink" style="margin-top: 40px; padding: 15px 30px; font-size: 1rem;">Create This Feeling Now</a>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="review-modal" class="sim-overlay">
+        <div class="glass-card" style="width: 90%; max-width: 400px; position: relative;">
+            <button class="close-sim" id="close-review" style="top: 10px; right: 15px;"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="gold-heading" style="font-size: 1.8rem;">Share Experience</h3>
+            <form id="submit-review-form">
+                <input type="text" id="rev-name" class="review-input" placeholder="Your Name" required>
+                <textarea id="rev-msg" class="review-input" rows="4" placeholder="How did they react? (She cried, smiled, etc.)" required></textarea>
+                <select id="rev-rating" class="review-input">
+                    <option value="5">⭐⭐⭐⭐⭐ (Perfect)</option>
+                    <option value="4">⭐⭐⭐⭐ (Great)</option>
+                </select>
+                <button type="submit" class="btn-gold" style="width: 100%; justify-content: center; margin-top: 10px;" id="rev-btn">Submit Review ❤️</button>
+            </form>
+            <p id="rev-success" style="color: #10b981; margin-top: 15px; display: none;">Thank you! Your review is pending approval.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- SIMULATION ENGINE ---
+        const simEngine = {
+            currentScene: 1,
+            init: function() {
+                document.getElementById('start-demo-btn').addEventListener('click', () => {
+                    document.getElementById('sim-overlay').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    this.showScene(1);
+                });
+
+                document.getElementById('close-sim').addEventListener('click', () => {
+                    document.getElementById('sim-overlay').classList.remove('active');
+                    document.body.style.overflow = '';
+                    this.reset();
+                });
+            },
+            showScene: function(step) {
+                document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+                const scene = document.getElementById(`scene-${step}`);
+                if(scene) {
+                    scene.classList.add('active');
+                    this.currentScene = step;
+                    this.handleSceneLogic(step);
+                }
+            },
+            next: function() {
+                if(navigator.vibrate) navigator.vibrate(30);
+                this.showScene(this.currentScene + 1);
+            },
+            reset: function() {
+                this.currentScene = 1;
+                document.querySelectorAll('.sim-dot').forEach(d => d.classList.remove('filled'));
+            },
+            handleSceneLogic: function(step) {
+                // Auto-fill password logic for Scene 2
+                if(step === 2) {
+                    const dots = document.querySelectorAll('.sim-dot');
+                    const hint = document.getElementById('sim-typing-hint');
+                    hint.style.opacity = '1';
+                    let fillCount = 0;
+                    
+                    const typeInterval = setInterval(() => {
+                        if(fillCount < 6) {
+                            dots[fillCount].classList.add('filled');
+                            if(navigator.vibrate) navigator.vibrate(20);
+                            fillCount++;
+                        } else {
+                            clearInterval(typeInterval);
+                            hint.innerText = "Unlocked! 🔓";
+                            hint.style.color = "#10b981";
+                            setTimeout(() => this.next(), 800);
+                        }
+                    }, 300);
+                }
+                
+                // Card Flip animation logic for Scene 3
+                if(step === 3) {
+                    const card = document.getElementById('sim-card');
+                    card.style.transform = 'rotateY(0deg) scale(1)';
+                    // The tap hint triggers next() which goes to scene 4
+                }
+            }
+        };
+
+        simEngine.init();
+
+        // --- REVIEW SUBMISSION LOGIC ---
+        const revModal = document.getElementById('review-modal');
+        document.getElementById('open-review-modal').addEventListener('click', () => {
+            revModal.classList.add('active');
+        });
+        document.getElementById('close-review').addEventListener('click', () => {
+            revModal.classList.remove('active');
+            document.getElementById('rev-success').style.display = 'none';
+            document.getElementById('submit-review-form').style.display = 'block';
+            document.getElementById('submit-review-form').reset();
+        });
+
+        // Initialize Firebase if not already initialized
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        document.getElementById('submit-review-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('rev-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+            btn.disabled = true;
+
+            const newReview = {
+                name: document.getElementById('rev-name').value.trim(),
+                message: document.getElementById('rev-msg').value.trim(),
+                rating: document.getElementById('rev-rating').value,
+                status: "pending", // PRD Logic: Must be approved to show
+                date: new Date().toISOString()
+            };
+
+            db.ref('public_reviews').push(newReview)
+            .then(() => {
+                document.getElementById('submit-review-form').style.display = 'none';
+                document.getElementById('rev-success').style.display = 'block';
+            })
+            .catch((err) => {
+                alert("Error submitting review. Please try again.");
+                btn.innerHTML = 'Submit Review ❤️';
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -8,6 +8,26 @@
     const openBtn = document.getElementById('master-open-btn');
     const lightBurst = document.getElementById('light-burst-overlay');
 
+    // 🔴 NAYA UPDATE: Mode Switcher Logic
+    let selectedMode = 'viewer'; // Default
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const toggleBg = document.querySelector('.mode-toggle-bg');
+
+    modeBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedMode = btn.getAttribute('data-mode');
+            
+            // Slider Animation
+            if (index === 0) {
+                toggleBg.style.transform = 'translateX(0)';
+            } else {
+                toggleBg.style.transform = 'translateX(100%)';
+            }
+        });
+    });
+
     function createParticles() {
         const container = document.getElementById('particles-container');
         if(!container) return;
@@ -34,7 +54,6 @@
         }
     }
 
-    // 🔴 NAYA UPDATE: Logo par single click karne se wapas index.html (Home) par jayega
     const logoArea = document.getElementById('secret-admin-trigger');
     if(logoArea) {
         logoArea.addEventListener('click', () => {
@@ -79,7 +98,15 @@
                     setTimeout(() => {
                         lightBurst.classList.add('active');
                         sessionStorage.setItem(`auth_${memoryId}`, enteredPasscode); 
-                        setTimeout(() => { window.location.href = `?id=${memoryId}`; }, 600);
+                        
+                        // 🔴 NAYA UPDATE: Sahi link par redirect karna based on Mode selection
+                        setTimeout(() => { 
+                            if (selectedMode === 'dashboard') {
+                                window.location.href = `?mode=form&id=${memoryId}`; // Sender Dashboard ke liye
+                            } else {
+                                window.location.href = `?id=${memoryId}`; // Viewer Surprise ke liye
+                            }
+                        }, 600);
                     }, 50);
                     return;
                 }
@@ -96,7 +123,7 @@
         if(masterPassInput) { masterPassInput.value = ''; masterPassInput.focus(); }
     }
 
-    // --- 2-BOX RECOVERY SYSTEM WITH SECURE BACKEND VERIFICATION ---
+    // --- 2-BOX RECOVERY SYSTEM ---
     const forgotBtn = document.getElementById('btn-forgot-recovery');
     const recoveryModal = document.getElementById('recovery-modal');
     const closeRecovery = document.getElementById('close-recovery');
