@@ -1,0 +1,10 @@
+.review-filters { display: flex; gap: 8px; background: #f1f5f9; padding: 5px; border-radius: 10px; }
+.filter-tab { border: none; background: transparent; padding: 6px 15px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+.filter-tab.active { background: #fff; color: var(--admin-blue); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+.rating-stars { color: #f59e0b; font-size: 12px; margin-bottom: 4px; display: block; }
+.review-msg-cell { max-width: 300px; font-size: 13px; color: #334155; line-height: 1.4; font-style: italic; }
+
+.btn-approve-sm { background: #d1fae5; color: #059669; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.btn-hide-sm { background: #fef3c7; color: #d97706; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.btn-delete-sm { color: #ef4444; background: transparent; border: 1px solid #fee2e2; padding: 5px 8px; border-radius: 4px; cursor: pointer; }

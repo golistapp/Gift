@@ -1,0 +1,51 @@
+<div class="leads-section fade-in">
+    <div class="admin-card">
+        <div class="orders-header" style="margin-bottom: 20px;">
+            <h2><i class="fa-solid fa-user-plus"></i> New Leads Request</h2>
+            <p style="font-size: 13px; color: #64748b; margin-top: 5px;">Approve leads to instantly create their order and generate links.</p>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>CUSTOMER DETAILS</th>
+                        <th>CONTACT</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="leads-tbody">
+                    <tr><td colspan="4" style="text-align:center; padding: 30px;">Loading leads...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="lead-success-modal" class="hidden modal-overlay">
+        <div class="admin-card modal-card" style="width: 90%; max-width: 500px; padding: 30px;">
+            <button id="close-lead-modal" class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 40px;"></i>
+                <h2 style="margin-top: 10px; color: #0f172a;">Lead Approved!</h2>
+                <p style="font-size: 14px; color: #64748b;">Order created successfully.</p>
+            </div>
+            
+            <div class="result-box" style="margin-top: 10px; padding-top: 10px;">
+                <div class="memory-id-box" style="background: #ecfdf5; color: #059669; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-weight: bold;">
+                    Memory ID: <strong id="lead-new-id"></strong>
+                </div>
+                <div class="links-box">
+                    <div class="link-item" style="text-align: left;">
+                        <h3 style="font-size: 13px; margin-bottom: 5px;">Send Form Link to Customer</h3>
+                        <input type="text" id="lead-form-link" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 10px;" readonly>
+                        <div class="link-actions" style="display: flex; gap: 10px;">
+                            <button class="copy-btn" style="flex:1; padding:10px; cursor:pointer;" onclick="window.copyToClipboard(document.getElementById('lead-form-link').value)"><i class="fa-regular fa-copy"></i> Copy Link</button>
+                            <button class="wa-btn" id="lead-wa-share-btn" style="flex:1; padding:10px; cursor:pointer; background:#25d366; color:white; border:none; border-radius:6px;"><i class="fa-brands fa-whatsapp"></i> Share on WA</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

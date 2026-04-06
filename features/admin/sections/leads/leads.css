@@ -1,0 +1,8 @@
+/* Styling is mostly inherited from global admin.css, just keeping this file for structural integrity */
+.leads-section { width: 100%; }
+.contact-wa-btn { background: #dcfce7; color: #16a34a; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s;}
+.contact-wa-btn:hover { background: #bbf7d0; color: #15803d; }
+.btn-approve { background: #eff6ff; color: #2563eb; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;}
+.btn-approve:hover { background: #dbeafe; color: #1d4ed8; }
+.btn-reject { background: #fee2e2; color: #ef4444; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: 5px;}
+.btn-reject:hover { background: #fca5a5; color: #b91c1c; }
