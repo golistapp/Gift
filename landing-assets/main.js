@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Create Progress Bar
         const progressBar = document.createElement('div');
-        
+
         // 🔴 FIX 1: Position 'absolute' karke isko seedha Navbar ke andar daal diya hai
         progressBar.style.cssText = `
             position: absolute; top: 0; left: 0; height: 3px; 
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
             transition: width 0.1s ease-out; pointer-events: none;
             box-shadow: 0 0 10px var(--primary-glow);
         `;
-        
+
         // Navbar ke andar progress bar ko fit karo
         if (navbar) {
             navbar.appendChild(progressBar);
@@ -45,14 +45,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const onScroll = throttle(() => {
             const scrollY = Math.max(0, window.scrollY); 
-            
+
             // 🔴 FIX 2: Mobile address bar hide/show hone se calculation kharab na ho, isliye clientHeight use kiya hai
             const docHeight = Math.max(1, document.documentElement.scrollHeight - document.documentElement.clientHeight); 
 
             // Update Progress Bar
             let progress = (scrollY / docHeight) * 100;
             progress = Math.min(100, Math.max(0, progress)); 
-            
+
             progressBar.style.width = `${progress}%`;
 
             // Toggle Navbar Blur
@@ -367,7 +367,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-      // ==========================================
     // INITIALIZATION
     // ==========================================
     initScrollSystem();
@@ -378,13 +377,122 @@ document.addEventListener("DOMContentLoaded", () => {
     initActionButtons();
 
     // ==========================================
+    // 10. PUBLIC REVIEWS (DYNAMIC FETCH, SORT & PAGINATION)
+    // ==========================================
+    const initPublicReviews = async () => {
+        const reviewsGrid = document.getElementById('reviews-grid');
+        const loadMoreBtn = document.getElementById('load-more-reviews-btn');
+        if (!reviewsGrid || !loadMoreBtn) return;
+
+        let allReviews = [];
+        let currentIndex = 0;
+        let initialLoad = 5;
+        let loadMoreCount = 10;
+
+        // Render Function
+        const renderReviews = (startIndex, count) => {
+            const endIndex = Math.min(startIndex + count, allReviews.length);
+            for (let i = startIndex; i < endIndex; i++) {
+                const rev = allReviews[i];
+                const dateObj = rev.date ? new Date(rev.date) : new Date();
+                const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                const ratingNum = parseInt(rev.rating) || 5;
+                const starsHTML = '⭐'.repeat(ratingNum) + '<span style="opacity:0.2">⭐</span>'.repeat(5 - ratingNum);
+
+                const card = document.createElement('div');
+                card.className = 'review-card js-reveal';
+                card.innerHTML = `
+                    <div class="review-card__header">
+                        <div class="review-card__stars">${starsHTML}</div>
+                        <div class="review-card__date">${formattedDate}</div>
+                    </div>
+                    <blockquote class="review-card__quote">
+                        <p class="review-card__text">"${rev.message}"</p>
+                    </blockquote>
+                    <div class="review-card__author">
+                        <span class="author-name">${rev.name}</span>
+                        <span class="trust-badge"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                    </div>
+                `;
+                reviewsGrid.appendChild(card);
+
+                // Trigger reveal animation instantly for appended cards
+                setTimeout(() => card.classList.add('is-visible'), 50);
+            }
+
+            currentIndex = endIndex;
+            if (currentIndex >= allReviews.length) {
+                loadMoreBtn.style.display = 'none'; // Sab load ho gaya
+            } else {
+                loadMoreBtn.style.display = 'inline-flex';
+            }
+        };
+
+        try {
+            reviewsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size: 1.1rem;">Loading experiences... <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary);"></i></p>';
+
+            // Firebase Data Fetch
+            const res = await fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/public_reviews.json');
+            const data = await res.json();
+
+            if (data && !data.error) {
+                Object.keys(data).forEach(key => {
+                    const rev = data[key];
+                    if (rev.status === 'approved') { // Sirf Approved reviews
+                        allReviews.push(rev);
+                    }
+                });
+
+                // Sorting Logic: Rating (5 to 1) then Date (Latest first)
+                allReviews.sort((a, b) => {
+                    const ratingA = parseInt(a.rating) || 0;
+                    const ratingB = parseInt(b.rating) || 0;
+                    if (ratingB !== ratingA) return ratingB - ratingA; 
+                    const dateA = new Date(a.date).getTime();
+                    const dateB = new Date(b.date).getTime();
+                    return dateB - dateA; 
+                });
+
+                reviewsGrid.innerHTML = ''; 
+
+                if (allReviews.length > 0) {
+                    renderReviews(0, initialLoad); // Starting ke 5 load karo
+                } else {
+                    reviewsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Be the first to share your experience!</p>';
+                }
+            }
+        } catch (e) {
+            reviewsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Could not load reviews at this moment.</p>';
+        }
+
+        // View More Button Logic with Buffering
+        loadMoreBtn.addEventListener('click', () => {
+            const btnText = loadMoreBtn.querySelector('span');
+            const btnSpinner = loadMoreBtn.querySelector('.fa-spinner');
+
+            btnText.innerText = "Loading...";
+            btnSpinner.style.display = "inline-block";
+            loadMoreBtn.disabled = true;
+
+            setTimeout(() => { // Buffering effect
+                renderReviews(currentIndex, loadMoreCount);
+                btnText.innerText = "View More Experiences";
+                btnSpinner.style.display = "none";
+                loadMoreBtn.disabled = false;
+            }, 800);
+        });
+    };
+
+    initPublicReviews(); // Functio Call
+
+    // ==========================================
     // 8. LIVE DEMO (BOT + FULL SCREEN PREVIEW)
     // ==========================================
     const initLiveDemo = () => {
         const demoBtn = document.getElementById('start-live-demo-btn');
         const overlay = document.getElementById('demo-overlay');
         const iframe = document.getElementById('live-demo-frame');
-        
+
         // Full Screen Elements
         const expandBtn = document.getElementById('expand-demo-btn');
         const fsModal = document.getElementById('fullscreen-demo-modal');
@@ -400,7 +508,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const demoGiftData = {
                     status: "locked", is_enabled: true, occasion: "A Special Surprise", girlfriend_name: "Priya",
                     message_text: "Hi Priya ❤️,\n\nI made this special digital space just for you. Every moment with you is a beautiful dream come true. You are my everything!",
-                    // 🔴 FIX: Tumhari original images wapas set kar di hain
                     image_1_url: "assets/image/album1.1.jpg", caption_1: "Sweet Memory",
                     image_2_url: "assets/image/album2.jpg", caption_2: "Cutie Pie 🥰",
                     image_3_url: "assets/image/album3.jpg", caption_3: "Golden Moments",
@@ -411,7 +518,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem('gx_preview_data', JSON.stringify(demoGiftData));
                 iframe.src = 'portal.html?mode=preview';
 
-                   // 🔴 SMART BOT INJECTOR (Works from outside, keeps your real app safe!)
                 iframe.onload = () => {
                     try {
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
@@ -424,15 +530,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             const checkChat = setInterval(() => {
                                 const sendBtn = document.getElementById('send-msg-btn');
                                 const inputEl = document.getElementById('live-msg-input');
-                                
+
                                 if (sendBtn && inputEl && window.viewerState) {
                                     clearInterval(checkChat); 
-                                    
+
                                     let lastTypedText = "";
-                                    let sequenceTriggered = false; // 🔴 FUNNEL TRACKER
-                                    
+                                    let sequenceTriggered = false; 
+
                                     inputEl.addEventListener('input', (e) => { 
-                                        lastTypedText = e.target.value.trim(); // Capitalization maintain rakhne ke liye lowerCase nahi kiya yahan
+                                        lastTypedText = e.target.value.trim(); 
                                     });
 
                                     const triggerBot = () => {
@@ -440,77 +546,37 @@ document.addEventListener("DOMContentLoaded", () => {
                                         const userText = userTextOriginal.toLowerCase();
                                         if(!userText) return;
                                         lastTypedText = ""; 
-                                        
+
                                         setTimeout(() => {
                                             fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
                                                 method: 'PUT', body: JSON.stringify('typing...')
                                             });
-                                            
+
                                             setTimeout(() => {
                                                 let botReply = "";
                                                 let isMatched = false;
-                                                
-                                                // 1. SPECIFIC MATCHES
-                                               if (userText.match(/hi|hello|hey|hii|hy/)) 
-botReply = "Hii my love! Kaisa raha din? 💖";
 
-else if (userText.match(/morning|good morning/)) 
-botReply = "Good morning! Aaj ka din sirf tumhare liye special ho ✨❤️";
+                                               if (userText.match(/hi|hello|hey|hii|hy/)) botReply = "Hii my love! Kaisa raha din? 💖";
+                                                else if (userText.match(/morning|good morning/)) botReply = "Good morning! Aaj ka din sirf tumhare liye special ho ✨❤️";
+                                                else if (userText.match(/night|good night/)) botReply = "Good night babu! Sapno mein milte hain 🌙❤️";
+                                                else if (userText.match(/love|luv u|i love you/)) botReply = "I love you more than you can imagine 💖🌹";
+                                                else if (userText.match(/miss|missing you/)) botReply = "I miss you sooo much 🥺❤️ Jaldi milo na...";
+                                                else if (userText.match(/kaise ho|how are you|kya haal/)) botReply = "Main theek hu... par tumhare bina thoda incomplete lagta hai ❤️";
+                                                else if (userText.match(/kya kar rahe|doing|kya kar rahe ho/)) botReply = "Bas tumhare baare mein soch raha tha 🥰";
+                                                else if (userText.match(/khana|khaya|eat/)) botReply = "Tumne khana khaya? Apna khayal rakho na ❤️";
+                                                else if (userText.match(/sad|cry|rona|dukhi/)) botReply = "Aww mera babu udaas hai? Aao hug de doon 🥺🤗";
+                                                else if (userText.match(/angry|gussa/)) botReply = "Gussa mat ho na... tum haste hue zyada cute lagte ho 😘";
+                                                else if (userText.match(/kiss|hug/)) botReply = "Yeh lo ek tight hug aur ek pyara sa kiss 😘🤗";
+                                                else if (userText.match(/yaad|remember/)) botReply = "Tumhari har choti baat yaad hai mujhe ❤️";
+                                                else if (userText.match(/busy|kaam/)) botReply = "Busy ho kya? Thoda sa time mujhe bhi de do na 🥺❤️";
+                                                else if (userText.match(/bored|boring/)) botReply = "Chalo kuch fun karte hain... ek surprise hai tumhare liye 😉🎁";
+                                                else if (userText.match(/thank/)) botReply = "Tumhare liye to kuch bhi ❤️";
+                                                else if (userText.match(/sorry/)) botReply = "Sorry kis baat ka... tum ho hi itne cute 😘";
+                                                else if (userText.match(/acha|hmm/)) botReply = "Itna short reply? Mujhe ignore kar rahe ho kya 😏❤️";
+                                                else if (userText.match(/kya|kyun|why/)) botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
 
-else if (userText.match(/night|good night/)) 
-botReply = "Good night babu! Sapno mein milte hain 🌙❤️";
-
-else if (userText.match(/love|luv u|i love you/)) 
-botReply = "I love you more than you can imagine 💖🌹";
-
-else if (userText.match(/miss|missing you/)) 
-botReply = "I miss you sooo much 🥺❤️ Jaldi milo na...";
-
-else if (userText.match(/kaise ho|how are you|kya haal/)) 
-botReply = "Main theek hu... par tumhare bina thoda incomplete lagta hai ❤️";
-
-else if (userText.match(/kya kar rahe|doing|kya kar rahe ho/)) 
-botReply = "Bas tumhare baare mein soch raha tha 🥰";
-
-else if (userText.match(/khana|khaya|eat/)) 
-botReply = "Tumne khana khaya? Apna khayal rakho na ❤️";
-
-else if (userText.match(/sad|cry|rona|dukhi/)) 
-botReply = "Aww mera babu udaas hai? Aao hug de doon 🥺🤗";
-
-else if (userText.match(/angry|gussa/)) 
-botReply = "Gussa mat ho na... tum haste hue zyada cute lagte ho 😘";
-
-else if (userText.match(/kiss|hug/)) 
-botReply = "Yeh lo ek tight hug aur ek pyara sa kiss 😘🤗";
-
-else if (userText.match(/yaad|remember/)) 
-botReply = "Tumhari har choti baat yaad hai mujhe ❤️";
-
-else if (userText.match(/busy|kaam/)) 
-botReply = "Busy ho kya? Thoda sa time mujhe bhi de do na 🥺❤️";
-
-else if (userText.match(/bored|boring/)) 
-botReply = "Chalo kuch fun karte hain... ek surprise hai tumhare liye 😉🎁";
-
-else if (userText.match(/thank/)) 
-botReply = "Tumhare liye to kuch bhi ❤️";
-
-else if (userText.match(/sorry/)) 
-botReply = "Sorry kis baat ka... tum ho hi itne cute 😘";
-
-else if (userText.match(/acha|hmm/)) 
-botReply = "Itna short reply? Mujhe ignore kar rahe ho kya 😏❤️";
-
-else if (userText.match(/kya|kyun|why/)) 
-botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
-
-                                                // 2. 🔴 DYNAMIC QUOTE FALLBACK (Agar kuch match nahi hua)
                                                 if(!isMatched) {
-                                                    // User ke text ko thoda chota karna (taaki lamba text UI na tode)
                                                     let shortQuote = userTextOriginal.length > 30 ? userTextOriginal.substring(0, 30) + "..." : userTextOriginal;
-                                                    
-                                                    // Random Cute Replies
                                                     const fallbacks = [
                                                         "Aww, you're the sweetest! 🥰",
                                                         "Hehe, I love talking to you ❤️",
@@ -518,13 +584,11 @@ botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
                                                         "You always know how to make me smile 😘"
                                                     ];
                                                     const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-                                                    
-                                                    // Quote format banaya: [QUOTE]User Text[/QUOTE] Reply
                                                     botReply = \`[QUOTE]\${shortQuote}[/QUOTE] \${randomFallback}\`;
                                                 }
 
                                                 const encryptedMsg1 = CryptoJS.AES.encrypt(botReply, window.viewerState.userPasscode || '').toString();
-                                                
+
                                                 fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/chat.json', {
                                                     method: 'POST', body: JSON.stringify({ sender: 'bf', text: encryptedMsg1, timestamp: new Date().toISOString() })
                                                 }).then(() => {
@@ -532,9 +596,8 @@ botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
                                                         method: 'PUT', body: JSON.stringify('online')
                                                     });
 
-                                                    // 🔴 GAME CHANGER FUNNEL LOGIC STARTS HERE
                                                     if (!sequenceTriggered) {
-                                                        sequenceTriggered = true; // Ek baar hi chalega
+                                                        sequenceTriggered = true; 
 
                                                         setTimeout(() => {
                                                             fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/bf_status.json', {
@@ -544,7 +607,7 @@ botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
                                                             setTimeout(() => {
                                                                 const msg2 = "Waise... maine tumhare liye kuch banaya hai ❤️";
                                                                 const encryptedMsg2 = CryptoJS.AES.encrypt(msg2, window.viewerState.userPasscode || '').toString();
-                                                                
+
                                                                 fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/chat.json', {
                                                                     method: 'POST', body: JSON.stringify({ sender: 'bf', text: encryptedMsg2, timestamp: new Date().toISOString() })
                                                                 }).then(() => {
@@ -560,7 +623,7 @@ botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
                                                                         setTimeout(() => {
                                                                             const msg3 = "Dekhna hai? Yahan click karo 👉 <br><br> <a href='lead-form.html' target='_parent' style='background: linear-gradient(135deg, #ff4d79, #cc0033); color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 10px rgba(255, 77, 121, 0.4); font-size: 14px;'>Tap to Open 🎁</a>";
                                                                             const encryptedMsg3 = CryptoJS.AES.encrypt(msg3, window.viewerState.userPasscode || '').toString();
-                                                                            
+
                                                                             fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/memories/PREVIEW_MODE/chat.json', {
                                                                                 method: 'POST', body: JSON.stringify({ sender: 'bf', text: encryptedMsg3, timestamp: new Date().toISOString() })
                                                                             }).then(() => {
@@ -602,19 +665,18 @@ botReply = "Kuch nahi... bas tumhari yaadon mein kho gaya tha ❤️";
         if (expandBtn && fsModal && closeFsBtn && iframe) {
             expandBtn.addEventListener('click', () => {
                 fsIframeContainer.appendChild(iframe);
-                // 🔴 FIX: CSS !important ko override karna
                 iframe.style.setProperty('transform', 'scale(1)', 'important'); 
                 iframe.style.setProperty('width', '100%', 'important');
                 iframe.style.setProperty('height', '100%', 'important');
                 iframe.style.setProperty('border-radius', '20px', 'important');
-                
+
                 fsModal.classList.add('active'); 
                 document.body.style.overflow = 'hidden'; 
             });
 
             closeFsBtn.addEventListener('click', () => {
                 originalIframeParent.appendChild(iframe);
-                
+
                 iframe.style.setProperty('width', '375px', 'important');
                 iframe.style.setProperty('height', '812px', 'important');
                 iframe.style.setProperty('transform', 'scale(0.76)', 'important');

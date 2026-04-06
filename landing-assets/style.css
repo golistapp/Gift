@@ -46,7 +46,7 @@ section {
     border: none !important;
     background: #fff !important;
     z-index: 5 !important;
-    
+
     /* Slightly inner curvature for professional finish */
     border-radius: 16px !important; 
 }
@@ -274,14 +274,14 @@ section {
     left: 0;
     width: 100%;
     z-index: 1000;
-    
+
     /* 🔴 STRICT HEIGHT & PADDING: Ab yeh rubber ki tarah nahi khichega */
     height: 65px !important; 
     padding: 12px 0 !important; 
-    
+
     background: transparent;
     border-bottom: 1px solid transparent;
-    
+
     /* 🔴 STRICT TRANSITION: Sirf background change hoga, size lock kar diya hai */
     transition: background 0.3s ease, backdrop-filter 0.3s ease, border-bottom 0.3s ease !important;
 }
@@ -291,7 +291,7 @@ section {
     backdrop-filter: blur(15px) !important;
     -webkit-backdrop-filter: blur(15px) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    
+
     /* Scrolled hone par bhi exact same size rahega */
     height: 65px !important; 
     padding: 12px 0 !important; 
@@ -511,17 +511,17 @@ section {
 .mobile-mockup::after {
     content: '';
     position: absolute;
-    
+
     /* 🎛️ CONTROL PANEL FOR FRAME SIZE & POSITION 🎛️ */
-    
+
     /* 1. Frame ko Bada Karein (100% se zyada value daalein) */
     width: 125% !important;   /* Frame ki Chaudai (Motaai) badhayega */
     height: 110% !important;  /* Frame ki Lambai badhayega */
-    
+
     /* 2. Frame ko exact Center mein laayein (Minus value se adjust karein) */
     top: -5% !important;      /* Frame ko thoda Upar khiskane ke liye */
     left: -12.5% !important;  /* Frame ko thoda Left khiskane ke liye */
-    
+
     /* Image path aur baki settings same rahengi */
     background: transparent url('../assets/image/frame.png') center center / 100% 100% no-repeat !important;
     z-index: 50 !important; 
@@ -532,7 +532,7 @@ section {
 
 
 
-    
+
     /* Zaroori: Iske bina 'Tap to Open' button click nahi hoga, ye clicks ko aar-paar jane dega */
     pointer-events: none !important; 
 }
@@ -544,13 +544,13 @@ section {
 /* --- 2. Defining the *Screen Area* inside the PNG Frame --- */
 .mobile-mockup__screen {
     position: absolute !important;
-    
+
     /* 🔴 AAPKO IS IMAGE KE ANUSAR YE NUMBERS TWEAK KARNE PAD SAKTE HAIN 🔴 */
     top: 2.2% !important;   /* Distance from top to screen start */
     left: 5.5% !important;  /* Distance from left to screen start */
     width: 89% !important;  /* Width of the actual screen area */
     height: 95.6% !important; /* Height of the actual screen area */
-    
+
     /* Match inner frame curvature */
     border-radius: 20px !important; 
     overflow: hidden !important;
@@ -698,74 +698,118 @@ section {
     font-size: 1.1rem;
 }
 
-/* --- Emotional Statements --- */
-.statements {
-    padding: 140px 24px;
+/* --- Public Reviews (Premium Dynamic Section) --- */
+.public-reviews {
+    padding: 100px 24px;
 }
 
-.statement-block {
-    margin-bottom: 70px;
-}
-
-.statement-block:last-child {
-    margin-bottom: 0;
-}
-
-.statement-block__text {
-    font-size: clamp(1.8rem, 4vw, 3.2rem);
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.4);
-    transition: var(--transition-smooth);
-    letter-spacing: -0.02em;
-}
-
-.statement-block:hover .statement-block__text {
-    color: #fff;
-}
-
-/* --- Testimonials --- */
-.testimonials__grid {
+.reviews-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 24px;
-    margin-top: 56px;
+    margin-top: 48px;
 }
 
-.testimonial-card {
-    composes: base-card;
+.review-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 32px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
 }
 
-.testimonial-card__text {
-    font-size: 1.05rem;
-    font-style: italic;
-    color: #e0e0e0;
-    margin-bottom: 32px;
-    line-height: 1.7;
+/* Elite Highlight Bar on Left */
+.review-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: 0.3s ease;
 }
 
-.testimonial-card__author {
+.review-card:hover {
+    transform: translateY(-5px);
+    background: var(--glass-bg-hover);
+    border-color: rgba(255, 77, 166, 0.3);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.review-card:hover::before {
+    opacity: 1;
+}
+
+.review-card__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid var(--glass-border);
-    padding-top: 24px;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
 }
 
-.author-name {
+.review-card__stars {
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4));
+}
+
+.review-card__date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.review-card__quote {
+    flex-grow: 1;
+}
+
+.review-card__text {
+    font-size: 1.05rem;
+    font-style: italic;
+    color: #e0e0e0;
+    margin-bottom: 24px;
+    line-height: 1.7;
+}
+
+.review-card__author {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.review-card__author .author-name {
     font-weight: 600;
     color: #fff;
+    font-size: 1.1rem;
 }
 
-.author-occasion {
+.review-card__author .trust-badge {
     font-size: 0.85rem;
-    color: var(--primary);
-    background: rgba(255, 77, 166, 0.1);
-    padding: 6px 14px;
-    border-radius: var(--radius-sm);
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
 }
+
 
 /* --- Final CTA & Trust --- */
 .trust-cta-wrapper {
@@ -1022,7 +1066,7 @@ section {
     .mobile-menu-btn {
         display: block; /* Show menu icon on mobile */
     }
-    
+
     /* Optional: Agar mobile me space kam pade toh CTA button hide/adjust kar sakte hain */
     /* .navbar__actions .btn { display: none; } */
 }
