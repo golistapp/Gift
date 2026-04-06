@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         // 🚀 --- NAYA: LEAD FORM SUBMIT LOGIC ---
         if (requestType === 'submit_lead') {
             const { name, mobile, email } = req.body;
-            
+
             if (!name || !mobile || !email) {
                 return res.status(400).json({ success: false, error: 'Missing details' });
             }
@@ -44,10 +44,10 @@ export default async function handler(req, res) {
             }
         }
 
-        // 🌟 --- NAYA: REVIEW SUBMIT LOGIC ---
+               // 🌟 --- NAYA: REVIEW SUBMIT LOGIC ---
         if (requestType === 'submit_review') {
-            const { name, message, rating } = req.body;
-            
+            const { name, occasion, message, rating } = req.body; // 🔴 Occasion add kar diya
+
             if (!name || !message) {
                 return res.status(400).json({ success: false, error: 'Missing details' });
             }
@@ -56,12 +56,15 @@ export default async function handler(req, res) {
                 const newReviewRef = db.ref('public_reviews').push();
                 await newReviewRef.set({
                     name: name,
+                    occasion: occasion || "General", // 🔴 Occasion Firebase mein save hoga
                     message: message,
                     rating: rating || "5",
-                    status: "pending", // PRD ke hisaab se pending status
+                    status: "pending", 
                     date: new Date().toISOString()
                 });
                 return res.status(200).json({ success: true });
+
+
             } catch (err) {
                 return res.status(500).json({ success: false, error: 'Database save failed' });
             }
@@ -157,7 +160,7 @@ export default async function handler(req, res) {
 
         const storedPass = data.passcode || "";
         const isMatch = storedPass === enteredPasscode || (enteredPasscode !== "" && storedPass.endsWith(enteredPasscode));
-        
+
         if (isMatch) {
             await rateLimitRef.remove();
             return res.status(200).json({ success: true, memoryData: data });
@@ -169,7 +172,7 @@ export default async function handler(req, res) {
             if (newAttempts >= 5) return res.status(429).json({ success: false, error: "Account locked. Try again in 10 minutes." });
             else return res.status(401).json({ success: false, error: `Incorrect Passcode! ${5 - newAttempts} attempts left.` });
         }
-        
+
     } catch (error) {
         console.error("Firebase Admin Error:", error);
         return res.status(500).json({ success: false, error: "Internal Server Error" });

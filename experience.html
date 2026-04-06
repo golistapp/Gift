@@ -343,6 +343,7 @@
         // --- SIMULATION ENGINE ---
         const simEngine = {
             currentScene: 1,
+            typeInterval: null, // 🔴 NAYA: Interval ko track karne ke liye taaki cancel kar sakein
             init: function() {
                 document.getElementById('start-demo-btn').addEventListener('click', () => {
                     document.getElementById('sim-overlay').classList.add('active');
@@ -369,42 +370,68 @@
                 if(navigator.vibrate) navigator.vibrate(30);
                 this.showScene(this.currentScene + 1);
             },
-            reset: function() {
+
+
+                        reset: function() {
                 this.currentScene = 1;
+                clearInterval(this.typeInterval); 
                 document.querySelectorAll('.sim-dot').forEach(d => d.classList.remove('filled'));
+                
+                const hint = document.getElementById('sim-typing-hint');
+                if (hint) {
+                    hint.innerText = "Entering passcode...";
+                    hint.style.color = "var(--pink-accent)";
+                    hint.style.opacity = "0";
+                }
+
+                // 🔴 NAYA FIX: Animations ko completely reset karna taaki next time fresh chale
+                const card = document.getElementById('sim-card');
+                if(card) card.style.transform = ''; // Card ko wapas seedha karo
+                
+                const bubble = document.querySelector('.sim-chat-bubble');
+                if(bubble) {
+                    bubble.style.animation = 'none'; // Purana animation clear karo
+                    bubble.offsetHeight; // Reflow trigger karo taaki browser reset samajh jaye
+                    bubble.style.animation = null; // Wapas default allow karo
+                }
             },
+
             handleSceneLogic: function(step) {
-                // Auto-fill password logic for Scene 2
                 if(step === 2) {
                     const dots = document.querySelectorAll('.sim-dot');
                     const hint = document.getElementById('sim-typing-hint');
                     hint.style.opacity = '1';
                     let fillCount = 0;
                     
-                    const typeInterval = setInterval(() => {
+                    clearInterval(this.typeInterval); // Pehle purana koi timer ho toh band karo
+                    this.typeInterval = setInterval(() => {
                         if(fillCount < 6) {
                             dots[fillCount].classList.add('filled');
                             if(navigator.vibrate) navigator.vibrate(20);
                             fillCount++;
                         } else {
-                            clearInterval(typeInterval);
+                            clearInterval(this.typeInterval);
                             hint.innerText = "Unlocked! 🔓";
                             hint.style.color = "#10b981";
-                            setTimeout(() => this.next(), 800);
+                            setTimeout(() => {
+                                // 🔴 Sirf tabhi next scene par jao agar modal open hai
+                                if (this.currentScene === 2 && document.getElementById('sim-overlay').classList.contains('active')) {
+                                    this.next();
+                                }
+                            }, 800);
                         }
                     }, 300);
                 }
                 
-                // Card Flip animation logic for Scene 3
                 if(step === 3) {
                     const card = document.getElementById('sim-card');
-                    card.style.transform = 'rotateY(0deg) scale(1)';
-                    // The tap hint triggers next() which goes to scene 4
+                    if(card) card.style.transform = 'rotateY(0deg) scale(1)';
                 }
             }
         };
 
         simEngine.init();
+
 
         // --- REVIEW SUBMISSION LOGIC ---
         const revModal = document.getElementById('review-modal');
