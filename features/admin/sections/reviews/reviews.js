@@ -1,36 +1,52 @@
+// Global Cache Object
+window.adminDataCache = window.adminDataCache || {};
+
 window.initAdminreviews = function() {
     const tbody = document.getElementById('reviews-tbody');
     const filterBtns = document.querySelectorAll('.filter-tab');
-    let allReviews = [];
     let currentFilter = 'all';
 
-    window.loadReviewsData = async function() {
+    window.loadReviewsData = async function(forceRefresh = false) {
         if(!tbody) return;
+
+        const now = Date.now();
+        // 5 MINUTE CACHE SYSTEM (300000 ms)
+        if (!forceRefresh && window.adminDataCache.reviewsData && window.adminDataCache.reviewsTime && (now - window.adminDataCache.reviewsTime < 300000)) {
+            renderReviewsTable(window.adminDataCache.reviewsData);
+            return;
+        }
+
         try {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> Fetching latest reviews...</td></tr>';
             const adminToken = localStorage.getItem('adminToken');
             const res = await fetch(`${firebaseConfig.databaseURL}/public_reviews.json?auth=${adminToken}`);
             if (!res.ok) throw new Error("Auth Failed");
-            
-            const data = await res.json();
-            allReviews = [];
 
-            if (data && !data.error) {
-                Object.keys(data).forEach(key => {
-                    if(typeof data[key] === 'object') {
-                        allReviews.push({ key, ...data[key] });
-                    }
-                });
-                allReviews.reverse(); // Latest reviews first
-            }
-            renderReviewsTable();
+            const data = await res.json();
+
+            // Save data to browser memory (Cache)
+            window.adminDataCache.reviewsData = data;
+            window.adminDataCache.reviewsTime = Date.now();
+
+            renderReviewsTable(data);
         } catch (e) {
             tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Error loading reviews!</td></tr>';
         }
     };
 
-    function renderReviewsTable() {
+    function renderReviewsTable(data) {
         if(!tbody) return;
-        
+
+        let allReviews = [];
+        if (data && !data.error) {
+            Object.keys(data).forEach(key => {
+                if(typeof data[key] === 'object') {
+                    allReviews.push({ key, ...data[key] });
+                }
+            });
+            allReviews.reverse(); // Latest reviews first
+        }
+
         const filtered = allReviews.filter(rev => {
             if(currentFilter === 'all') return true;
             return rev.status === currentFilter;
@@ -45,7 +61,7 @@ window.initAdminreviews = function() {
         filtered.forEach(rev => {
             const dateStr = rev.date ? new Date(rev.date).toLocaleDateString() : 'N/A';
             const stars = '★'.repeat(parseInt(rev.rating || 5)) + '☆'.repeat(5 - parseInt(rev.rating || 5));
-            
+
             const statusBadge = rev.status === 'approved' 
                 ? `<span class="badge badge-locked" style="font-size:9px;">Approved</span>` 
                 : `<span class="badge badge-empty" style="font-size:9px;">Pending</span>`;
@@ -78,7 +94,8 @@ window.initAdminreviews = function() {
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = btn.getAttribute('data-status');
-            renderReviewsTable();
+            // Use cached data for filtering instantly
+            renderReviewsTable(window.adminDataCache.reviewsData);
         });
     });
 
@@ -87,10 +104,9 @@ window.initAdminreviews = function() {
         try {
             const adminToken = localStorage.getItem('adminToken');
             await fetch(`${firebaseConfig.databaseURL}/public_reviews/${key}.json?auth=${adminToken}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ status: newStatus })
+                method: 'PATCH', body: JSON.stringify({ status: newStatus })
             });
-            window.loadReviewsData();
+            window.loadReviewsData(true); // Force Refresh to get updated status
         } catch(e) { alert("Error updating review!"); }
     };
 
@@ -100,9 +116,12 @@ window.initAdminreviews = function() {
         try {
             const adminToken = localStorage.getItem('adminToken');
             await fetch(`${firebaseConfig.databaseURL}/public_reviews/${key}.json?auth=${adminToken}`, { method: 'DELETE' });
-            window.loadReviewsData();
+            window.loadReviewsData(true); // Force Refresh
         } catch(e) { alert("Error deleting review!"); }
     };
 
     window.loadReviewsData();
 };
+
+// 🔴 YEH LINE CHHOOT GAYI THI PICHHLI BAAR!
+window.initAdminreviews();
