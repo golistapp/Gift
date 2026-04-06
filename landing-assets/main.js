@@ -376,114 +376,148 @@ document.addEventListener("DOMContentLoaded", () => {
     initPersonalization();
     initActionButtons();
 
-    // ==========================================
-    // 10. PUBLIC REVIEWS (DYNAMIC FETCH, SORT & PAGINATION)
+     // ==========================================
+    // 10. PUBLIC REVIEWS (PREMIUM EMOTIONAL FEED)
     // ==========================================
     const initPublicReviews = async () => {
         const reviewsGrid = document.getElementById('reviews-grid');
-        const loadMoreBtn = document.getElementById('load-more-reviews-btn');
-        if (!reviewsGrid || !loadMoreBtn) return;
+        if (!reviewsGrid) return;
 
         let allReviews = [];
-        let currentIndex = 0;
-        let initialLoad = 5;
-        let loadMoreCount = 10;
 
-        // Render Function
-        const renderReviews = (startIndex, count) => {
-            const endIndex = Math.min(startIndex + count, allReviews.length);
-            for (let i = startIndex; i < endIndex; i++) {
-                const rev = allReviews[i];
-                const dateObj = rev.date ? new Date(rev.date) : new Date();
-                const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        // Helper: Convert ISO Date to Human Readable "Time Ago"
+        const timeAgo = (dateString) => {
+            if (!dateString) return "Recently";
+            const date = new Date(dateString);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) === 1 ? "Yesterday" : Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " mins ago";
+            return "Just now";
+        };
+
+        const renderReviews = () => {
+            reviewsGrid.innerHTML = ''; 
+
+            allReviews.forEach((rev, index) => {
                 const ratingNum = parseInt(rev.rating) || 5;
                 const starsHTML = '⭐'.repeat(ratingNum) + '<span style="opacity:0.2">⭐</span>'.repeat(5 - ratingNum);
+                const timeAgoStr = timeAgo(rev.date);
+
+                // 🧠 Auto-Logic: Top Emotion Tag
+                let topTag = "💭 A meaningful moment";
+                const msgLower = (rev.message || "").toLowerCase();
+                const occ = rev.occasion || "";
+
+                if (occ === "Anniversary") topTag = "💑 Anniversary Surprise";
+                else if (occ === "Birthday") topTag = "🎂 Birthday Magic";
+                else if (msgLower.includes('love') || msgLower.includes('cry') || msgLower.includes('tears')) topTag = "❤️ Felt deeply";
+                else if (ratingNum >= 4) topTag = "😍 Made them feel special";
+
+                // 🧠 Auto-Logic: Emotional Context Line
+                let contextLine = "A beautiful memory created... 💫";
+                if (occ === "Anniversary") contextLine = "Sent this on their anniversary… and this was the reaction ❤️";
+                else if (occ === "Birthday") contextLine = "A birthday surprise that turned into a core memory 🎂";
+                else if (msgLower.includes('sorry') || msgLower.includes('forgive')) contextLine = "Sometimes an apology needs a little magic 🥺";
+                else if (ratingNum === 5) contextLine = "A small surprise… but a massive emotional reaction ✨";
 
                 const card = document.createElement('div');
                 card.className = 'review-card js-reveal';
+                card.style.transitionDelay = `${index * 0.1}s`; // Staggered entry animation
+
+                // Future Ready: Agar future mein rev.image aati hai toh wo show ho jayegi
+                const imageHTML = rev.image ? `<img src="${rev.image}" style="width: 100%; border-radius: 12px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; max-height: 150px;">` : '';
+
                 card.innerHTML = `
+                    <div class="review-top-tag">${topTag}</div>
                     <div class="review-card__header">
-                        <div class="review-card__stars">${starsHTML}</div>
-                        <div class="review-card__date">${formattedDate}</div>
+                        <div>
+                            <div class="review-card__stars">${starsHTML}</div>
+                            <div style="font-size: 0.8rem; color: #ffb5c8; margin-top: 6px; font-weight: 500;">Felt everything ❤️</div>
+                        </div>
+                        <div class="review-card__time">${timeAgoStr}</div>
                     </div>
+                    <div class="review-context-line">${contextLine}</div>
                     <blockquote class="review-card__quote">
                         <p class="review-card__text">"${rev.message}"</p>
+                        ${imageHTML}
                     </blockquote>
-                    <div class="review-card__author">
-                        <span class="author-name">${rev.name}</span>
-                        <span class="trust-badge"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                    <div class="review-card__footer">
+                        <div>
+                            <span class="author-name" style="display:block; font-weight:600; color:#fff; font-size:1.1rem;">— ${rev.name}</span>
+                            <span style="font-size: 0.8rem; color: #cbd5e1; background: rgba(255,255,255,0.1); padding: 3px 10px; border-radius: 12px; display:inline-block; margin-top:8px;">${occ || 'Special Moment'}</span>
+                        </div>
+                        <div style="font-size:0.8rem; color:#ff4da6; display:flex; align-items:center; gap:5px; font-weight:600; background: rgba(255, 77, 166, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,77,166,0.2);">
+                            <i class="fa-solid fa-heart-circle-check"></i> Emotion Verified
+                        </div>
                     </div>
                 `;
                 reviewsGrid.appendChild(card);
+                setTimeout(() => card.classList.add('is-visible'), 100);
+            });
 
-                // Trigger reveal animation instantly for appended cards
-                setTimeout(() => card.classList.add('is-visible'), 50);
-            }
-
-            currentIndex = endIndex;
-            if (currentIndex >= allReviews.length) {
-                loadMoreBtn.style.display = 'none'; // Sab load ho gaya
-            } else {
-                loadMoreBtn.style.display = 'inline-flex';
+            // Swipe For More End Card
+            if (allReviews.length > 2) {
+                const endCard = document.createElement('div');
+                endCard.className = 'review-card js-reveal is-visible';
+                endCard.style.cssText = 'min-width: 200px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; box-shadow: none; backdrop-filter: none;';
+                endCard.innerHTML = `<div style="text-align: center; color: var(--gold-primary); opacity: 0.8;"><i class="fa-solid fa-arrow-right-long" style="font-size: 2.5rem; margin-bottom: 10px; animation: pulse 2s infinite;"></i><br><span style="font-weight: 500; font-size: 1.1rem;">Swipe for more ❤️</span></div>`;
+                reviewsGrid.appendChild(endCard);
             }
         };
 
         try {
-            reviewsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size: 1.1rem;">Loading experiences... <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary);"></i></p>';
+            reviewsGrid.innerHTML = '<p style="width: 100%; text-align: center; color: var(--text-muted); font-size: 1.1rem; padding: 40px 0;">Loading experiences... <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary);"></i></p>';
 
-            // Firebase Data Fetch
             const res = await fetch('https://gift-32f5c-default-rtdb.asia-southeast1.firebasedatabase.app/public_reviews.json');
             const data = await res.json();
 
             if (data && !data.error) {
                 Object.keys(data).forEach(key => {
                     const rev = data[key];
-                    if (rev.status === 'approved') { // Sirf Approved reviews
-                        allReviews.push(rev);
-                    }
+                    if (rev.status === 'approved') allReviews.push(rev);
                 });
 
-                // Sorting Logic: Rating (5 to 1) then Date (Latest first)
-                allReviews.sort((a, b) => {
-                    const ratingA = parseInt(a.rating) || 0;
-                    const ratingB = parseInt(b.rating) || 0;
-                    if (ratingB !== ratingA) return ratingB - ratingA; 
-                    const dateA = new Date(a.date).getTime();
-                    const dateB = new Date(b.date).getTime();
-                    return dateB - dateA; 
-                });
-
-                reviewsGrid.innerHTML = ''; 
+                // Sort by Latest Date First
+                allReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                 if (allReviews.length > 0) {
-                    renderReviews(0, initialLoad); // Starting ke 5 load karo
+                    renderReviews(); 
                 } else {
-                    reviewsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Be the first to share your experience!</p>';
+                    reviewsGrid.innerHTML = '<p style="width: 100%; text-align: center; color: var(--text-muted); padding: 40px 0;">Be the first to create a magical moment!</p>';
                 }
             }
         } catch (e) {
-            reviewsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Could not load reviews at this moment.</p>';
+            reviewsGrid.innerHTML = '<p style="width: 100%; text-align: center; color: #ef4444; padding: 40px 0;">Could not load experiences at this moment.</p>';
         }
 
-        // View More Button Logic with Buffering
-        loadMoreBtn.addEventListener('click', () => {
-            const btnText = loadMoreBtn.querySelector('span');
-            const btnSpinner = loadMoreBtn.querySelector('.fa-spinner');
+        // 🖱️ Desktop Drag-to-Scroll Logic (Instagram Style)
+        let isDown = false;
+        let startX;
+        let scrollLeft;
 
-            btnText.innerText = "Loading...";
-            btnSpinner.style.display = "inline-block";
-            loadMoreBtn.disabled = true;
-
-            setTimeout(() => { // Buffering effect
-                renderReviews(currentIndex, loadMoreCount);
-                btnText.innerText = "View More Experiences";
-                btnSpinner.style.display = "none";
-                loadMoreBtn.disabled = false;
-            }, 800);
+        reviewsGrid.addEventListener('mousedown', (e) => {
+            isDown = true;
+            reviewsGrid.style.cursor = 'grabbing';
+            startX = e.pageX - reviewsGrid.offsetLeft;
+            scrollLeft = reviewsGrid.scrollLeft;
+        });
+        reviewsGrid.addEventListener('mouseleave', () => { isDown = false; reviewsGrid.style.cursor = 'grab'; });
+        reviewsGrid.addEventListener('mouseup', () => { isDown = false; reviewsGrid.style.cursor = 'grab'; });
+        reviewsGrid.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - reviewsGrid.offsetLeft;
+            const walk = (x - startX) * 2; // Scroll Speed
+            reviewsGrid.scrollLeft = scrollLeft - walk;
         });
     };
 
     initPublicReviews(); // Functio Call
+
 
     // ==========================================
     // 8. LIVE DEMO (BOT + FULL SCREEN PREVIEW)
