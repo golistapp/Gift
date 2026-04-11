@@ -760,4 +760,140 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initSidebarMenu();
 
+    // ==========================================
+    // 11. PREMIUM PWA INSTALL ENGINE
+    // ==========================================
+    const initPremiumPWA = () => {
+        // 1. Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .catch(err => console.warn('PWA Engine offline:', err));
+        }
+
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            return; // App is already running as PWA
+        }
+
+        let deferredPrompt;
+        let hasPrompted = false;
+
+        // 2. Build the Custom Glassmorphism UI
+        const installCardHTML = `
+            <div id="pwa-install-card" style="
+                position: fixed; bottom: -150px; left: 50%; transform: translateX(-50%);
+                width: 90%; max-width: 400px; background: rgba(15, 10, 20, 0.75);
+                backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+                border: 1px solid rgba(255, 77, 166, 0.3); border-radius: 24px;
+                padding: 28px 24px; text-align: center;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,77,166,0.05);
+                z-index: 9999; opacity: 0; transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            ">
+                <div style="font-size: 2rem; margin-bottom: 10px; animation: pulse 2s infinite;">✨</div>
+                <h3 style="font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #fff; margin-bottom: 8px;">Save this feeling forever ❤️</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; line-height: 1.4;">Install GiftoraX for faster, magical access anytime directly from your home screen.</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button id="pwa-accept-btn" style="
+                        background: linear-gradient(135deg, #ff4da6, #9d4edd); color: #fff; border: none;
+                        padding: 14px; border-radius: 50px; font-weight: 600; font-family: 'Poppins', sans-serif;
+                        font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 77, 166, 0.3);
+                        transition: transform 0.3s;
+                    ">Install Now ✨</button>
+                    <button id="pwa-decline-btn" style="
+                        background: transparent; color: #888; border: none; font-size: 0.9rem;
+                        cursor: pointer; font-family: 'Poppins', sans-serif;
+                    ">Maybe Later</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', installCardHTML);
+
+        const installCard = document.getElementById('pwa-install-card');
+        const acceptBtn = document.getElementById('pwa-accept-btn');
+        const declineBtn = document.getElementById('pwa-decline-btn');
+
+        // 3. Intercept Default Prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Stop default boring prompt
+            deferredPrompt = e;
+            setupSmartTriggers(); // Only setup triggers if PWA is installable
+        });
+
+        const showPremiumPrompt = () => {
+            if (deferredPrompt && !hasPrompted) {
+                hasPrompted = true;
+                installCard.style.bottom = '30px';
+                installCard.style.opacity = '1';
+                if (navigator.vibrate) navigator.vibrate([30, 50, 30]); // Subtle magical vibration
+            }
+        };
+
+        const hidePremiumPrompt = () => {
+            installCard.style.bottom = '-150px';
+            installCard.style.opacity = '0';
+        };
+
+        // 4. Smart Install Triggers
+        const setupSmartTriggers = () => {
+            // Trigger 1: Time (12 Seconds)
+            setTimeout(showPremiumPrompt, 12000);
+
+            // Trigger 2: Scroll Depth (40%)
+            const scrollTrigger = () => {
+                const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+                if (scrollPercent > 40) {
+                    showPremiumPrompt();
+                    window.removeEventListener('scroll', scrollTrigger);
+                }
+            };
+            window.addEventListener('scroll', scrollTrigger, { passive: true });
+
+            // Trigger 3: Emotional Intent (Clicking CTA)
+            document.querySelectorAll('a[href="lead-form.html"]').forEach(btn => {
+                btn.addEventListener('mouseenter', showPremiumPrompt, { once: true });
+            });
+        };
+
+        // 5. Handle Actions
+        acceptBtn.addEventListener('click', async () => {
+            hidePremiumPrompt();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            }
+        });
+
+        declineBtn.addEventListener('click', hidePremiumPrompt);
+
+        // 6. Installation Success Magic
+        window.addEventListener('appinstalled', () => {
+            hidePremiumPrompt();
+
+            // Show premium success toast
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 40px; left: 50%; transform: translateX(-50%) translateY(-20px);
+                background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4);
+                color: #10b981; padding: 16px 24px; border-radius: 50px; backdrop-filter: blur(10px);
+                font-weight: 500; opacity: 0; z-index: 10000; transition: all 0.4s ease;
+                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+            `;
+            toast.innerHTML = `<i class="fa-solid fa-heart"></i> GiftoraX is now part of your world ❤️`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)'; }, 100);
+            if (navigator.vibrate) navigator.vibrate([50, 100, 50]); // Success vibration
+            if (typeof triggerConfetti === 'function') triggerConfetti(); // Trigger existing confetti
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        });
+    };
+
+    initPremiumPWA();
+
+
 }); // Ye aakhri bracket waise hi rehna chahiye
