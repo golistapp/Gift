@@ -1,24 +1,60 @@
 {
-  "name": "GiftoraX",
-  "short_name": "GiftoraX",
-  "description": "Not Just a Gift… A Feeling. A premium emotional digital gifting experience.",
-  "start_url": "/index.html",
+  "name": "AMP KART Tool OS",
+  "short_name": "AMP KART",
+  "description": "AMP KART Control Panel - All your business tools in one place.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#05020a",
-  "theme_color": "#05020a",
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["business", "utilities", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "https://ik.imagekit.io/hryqx2lst9/qr-memory-gift/1000198391-optimized.jpg",
+      "src": "https://ik.imagekit.io/nsyr92pse/1000201093-optimized.jpg",
       "sizes": "192x192",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "https://ik.imagekit.io/hryqx2lst9/qr-memory-gift/1000198391-optimized.jpg",
+      "src": "https://ik.imagekit.io/nsyr92pse/1000201093-optimized.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://ik.imagekit.io/nsyr92pse/1000201093-optimized.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://ik.imagekit.io/nsyr92pse/1000201093-optimized.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "AMP KART Tool OS Home"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pricing Calculator",
+      "short_name": "Calculator",
+      "description": "Open Pricing Calculator",
+      "url": "/calculator.html",
+      "icons": [{ "src": "https://ik.imagekit.io/nsyr92pse/1000201093-optimized.jpg", "sizes": "96x96" }]
+    },
+    {
+      "name": "QR Generator",
+      "short_name": "QR Gen",
+      "description": "Open QR Generator",
+      "url": "/qr.html",
+      "icons": [{ "src": "https://ik.imagekit.io/nsyr92pse/1000201093-optimized.jpg", "sizes": "96x96" }]
     }
   ]
 }
